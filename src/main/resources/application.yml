@@ -1,0 +1,36 @@
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: paynest_app
+    password: paynest_app
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        multiTenancy: SCHEMA
+        tenant_identifier_resolver: com.paynest.tenant.TenantIdentifierResolver
+        multi_tenant_connection_provider: com.paynest.config.MultiTenantConnectionProviderImpl
+        connection:
+          handling_mode: DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION
+
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+
+  logging:
+    level:
+      root: INFO
+      com.paynest: DEBUG
+      org.hibernate.engine.jdbc.connections.internal: DEBUG
+      org.hibernate.SQL: DEBUG
+      org.hibernate.orm.jdbc.bind: TRACE
+
+
+  app:
+    logging:
+      path: ./logs
