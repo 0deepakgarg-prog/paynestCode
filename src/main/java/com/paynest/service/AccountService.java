@@ -3,6 +3,7 @@ package com.paynest.service;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.dto.RegistrationRequest;
 import com.paynest.dto.RegistrationRequestWithOtp;
+import com.paynest.dto.UpdateAccountRequest;
 import com.paynest.entity.*;
 import com.paynest.exception.ApplicationException;
 import com.paynest.repository.*;
@@ -147,5 +148,42 @@ public class AccountService {
         return;
     }
 
+    @Transactional
+    public void updateAccountDetails(UpdateAccountRequest request) {
+        Account account = accountRepository.findById(request.getAccountId())
+                .orElseThrow(() -> new ApplicationException("INVALID_ACCOUNT", "Account not found"));
+
+        account.setFirstName(request.getUser().getFirstName());
+        account.setLastName(request.getUser().getLastName());
+        account.setAddress(request.getUser().getAddress());
+        account.setGender(request.getUser().getGender().toString());
+        if(request.getUser().getPreferredLanguage() == null) {
+            account.setPreferredLang("en");
+        }else{
+            account.setPreferredLang(request.getUser().getPreferredLanguage());
+        }
+        account.setUpdatedBy(account.getAccountId());
+        account.setUpdatedAt(java.time.LocalDateTime.now());
+        if(request.getUser().getEmail() !=null){
+            account.setEmail(request.getUser().getEmail());
+
+            AccountIdentifier accountIdentifierOld = accountIdentifierRepository
+                    .findByAccountIdAndStatus(account.getAccountId(),"ACTIVE")
+                    .stream()
+                    .filter(id -> id.getIdentifierType().equals("MOBILE"))
+                    .findFirst()
+                    .orElseThrow(() -> new ApplicationException("IDENTIFIER_NOT_FOUND","Account identifier not found"));
+
+            AccountIdentifier accountIdentifier = new AccountIdentifier();
+            accountIdentifier.setAccountId(account.getAccountId());
+            accountIdentifier.setIdentifierType("EMAIL");
+            accountIdentifier.setIdentifierValue(request.getUser().getEmail());
+            accountIdentifier.setStatus("ACTIVE");
+            accountIdentifier.setAuthId(accountIdentifierOld.getAuthId());
+            accountIdentifierRepository.save(accountIdentifier);
+        }
+        accountRepository.save(account);
+
+    }
 
 }

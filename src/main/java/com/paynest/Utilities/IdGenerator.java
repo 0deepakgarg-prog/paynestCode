@@ -4,8 +4,11 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 
+@Slf4j
 public class IdGenerator {
 
     private static final SecureRandom secureRandom = new SecureRandom();
@@ -45,6 +48,7 @@ public class IdGenerator {
 
     public static String generate4DigitPin() {
         int pin = secureRandom.nextInt(9000) + 1000;
+        log.info("generated Pin is : " + pin);
         return String.valueOf(pin);
     }
 
