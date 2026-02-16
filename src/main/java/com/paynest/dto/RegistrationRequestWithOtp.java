@@ -2,20 +2,19 @@ package com.paynest.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class RegistrationRequest {
+public class RegistrationRequestWithOtp {
 
+    @NotBlank(message = "tenantId is required")
     @JsonProperty("tenantId")
-    @NotBlank(message = "Tenant ID is required")
     private String tenantId;
 
-    @JsonProperty("requestId")
     @NotBlank(message = "requestId is required")
+    @JsonProperty("requestId")
     private String requestId;
-
 
     @JsonProperty("user")
     private UserData user;
@@ -26,6 +25,11 @@ public class RegistrationRequest {
         @NotBlank(message = "Mobile number is required")
         @JsonProperty("mobileNumber")
         private String mobile;
+
+        @NotNull(message = "OTP is required")
+        @JsonProperty("otp")
+        private String otp;
+
     }
 }
 

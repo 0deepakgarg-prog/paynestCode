@@ -3,6 +3,7 @@ package com.paynest.service;
 import com.paynest.dto.BalanceResponse;
 import com.paynest.entity.Wallet;
 import com.paynest.entity.WalletBalance;
+import com.paynest.exception.ApplicationException;
 import com.paynest.repository.WalletBalanceRepository;
 import com.paynest.repository.WalletRepository;
 import org.springframework.stereotype.Service;
@@ -22,10 +23,10 @@ public class BalanceService {
     public BalanceResponse getBalance(Long walletId) {
 
         Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+                .orElseThrow(() -> new ApplicationException("INVALID_WALLET_NO","Wallet not found"));
 
         WalletBalance balance = balanceRepository.findById(walletId)
-                .orElseThrow(() -> new RuntimeException("Balance not found"));
+                .orElseThrow(() -> new ApplicationException("INVALID_WALLET_NO","Wallet not found"));
 
         return new BalanceResponse(
                 walletId,

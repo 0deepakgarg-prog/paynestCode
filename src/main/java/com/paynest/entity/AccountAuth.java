@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public class AccountAuth {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "auth_hash", length = 255)

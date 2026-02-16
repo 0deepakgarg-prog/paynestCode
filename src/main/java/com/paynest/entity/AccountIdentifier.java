@@ -17,7 +17,7 @@ public class AccountIdentifier {
     private Long id;
 
     @Column(nullable = false)
-    private Long accountId;
+    private String accountId;
 
     @Column(nullable = false)
     private Long authId;

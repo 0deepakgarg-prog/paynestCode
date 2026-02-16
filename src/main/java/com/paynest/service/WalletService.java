@@ -31,7 +31,7 @@ public class WalletService {
 
         if (balance.getAvailableBalance()
                 .compareTo(amount) < 0) {
-            throw new ApplicationException("Insufficient balance");
+            throw new ApplicationException("INSUFFICIENT_BALANCE","Insufficient balance");
         }
 
         BigDecimal before =
