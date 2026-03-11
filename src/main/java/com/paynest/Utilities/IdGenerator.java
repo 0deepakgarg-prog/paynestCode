@@ -63,4 +63,13 @@ public class IdGenerator {
         String inputHash = DigestUtils.sha256Hex(inputPin + uuid);
         return inputHash.equals(storedHash);
     }
+
+    public static String generateTransactionId(String prefix) {
+        LocalDateTime timeStamp=LocalDateTime.now();
+        String datePart = timeStamp.format(DATE_FORMAT);
+        String timePart = timeStamp.format(TIME_FORMAT);
+        int randomNumber = secureRandom.nextInt(10000);
+        String randomPart = String.format("%04d", randomNumber);
+        return prefix.concat(datePart).concat("-").concat(timePart).concat("-").concat(randomPart);
+    }
 }
