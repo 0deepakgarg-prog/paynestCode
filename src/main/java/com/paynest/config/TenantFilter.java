@@ -30,18 +30,20 @@ public class TenantFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-
+        log.info("Inside TenantFilter");
         String tenant = request.getHeader("X-Tenant-Id");
+        if(tenant == null){
+            tenant = TenantContext.getTenant();
+        }
+        log.info("Inside TenantFilter:" + tenant);
         if (tenant == null) {
-            response.sendError(400, "X-Tenant-Id missing");
+            response.sendError(400, "Tenant missing");
             return;
         }
+        //Do not remove this, this is put here for the cases where the tenant is present in header
+        TenantContext.setTenant(tenant);
 
-        String schema = tenantService.getSchema(tenant);
-
-        TenantContext.setTenant(schema);
         //MDC.put("tenantId", tenant);
-        log.info("Tenant before filter chain: {}", TenantContext.getTenant());
         try {
             filterChain.doFilter(request, response);
         } finally {

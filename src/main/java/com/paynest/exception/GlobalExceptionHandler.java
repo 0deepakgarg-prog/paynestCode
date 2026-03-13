@@ -1,6 +1,6 @@
 package com.paynest.exception;
 
-import com.paynest.dto.ApiErrorResponse;
+import com.paynest.dto.response.ApiErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

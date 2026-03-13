@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AccountIdentifierRepository extends JpaRepository<AccountIdentifier, Long> {
@@ -14,6 +15,12 @@ public interface AccountIdentifierRepository extends JpaRepository<AccountIdenti
 
     List<AccountIdentifier> findByAccountIdAndStatus(
             String accountId,
+            String status
+    );
+
+    Optional<AccountIdentifier> findByIdentifierTypeAndIdentifierValueAndStatus(
+            String identifierType,
+            String identifierValue,
             String status
     );
 }
