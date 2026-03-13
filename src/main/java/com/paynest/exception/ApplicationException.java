@@ -1,5 +1,8 @@
 package com.paynest.exception;
 
+import lombok.Getter;
+
+@Getter
 public class ApplicationException extends RuntimeException {
 
     private final String errorCode;
@@ -11,11 +14,4 @@ public class ApplicationException extends RuntimeException {
         this.errorMessage = errorMessage;
     }
 
-    public String getErrorCode() {
-        return errorCode;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
 }

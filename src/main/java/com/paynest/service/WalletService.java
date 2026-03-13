@@ -31,12 +31,12 @@ public class WalletService {
     private final WalletRepository walletRepository;
 
     @Transactional
-    public void debitWallet(Long walletId,
+    public void debitWallet(Wallet wallet,
                             BigDecimal amount,
                             String txnId) throws ApplicationException {
 
         WalletBalance balance =
-                balanceRepo.lockBalance(walletId);
+                balanceRepo.lockBalance(wallet.getWalletId());
 
         if (balance.getAvailableBalance()
                 .compareTo(amount) < 0) {
@@ -49,10 +49,11 @@ public class WalletService {
         BigDecimal after =
                 before.subtract(amount);
 
-        // 3. Insert ledger entry
         WalletLedger ledger = new WalletLedger();
         ledger.setTxnId(txnId);
-        ledger.setWalletId(walletId);
+        ledger.setWalletId(wallet.getWalletId());
+        ledger.setAccountId(wallet.getAccountId());
+        ledger.setCurrency(wallet.getCurrency());
         ledger.setEntryType("DR");
         ledger.setAmount(amount);
         ledger.setBalanceBefore(before);
@@ -64,12 +65,12 @@ public class WalletService {
     }
 
     @Transactional
-    public void creditWallet(Long walletId,
+    public void creditWallet(Wallet wallet,
                             BigDecimal amount,
                             String txnId) {
 
         WalletBalance balance =
-                balanceRepo.lockBalance(walletId);
+                balanceRepo.lockBalance(wallet.getWalletId());
 
         BigDecimal before =
                 balance.getAvailableBalance();
@@ -80,7 +81,9 @@ public class WalletService {
         // 3. Insert ledger entry
         WalletLedger ledger = new WalletLedger();
         ledger.setTxnId(txnId);
-        ledger.setWalletId(walletId);
+        ledger.setWalletId(wallet.getWalletId());
+        ledger.setAccountId(wallet.getAccountId());
+        ledger.setCurrency(wallet.getCurrency());
         ledger.setEntryType("CR");
         ledger.setAmount(amount);
         ledger.setBalanceBefore(before);
@@ -123,7 +126,5 @@ public class WalletService {
                 .collect(java.util.stream.Collectors.toList());
         return new AccountWalletBalancesResponse(accountId, balances);
     }
-
-
 
 }

@@ -24,7 +24,8 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
         log.info("tenantIdentifier : " + tenantIdentifier);
         Connection connection = dataSource.getConnection();
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute("SET search_path TO tenant_" + tenantIdentifier);
+            //stmt.execute("SET search_path TO tenant_" + tenantIdentifier);
+            stmt.execute("SET search_path TO " + tenantIdentifier);
         }
         return connection;
     }
@@ -56,7 +57,8 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
         log.info("tenantIdentifier in object : " + o.toString());
         Connection connection = dataSource.getConnection();
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute("SET search_path TO tenant_" + o.toString());
+            //stmt.execute("SET search_path TO tenant_" + o.toString());
+            stmt.execute("SET search_path TO " + o.toString());
         }
         return connection;
     }

@@ -31,4 +31,5 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
             nativeQuery = true)
     Long getNextWalletId();
 
+    List<Wallet> findByAccountIdAndIsDefault(String accountId, boolean isDefault);
 }

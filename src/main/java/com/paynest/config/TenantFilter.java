@@ -3,20 +3,20 @@ package com.paynest.config;
 
 import com.paynest.service.TenantRegistryService;
 import com.paynest.tenant.TenantContext;
+import com.paynest.tenant.TraceContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @Order(1)
@@ -30,26 +30,27 @@ public class TenantFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        log.info("Inside TenantFilter");
+
         String tenant = request.getHeader("X-Tenant-Id");
-        if(tenant == null){
-            tenant = TenantContext.getTenant();
-        }
-        log.info("Inside TenantFilter:" + tenant);
         if (tenant == null) {
-            response.sendError(400, "Tenant missing");
+            response.sendError(400, "X-Tenant-Id missing");
             return;
         }
-        //Do not remove this, this is put here for the cases where the tenant is present in header
-        TenantContext.setTenant(tenant);
 
+        String schema = tenantService.getSchema(tenant);
+
+        TenantContext.setTenant(schema);
         //MDC.put("tenantId", tenant);
+        String traceId = UUID.randomUUID().toString();
+        TraceContext.setTraceId(traceId);
+        log.info("Tenant before filter chain: {} and request TraceId {}", TenantContext.getTenant(),traceId);
         try {
             filterChain.doFilter(request, response);
         } finally {
-            log.info("Clearing tenant context for tenant ID: {}", tenant);
+            log.info("Clearing tenant context for tenant ID: {} and Trace Context {}", tenant,TraceContext.getTraceId());
             MDC.clear();
             TenantContext.clear();
+            TraceContext.clear();
         }
     }
 }

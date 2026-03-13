@@ -1,7 +1,7 @@
 package com.paynest.repository;
 
 import com.paynest.entity.AccountIdentifier;
-import com.paynest.entity.Wallet;
+import com.paynest.enums.IdentifierType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +17,7 @@ public interface AccountIdentifierRepository extends JpaRepository<AccountIdenti
             String accountId,
             String status
     );
+
 
     Optional<AccountIdentifier> findByIdentifierTypeAndIdentifierValueAndStatus(
             String identifierType,

@@ -4,6 +4,7 @@ import com.paynest.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,7 +14,7 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     Optional<Account> findByMobileNumber(String mobileNumber);
 
     // Read active accounts
-    Optional<Account> findByAccountIdAndStatus(String accountId, String status);
+    List<Account> findByAccountIdAndStatus(String accountId, String status);
 
 }
 

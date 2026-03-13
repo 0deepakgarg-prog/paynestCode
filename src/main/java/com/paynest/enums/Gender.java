@@ -1,4 +1,4 @@
-package com.paynest.dto;
+package com.paynest.enums;
 
 public enum Gender {
     MALE,
