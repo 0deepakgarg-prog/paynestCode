@@ -1,5 +1,9 @@
 package com.paynest.dto.logging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +17,10 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiAuditLogEvent {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
     private String eventType;
     private String correlationId;
     private LocalDateTime eventTime;
@@ -30,4 +38,12 @@ public class ApiAuditLogEvent {
     private Map<String, String> headers;
     private String requestBody;
     private String responseBody;
+
+    public String toJson() {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(this);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialize ApiAuditLogEvent to JSON", ex);
+        }
+    }
 }

@@ -1,8 +1,13 @@
 package com.paynest.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.dto.logging.ApiAuditLogEvent;
+import com.paynest.entity.AuditApiLog;
+import com.paynest.repository.AuditApiLogRepository;
 import com.paynest.service.AsyncLogPublisher;
 import com.paynest.tenant.TenantContext;
+import com.paynest.tenant.TraceContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +36,8 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
     private static final String TENANT_HEADER = "X-Tenant-Id";
 
     private final AsyncLogPublisher asyncLogPublisher;
+    private final AuditApiLogRepository auditApiLogRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -87,10 +94,27 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
                     .responseBody(responseBody)
                     .build();
 
-            asyncLogPublisher.publish(requestEvent);
-            asyncLogPublisher.publish(responseEvent);
+           // asyncLogPublisher.publish(requestEvent);
+           // asyncLogPublisher.publish(responseEvent);
+            auditApiLogRepository.save(buildAuditApiLog(request, wrappedResponse, responseBody,
+                    requestBody,durationMs));
             wrappedResponse.copyBodyToResponse();
         }
+    }
+
+    private AuditApiLog buildAuditApiLog(HttpServletRequest request,
+                                         ContentCachingResponseWrapper response,
+                                         String responseBody,String requestBody,
+                                         long durationMs) {
+        AuditApiLog auditApiLog = new AuditApiLog();
+        auditApiLog.setTraceId(TraceContext.getTraceId());
+        auditApiLog.setTenantId(resolveAuditTenantId(request));
+        auditApiLog.setHttpMethod(request.getMethod());
+        auditApiLog.setRequestBody(toJsonNode(requestBody));
+        auditApiLog.setResponseBody(toJsonNode(responseBody));
+        auditApiLog.setHttpStatus(response.getStatus());
+        auditApiLog.setProcessingTimeMs(durationMs);
+        return auditApiLog;
     }
 
     private String resolveCorrelationId(HttpServletRequest request) {
@@ -107,6 +131,14 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
             return tenant;
         }
         return request.getHeader(TENANT_HEADER);
+    }
+
+    private String resolveAuditTenantId(HttpServletRequest request) {
+        String tenantId = request.getHeader(TENANT_HEADER);
+        if (tenantId != null && !tenantId.isBlank()) {
+            return tenantId;
+        }
+        return TenantContext.getTenant();
     }
 
     private String resolveAccountId() {
@@ -141,6 +173,21 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
         return headers;
     }
 
+    private Map<String, Object> extractResponseHeaders(HttpServletResponse response) {
+        Map<String, Object> headers = new HashMap<>();
+        for (String headerName : response.getHeaderNames()) {
+            var values = response.getHeaders(headerName);
+            if (values == null || values.isEmpty()) {
+                headers.put(headerName, null);
+            } else if (values.size() == 1) {
+                headers.put(headerName, values.iterator().next());
+            } else {
+                headers.put(headerName, values);
+            }
+        }
+        return headers;
+    }
+
     private String readBody(byte[] body, String encoding) {
         if (body == null || body.length == 0) {
             return null;
@@ -168,5 +215,22 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
                 .replaceAll("(?i)\"pin\"\\s*:\\s*\"[^\"]*\"", "\"pin\":\"****\"")
                 .replaceAll("(?i)\"credential\"\\s*:\\s*\"[^\"]*\"", "\"credential\":\"****\"")
                 .replaceAll("(?i)\"authValue\"\\s*:\\s*\"[^\"]*\"", "\"authValue\":\"****\"");
+    }
+
+    private JsonNode toJsonNode(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof String stringValue) {
+            if (stringValue.isBlank()) {
+                return null;
+            }
+            try {
+                return objectMapper.readTree(stringValue);
+            } catch (IOException ex) {
+                return objectMapper.getNodeFactory().textNode(stringValue);
+            }
+        }
+        return objectMapper.valueToTree(value);
     }
 }

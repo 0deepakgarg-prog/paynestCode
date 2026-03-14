@@ -4,7 +4,6 @@ import com.paynest.repository.TenantRegistryRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -21,13 +20,29 @@ public class TenantRegistryService {
             new ConcurrentHashMap<>();
 
     @PostConstruct
-    public void loadTenants() {
+    public synchronized void loadTenants() {
+        tenantSchemaMap.clear();
 
         repository.findAll().forEach(t ->
                 tenantSchemaMap.put(
                         t.getTenantId(),
                         t.getSchemaName()
                 ));
+
+        log.info("Loaded {} tenant mappings", tenantSchemaMap.size());
+    }
+
+    public void ensureTenantsLoaded() {
+        if (!tenantSchemaMap.isEmpty()) {
+            return;
+        }
+
+        synchronized (this) {
+            if (tenantSchemaMap.isEmpty()) {
+                log.info("Tenant cache empty before request processing. Loading tenants now.");
+                loadTenants();
+            }
+        }
     }
 
     public String getSchema(String tenantId) {
