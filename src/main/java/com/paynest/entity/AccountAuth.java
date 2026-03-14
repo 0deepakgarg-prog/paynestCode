@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class AccountAuth {
 
     @Id
+    @Column(name = "auth_id", length = 255)
     private Long id;
 
     @Column(name = "auth_hash", length = 255)

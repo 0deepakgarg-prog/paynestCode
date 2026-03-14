@@ -1,0 +1,1316 @@
+2026-03-01 20:57:29 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 20:57:29 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 6832 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 20:57:29 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 20:57:30 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 20:57:31 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 300 ms. Found 11 JPA repository interfaces.
+2026-03-01 20:57:32 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 20:57:32 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 20:57:32 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 20:57:32 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 20:57:32 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 20:57:32 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2912 ms
+2026-03-01 20:57:32 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 20:57:32 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@5edc3e29
+2026-03-01 20:57:32 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 20:57:33 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 20:57:33 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 20:57:33 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 20:57:33 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 20:57:33 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 20:57:33 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 20:57:33 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 20:57:33 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 20:57:36 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 20:57:36 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 20:57:37 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 20:57:37 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 20:57:39 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@234adbe2, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2f154d9b, org.springframework.security.web.context.SecurityContextHolderFilter@73299197, org.springframework.security.web.header.HeaderWriterFilter@1ddf9fd, org.springframework.web.filter.CorsFilter@7d8c264, org.springframework.security.web.authentication.logout.LogoutFilter@35c69e6b, com.paynest.security.JwtAuthenticationFilter@e5d9fa7, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@1611ce1c, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@40cd02fc, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@19993ed, org.springframework.security.web.session.SessionManagementFilter@37e15055, org.springframework.security.web.access.ExceptionTranslationFilter@726882da, org.springframework.security.web.access.intercept.AuthorizationFilter@661d49d1]
+2026-03-01 20:57:39 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 20:57:39 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 20:57:39 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 11.382 seconds (process running for 14.556)
+2026-03-01 20:58:14 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 20:58:14 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 20:58:14 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 20:58:14 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 20:58:14 [http-nio-8080-exec-2] INFO  com.paynest.controller.AccountController - Generate Otp for new registration
+2026-03-01 20:58:14 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 20:58:14 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 20:58:15 [http-nio-8080-exec-2] INFO  com.paynest.service.AccountService - Generated OTP 900538 for mobile number 9738220841
+2026-03-01 20:58:15 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.controller.AccountController - User registration started
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.service.AccountService - Otp validation done. registering user
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.Utilities.IdGenerator - generated Pin is : 6377
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.controller.AccountController - User registration completed
+2026-03-01 21:01:44 [http-nio-8080-exec-5] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:14:59 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:14:59 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:14:59 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 21:15:49 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 21:15:49 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 14428 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 21:15:49 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 21:15:51 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 21:15:51 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 152 ms. Found 11 JPA repository interfaces.
+2026-03-01 21:15:52 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 21:15:52 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:15:52 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 21:15:52 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 21:15:52 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 21:15:52 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3071 ms
+2026-03-01 21:15:52 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 21:15:53 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6b1321b7
+2026-03-01 21:15:53 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 21:15:53 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 21:15:53 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 21:15:53 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 21:15:53 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 21:15:53 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 21:15:53 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 21:15:54 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 21:15:54 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 21:15:56 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 21:15:56 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:15:56 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 21:15:57 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 21:15:58 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4caca86d, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@4bf2c697, org.springframework.security.web.context.SecurityContextHolderFilter@61f18997, org.springframework.security.web.header.HeaderWriterFilter@46d2be66, org.springframework.web.filter.CorsFilter@16a3d9a7, org.springframework.security.web.authentication.logout.LogoutFilter@28ab7ffb, com.paynest.security.JwtAuthenticationFilter@5efa05f9, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@39240aa3, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@13c36d48, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@24c94e95, org.springframework.security.web.session.SessionManagementFilter@529cd3ba, org.springframework.security.web.access.ExceptionTranslationFilter@2c2dfde3, org.springframework.security.web.access.intercept.AuthorizationFilter@5e6b2641]
+2026-03-01 21:15:58 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:15:58 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 21:15:58 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.434 seconds (process running for 13.979)
+2026-03-01 21:16:03 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 21:16:03 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 21:16:03 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 21:16:03 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:16:03 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:16:44 [http-nio-8080-exec-4] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:16:44 [http-nio-8080-exec-4] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:17:52 [http-nio-8080-exec-6] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:17:52 [http-nio-8080-exec-6] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:18:36 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:18:36 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:18:36 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 21:18:56 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 21:18:56 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 14424 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 21:18:56 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 21:18:57 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 21:18:57 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 149 ms. Found 11 JPA repository interfaces.
+2026-03-01 21:18:58 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 21:18:58 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:18:58 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 21:18:58 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 21:18:58 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 21:18:58 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2278 ms
+2026-03-01 21:18:58 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 21:18:58 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@78307a56
+2026-03-01 21:18:58 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 21:18:58 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 21:18:58 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 21:18:58 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 21:18:58 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 21:18:59 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 21:18:59 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 21:18:59 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 21:18:59 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 21:19:01 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 21:19:01 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:19:01 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 21:19:02 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 21:19:03 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@60660d21, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2898c70d, org.springframework.security.web.context.SecurityContextHolderFilter@7828bc6b, org.springframework.security.web.header.HeaderWriterFilter@186fc6e, org.springframework.web.filter.CorsFilter@ec67be1, org.springframework.security.web.authentication.logout.LogoutFilter@5bd191c2, com.paynest.security.JwtAuthenticationFilter@7d381eae, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@60cbba57, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@614d01b, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@64a00fe0, org.springframework.security.web.session.SessionManagementFilter@569026df, org.springframework.security.web.access.ExceptionTranslationFilter@15ab0461, org.springframework.security.web.access.intercept.AuthorizationFilter@6bb46040]
+2026-03-01 21:19:03 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:19:03 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 21:19:03 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.223 seconds (process running for 9.342)
+2026-03-01 21:19:27 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 21:19:27 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 21:19:27 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 21:19:28 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:19:28 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:19:28 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:19:28 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:19:37 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:19:37 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:19:37 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 21:19:47 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 21:19:48 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 13764 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 21:19:48 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 21:19:50 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 21:19:50 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 211 ms. Found 11 JPA repository interfaces.
+2026-03-01 21:19:51 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 21:19:51 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:19:51 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 21:19:51 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 21:19:52 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 21:19:52 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3656 ms
+2026-03-01 21:19:52 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 21:19:52 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@723e2d08
+2026-03-01 21:19:52 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 21:19:52 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 21:19:52 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 21:19:52 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 21:19:52 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 21:19:52 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 21:19:52 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 21:19:53 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 21:19:53 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 21:19:55 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 21:19:55 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:19:56 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 21:19:56 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 21:19:57 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@42d4de20, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2cc9a5a2, org.springframework.security.web.context.SecurityContextHolderFilter@76d654, org.springframework.security.web.header.HeaderWriterFilter@1676e501, org.springframework.web.filter.CorsFilter@1ff35ee7, org.springframework.security.web.authentication.logout.LogoutFilter@4ec78008, com.paynest.security.JwtAuthenticationFilter@13446044, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@20ed6de, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6ea0dfaa, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@4a9c188f, org.springframework.security.web.session.SessionManagementFilter@7f39bcb5, org.springframework.security.web.access.ExceptionTranslationFilter@7e93e396, org.springframework.security.web.access.intercept.AuthorizationFilter@4075c0d8]
+2026-03-01 21:19:57 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:19:57 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 21:19:57 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 11.169 seconds (process running for 13.09)
+2026-03-01 21:20:13 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 21:20:13 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 21:20:13 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-03-01 21:20:13 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:20:32 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:20:32 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:21:51 [HikariPool-1 housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=47s104ms966µs800ns).
+2026-03-01 21:21:52 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:21:52 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:21:52 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:21:52 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 21:22:33 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 21:22:33 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 2584 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 21:22:33 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 21:22:34 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 21:22:34 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 170 ms. Found 11 JPA repository interfaces.
+2026-03-01 21:22:35 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 21:22:35 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:22:35 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 21:22:35 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 21:22:35 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 21:22:35 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2733 ms
+2026-03-01 21:22:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 21:22:36 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7da1e005
+2026-03-01 21:22:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 21:22:36 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 21:22:36 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 21:22:36 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 21:22:36 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 21:22:36 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 21:22:36 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 21:22:37 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 21:22:37 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 21:22:39 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 21:22:39 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:22:40 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 21:22:41 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 21:22:42 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4075c0d8, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@3670af2b, org.springframework.security.web.context.SecurityContextHolderFilter@7f39bcb5, org.springframework.security.web.header.HeaderWriterFilter@13c36d48, org.springframework.web.filter.CorsFilter@7c8537e9, org.springframework.security.web.authentication.logout.LogoutFilter@5232cec1, com.paynest.security.JwtAuthenticationFilter@1abf38d1, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@25192b6e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@76d654, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@42d4de20, org.springframework.security.web.session.SessionManagementFilter@f1e8753, org.springframework.security.web.access.ExceptionTranslationFilter@55448710, org.springframework.security.web.access.intercept.AuthorizationFilter@5014ccf9]
+2026-03-01 21:22:42 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:22:42 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 21:22:42 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.732 seconds (process running for 12.406)
+2026-03-01 21:22:58 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 21:22:58 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 21:22:58 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 21:22:58 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:23:19 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:23:19 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:23:19 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:23:19 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:23:19 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:23:19 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 21:23:45 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 21:23:45 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 1692 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 21:23:45 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 21:23:46 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 21:23:47 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 164 ms. Found 11 JPA repository interfaces.
+2026-03-01 21:23:48 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 21:23:48 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:23:48 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 21:23:48 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 21:23:48 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 21:23:48 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2773 ms
+2026-03-01 21:23:48 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 21:23:48 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@62a6674f
+2026-03-01 21:23:48 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 21:23:48 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 21:23:48 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 21:23:48 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 21:23:48 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 21:23:49 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 21:23:49 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 21:23:49 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 21:23:50 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 21:23:52 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 21:23:52 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:23:52 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 21:23:53 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 21:23:54 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@79c9a128, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@729a98e9, org.springframework.security.web.context.SecurityContextHolderFilter@189f2184, org.springframework.security.web.header.HeaderWriterFilter@72769bf5, org.springframework.web.filter.CorsFilter@51c7d472, org.springframework.security.web.authentication.logout.LogoutFilter@1ed763aa, com.paynest.security.JwtAuthenticationFilter@1071f3ad, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@7388d94d, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6da14f7f, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3aa4d595, org.springframework.security.web.session.SessionManagementFilter@7d364bce, org.springframework.security.web.access.ExceptionTranslationFilter@a55b4f9, org.springframework.security.web.access.intercept.AuthorizationFilter@6dacde96]
+2026-03-01 21:23:54 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:23:54 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 21:23:54 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.337 seconds (process running for 12.049)
+2026-03-01 21:23:59 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 21:23:59 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 21:23:59 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 21:23:59 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:24:04 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:35:11 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:35:11 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:35:11 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 21:38:38 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 21:38:38 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 14952 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 21:38:38 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 21:38:40 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 21:38:40 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 176 ms. Found 11 JPA repository interfaces.
+2026-03-01 21:38:41 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 21:38:41 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:38:41 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 21:38:41 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 21:38:41 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 21:38:41 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2935 ms
+2026-03-01 21:38:42 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 21:38:42 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@38159384
+2026-03-01 21:38:42 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 21:38:42 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 21:38:42 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 21:38:42 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 21:38:42 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 21:38:42 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 21:38:42 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 21:38:43 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 21:38:43 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 21:38:46 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 21:38:46 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:38:46 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 21:38:47 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 21:38:47 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@3670af2b, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7c8537e9, org.springframework.security.web.context.SecurityContextHolderFilter@4e6881e, org.springframework.security.web.header.HeaderWriterFilter@7e93e396, org.springframework.web.filter.CorsFilter@42d4de20, org.springframework.security.web.authentication.logout.LogoutFilter@388ad8aa, com.paynest.security.JwtAuthenticationFilter@1d3bf0af, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@76d654, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@32180efb, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2cc9a5a2, org.springframework.security.web.session.SessionManagementFilter@1676e501, org.springframework.security.web.access.ExceptionTranslationFilter@39240aa3, org.springframework.security.web.access.intercept.AuthorizationFilter@58f259bd]
+2026-03-01 21:38:48 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:38:48 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 21:38:48 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.755 seconds (process running for 12.487)
+2026-03-01 21:42:00 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 21:42:00 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 21:42:00 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 21:42:00 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:42:00 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:42:00 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:42:00 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:42:47 [http-nio-8080-exec-3] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:42:47 [http-nio-8080-exec-3] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:42:47 [http-nio-8080-exec-3] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:42:47 [http-nio-8080-exec-3] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:42:55 [http-nio-8080-exec-5] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:42:55 [http-nio-8080-exec-5] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:42:55 [http-nio-8080-exec-5] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:42:55 [http-nio-8080-exec-5] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:43:05 [http-nio-8080-exec-7] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:43:05 [http-nio-8080-exec-7] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:43:05 [http-nio-8080-exec-7] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:43:05 [http-nio-8080-exec-7] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:52:21 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:52:21 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:52:21 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 21:52:33 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 21:52:33 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 11056 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 21:52:33 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 21:52:35 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 21:52:35 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 192 ms. Found 11 JPA repository interfaces.
+2026-03-01 21:52:36 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 21:52:36 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:52:36 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 21:52:36 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 21:52:36 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 21:52:36 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3102 ms
+2026-03-01 21:52:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 21:52:37 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@12192604
+2026-03-01 21:52:37 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 21:52:37 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 21:52:37 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 21:52:37 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 21:52:37 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 21:52:37 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 21:52:37 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 21:52:38 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 21:52:38 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 21:52:40 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 21:52:40 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:52:41 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 21:52:41 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 21:52:43 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@24c94e95, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@d8f65a1, org.springframework.security.web.context.SecurityContextHolderFilter@13c36d48, org.springframework.security.web.header.HeaderWriterFilter@4c541b00, org.springframework.web.filter.CorsFilter@5014ccf9, org.springframework.security.web.authentication.logout.LogoutFilter@5275d709, com.paynest.security.JwtAuthenticationFilter@204beb58, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@f1e8753, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@1676e501, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@58f259bd, org.springframework.security.web.session.SessionManagementFilter@61f18997, org.springframework.security.web.access.ExceptionTranslationFilter@119de68f, org.springframework.security.web.access.intercept.AuthorizationFilter@4caca86d]
+2026-03-01 21:52:43 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 21:52:43 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 21:52:43 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 12.01 seconds (process running for 14.104)
+2026-03-01 21:53:28 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 21:53:28 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 21:53:28 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 21:53:28 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 21:53:28 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 21:53:28 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 21:53:28 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 21:56:14 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 21:56:14 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 21:56:14 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 22:02:59 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 22:02:59 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 4720 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 22:02:59 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 22:03:00 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 22:03:01 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 139 ms. Found 11 JPA repository interfaces.
+2026-03-01 22:03:01 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 22:03:01 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:03:01 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 22:03:01 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 22:03:02 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 22:03:02 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2387 ms
+2026-03-01 22:03:02 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 22:03:02 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7fe8c7db
+2026-03-01 22:03:02 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 22:03:02 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 22:03:02 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 22:03:02 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 22:03:02 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 22:03:02 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 22:03:02 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 22:03:03 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 22:03:03 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 22:03:05 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 22:03:05 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:03:05 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 22:03:05 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 22:03:06 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2a4a95c4, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@71ae1cb, org.springframework.security.web.context.SecurityContextHolderFilter@3638120f, org.springframework.security.web.header.HeaderWriterFilter@78762e87, org.springframework.web.filter.CorsFilter@1f50fe84, org.springframework.security.web.authentication.logout.LogoutFilter@36299b83, com.paynest.security.JwtAuthenticationFilter@1067192a, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@581cb879, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6a77953c, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3380313d, org.springframework.security.web.session.SessionManagementFilter@2aacf54b, org.springframework.security.web.access.ExceptionTranslationFilter@3e9e7a70, org.springframework.security.web.access.intercept.AuthorizationFilter@731bdcca]
+2026-03-01 22:03:06 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:03:07 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 22:03:07 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.4 seconds (process running for 9.48)
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 22:03:24 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 22:03:25 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 22:03:47 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:03:47 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 22:03:47 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 22:21:04 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 22:21:04 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 9812 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 22:21:04 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 22:21:05 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 22:21:06 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 176 ms. Found 11 JPA repository interfaces.
+2026-03-01 22:21:07 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 22:21:07 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:21:07 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 22:21:07 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 22:21:07 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 22:21:07 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2374 ms
+2026-03-01 22:21:07 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 22:21:07 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@34c53688
+2026-03-01 22:21:07 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 22:21:07 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 22:21:07 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 22:21:07 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 22:21:07 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 22:21:07 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 22:21:07 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 22:21:08 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 22:21:08 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 22:21:09 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 22:21:09 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:21:10 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 22:21:10 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 22:21:11 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@42ceb67f, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@52e44f71, org.springframework.security.web.context.SecurityContextHolderFilter@11703cc8, org.springframework.security.web.header.HeaderWriterFilter@1c294a17, org.springframework.web.filter.CorsFilter@2e1b1d22, org.springframework.security.web.authentication.logout.LogoutFilter@77a14911, com.paynest.security.JwtAuthenticationFilter@48b744fd, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@2f6ede9, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@4583a186, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@653c0c9c, org.springframework.security.web.session.SessionManagementFilter@47a72c32, org.springframework.security.web.access.ExceptionTranslationFilter@581cb879, org.springframework.security.web.access.intercept.AuthorizationFilter@5e2ab1c]
+2026-03-01 22:21:11 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:21:11 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 22:21:11 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.186 seconds (process running for 9.384)
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 22:21:17 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 22:22:35 [http-nio-8080-exec-5] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:23:28 [http-nio-8080-exec-6] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:23:44 [http-nio-8080-exec-7] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:23:44 [http-nio-8080-exec-7] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 22:23:44 [http-nio-8080-exec-7] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter - fetching userDetails
+2026-03-01 22:23:44 [http-nio-8080-exec-7] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 22:23:44 [http-nio-8080-exec-7] WARN  org.hibernate.engine.jdbc.spi.SqlExceptionHelper - SQL Error: 0, SQLState: 42P01
+2026-03-01 22:23:44 [http-nio-8080-exec-7] ERROR org.hibernate.engine.jdbc.spi.SqlExceptionHelper - ERROR: relation "account" does not exist
+  Position: 414
+2026-03-01 22:23:44 [http-nio-8080-exec-7] INFO  org.hibernate.event.internal.DefaultLoadEventListener - HHH000327: Error performing load command
+org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:91)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:265)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.getResultSet(DeferredResultSetAccess.java:167)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.advanceNext(JdbcValuesResultSetImpl.java:218)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.processNext(JdbcValuesResultSetImpl.java:98)
+	at org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues.next(AbstractJdbcValues.java:19)
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.next(RowProcessingStateStandardImpl.java:66)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:188)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:209)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:83)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:76)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:65)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:145)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:117)
+	at org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl.load(SingleIdEntityLoaderStandardImpl.java:75)
+	at org.hibernate.persister.entity.AbstractEntityPersister.doLoad(AbstractEntityPersister.java:3715)
+	at org.hibernate.persister.entity.AbstractEntityPersister.load(AbstractEntityPersister.java:3704)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromDatasource(DefaultLoadEventListener.java:604)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromCacheOrDatasource(DefaultLoadEventListener.java:590)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:560)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doLoad(DefaultLoadEventListener.java:544)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:207)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadWithRegularProxy(DefaultLoadEventListener.java:290)
+	at org.hibernate.event.internal.DefaultLoadEventListener.proxyOrLoad(DefaultLoadEventListener.java:242)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doOnLoad(DefaultLoadEventListener.java:111)
+	at org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:68)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1242)
+	at org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1230)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:209)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.doLoad(IdentifierLoadAccessImpl.java:160)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.lambda$load$1(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.perform(IdentifierLoadAccessImpl.java:112)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2444)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2415)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:319)
+	at jdk.proxy2/jdk.proxy2.$Proxy118.find(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findById(SimpleJpaRepository.java:313)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:352)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:516)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:285)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:628)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:168)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:143)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:137)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:164)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:249)
+	at jdk.proxy2/jdk.proxy2.$Proxy125.findById(Unknown Source)
+	at com.paynest.security.PaynestUserDetailsService.loadUserByUsername(PaynestUserDetailsService.java:23)
+	at com.paynest.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:52)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:225)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "account" does not exist
+  Position: 414
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:134)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:246)
+	... 133 common frames omitted
+2026-03-01 22:23:44 [http-nio-8080-exec-7] ERROR org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet] - Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+org.springframework.dao.InvalidDataAccessResourceUsageException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]; SQL [n/a]
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:277)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241)
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:550)
+	at org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61)
+	at org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:335)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:152)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:164)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:249)
+	at jdk.proxy2/jdk.proxy2.$Proxy125.findById(Unknown Source)
+	at com.paynest.security.PaynestUserDetailsService.loadUserByUsername(PaynestUserDetailsService.java:23)
+	at com.paynest.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:52)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:225)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:91)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:265)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.getResultSet(DeferredResultSetAccess.java:167)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.advanceNext(JdbcValuesResultSetImpl.java:218)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.processNext(JdbcValuesResultSetImpl.java:98)
+	at org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues.next(AbstractJdbcValues.java:19)
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.next(RowProcessingStateStandardImpl.java:66)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:188)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:209)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:83)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:76)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:65)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:145)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:117)
+	at org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl.load(SingleIdEntityLoaderStandardImpl.java:75)
+	at org.hibernate.persister.entity.AbstractEntityPersister.doLoad(AbstractEntityPersister.java:3715)
+	at org.hibernate.persister.entity.AbstractEntityPersister.load(AbstractEntityPersister.java:3704)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromDatasource(DefaultLoadEventListener.java:604)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromCacheOrDatasource(DefaultLoadEventListener.java:590)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:560)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doLoad(DefaultLoadEventListener.java:544)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:207)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadWithRegularProxy(DefaultLoadEventListener.java:290)
+	at org.hibernate.event.internal.DefaultLoadEventListener.proxyOrLoad(DefaultLoadEventListener.java:242)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doOnLoad(DefaultLoadEventListener.java:111)
+	at org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:68)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1242)
+	at org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1230)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:209)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.doLoad(IdentifierLoadAccessImpl.java:160)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.lambda$load$1(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.perform(IdentifierLoadAccessImpl.java:112)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2444)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2415)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:319)
+	at jdk.proxy2/jdk.proxy2.$Proxy118.find(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findById(SimpleJpaRepository.java:313)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:352)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:516)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:285)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:628)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:168)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:143)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:137)
+	... 69 common frames omitted
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "account" does not exist
+  Position: 414
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:134)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:246)
+	... 133 common frames omitted
+2026-03-01 22:25:31 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:25:31 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 22:25:31 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 22:25:39 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 22:25:39 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 7968 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 22:25:39 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 22:25:40 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 22:25:40 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 154 ms. Found 11 JPA repository interfaces.
+2026-03-01 22:25:41 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 22:25:41 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:25:41 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 22:25:41 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 22:25:41 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 22:25:41 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2345 ms
+2026-03-01 22:25:41 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 22:25:41 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@5fffb692
+2026-03-01 22:25:41 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 22:25:42 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 22:25:42 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 22:25:42 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 22:25:42 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 22:25:42 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 22:25:42 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 22:25:42 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 22:25:42 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 22:25:44 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 22:25:44 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:25:45 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 22:25:45 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 22:25:46 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@37d50217, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@3e9e7a70, org.springframework.security.web.context.SecurityContextHolderFilter@763a72da, org.springframework.security.web.header.HeaderWriterFilter@64c79b69, org.springframework.web.filter.CorsFilter@360ccb68, org.springframework.security.web.authentication.logout.LogoutFilter@365eaef, com.paynest.security.JwtAuthenticationFilter@396f3bf2, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5fc76532, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@2e268c19, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@78762e87, org.springframework.security.web.session.SessionManagementFilter@54ee423f, org.springframework.security.web.access.ExceptionTranslationFilter@331da721, org.springframework.security.web.access.intercept.AuthorizationFilter@30e734a1]
+2026-03-01 22:25:46 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:25:46 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 22:25:46 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.282 seconds (process running for 9.395)
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter - fetching userDetails
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 22:26:01 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii
+2026-03-01 22:30:50 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:30:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 22:30:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 22:49:50 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 22:49:50 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 248 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 22:49:50 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 22:49:51 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 22:49:52 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 168 ms. Found 11 JPA repository interfaces.
+2026-03-01 22:49:53 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 22:49:53 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:49:53 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 22:49:53 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 22:49:53 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 22:49:53 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2496 ms
+2026-03-01 22:49:53 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 22:49:53 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@8c12524
+2026-03-01 22:49:53 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 22:49:53 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 22:49:53 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 22:49:53 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 22:49:53 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 22:49:53 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 22:49:53 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 22:49:54 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 22:49:54 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 22:49:56 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 22:49:56 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:49:56 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 22:49:57 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 22:49:58 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@51c0346d, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@32cda33c, org.springframework.security.web.context.SecurityContextHolderFilter@15b882a0, org.springframework.security.web.header.HeaderWriterFilter@2f6ede9, org.springframework.web.filter.CorsFilter@5bb24266, org.springframework.security.web.authentication.logout.LogoutFilter@513fb873, com.paynest.security.JwtAuthenticationFilter@3453f79c, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@fcae085, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3e3c6323, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@63437af4, org.springframework.security.web.session.SessionManagementFilter@55854382, org.springframework.security.web.access.ExceptionTranslationFilter@11703cc8, org.springframework.security.web.access.intercept.AuthorizationFilter@5276330a]
+2026-03-01 22:49:58 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:49:58 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 22:49:58 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 9.033 seconds (process running for 10.238)
+2026-03-01 22:50:30 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 22:50:30 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 22:50:30 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 22:50:30 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:50:30 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 22:50:37 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:50:37 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 22:50:37 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 22:56:56 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 22:56:56 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 11628 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 22:56:56 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 22:56:58 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 22:56:58 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 151 ms. Found 11 JPA repository interfaces.
+2026-03-01 22:56:59 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 22:56:59 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:56:59 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 22:56:59 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 22:56:59 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 22:56:59 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2326 ms
+2026-03-01 22:56:59 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 22:56:59 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@d5e575c
+2026-03-01 22:56:59 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 22:56:59 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 22:56:59 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 22:56:59 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 22:56:59 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 22:56:59 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 22:56:59 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 22:57:00 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 22:57:00 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 22:57:02 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 22:57:02 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:57:02 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 22:57:02 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 22:57:03 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@39ff4421, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7a59780b, org.springframework.security.web.context.SecurityContextHolderFilter@3380313d, org.springframework.security.web.header.HeaderWriterFilter@76fdd5f1, org.springframework.web.filter.CorsFilter@5205b3e2, org.springframework.security.web.authentication.logout.LogoutFilter@4c663fda, com.paynest.security.JwtAuthenticationFilter@63df2eb8, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@1d5ec2ed, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@5e2ab1c, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2802caa2, org.springframework.security.web.session.SessionManagementFilter@2a4a95c4, org.springframework.security.web.access.ExceptionTranslationFilter@4407f129, org.springframework.security.web.access.intercept.AuthorizationFilter@7fd7965b]
+2026-03-01 22:57:04 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:57:04 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 22:57:04 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.278 seconds (process running for 9.338)
+2026-03-01 22:58:30 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 22:58:30 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 22:58:30 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 5 ms
+2026-03-01 22:58:30 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:58:30 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 22:58:51 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:58:51 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 22:58:51 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 22:58:59 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 22:58:59 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 1892 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 22:58:59 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 22:59:00 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 22:59:01 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 187 ms. Found 11 JPA repository interfaces.
+2026-03-01 22:59:02 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 22:59:02 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:59:02 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 22:59:02 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 22:59:02 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 22:59:02 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3051 ms
+2026-03-01 22:59:02 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 22:59:02 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@4eeab3e
+2026-03-01 22:59:03 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 22:59:03 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 22:59:03 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 22:59:03 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 22:59:03 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 22:59:03 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 22:59:03 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 22:59:04 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 22:59:04 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 22:59:06 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 22:59:06 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 22:59:07 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 22:59:07 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 22:59:08 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2b43eb71, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2f32fe68, org.springframework.security.web.context.SecurityContextHolderFilter@29a51ff1, org.springframework.security.web.header.HeaderWriterFilter@5852605c, org.springframework.web.filter.CorsFilter@1007954a, org.springframework.security.web.authentication.logout.LogoutFilter@24c94e95, com.paynest.security.JwtAuthenticationFilter@6e8426aa, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@6f999cf4, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@7892635c, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@10770c1, org.springframework.security.web.session.SessionManagementFilter@5e8359da, org.springframework.security.web.access.ExceptionTranslationFilter@20ed6de, org.springframework.security.web.access.intercept.AuthorizationFilter@4a59d584]
+2026-03-01 22:59:08 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 22:59:08 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 22:59:08 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.69 seconds (process running for 12.433)
+2026-03-01 22:59:30 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 22:59:30 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 22:59:30 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-03-01 22:59:30 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 22:59:30 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:00:02 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:00:16 [http-nio-8080-exec-4] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:01:25 [http-nio-8080-exec-5] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:01:28 [http-nio-8080-exec-5] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:02:58 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:02:58 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:02:58 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:04:20 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:04:20 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 7208 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:04:20 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:04:21 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:04:22 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 151 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:04:23 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:04:23 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:04:23 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:04:23 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:04:23 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:04:23 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2606 ms
+2026-03-01 23:04:23 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:04:23 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1e5eb20a
+2026-03-01 23:04:23 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:04:23 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:04:23 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:04:23 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:04:23 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:04:23 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:04:24 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:04:24 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:04:24 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:04:26 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:04:26 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:04:26 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:04:26 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:04:27 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@752e50c6, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2bef33e7, org.springframework.security.web.context.SecurityContextHolderFilter@712dd0b0, org.springframework.security.web.header.HeaderWriterFilter@403b7be3, org.springframework.web.filter.CorsFilter@5bd191c2, org.springframework.security.web.authentication.logout.LogoutFilter@769c80d1, com.paynest.security.JwtAuthenticationFilter@1c76b2fe, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@500beb9f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@67e37d25, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@51806858, org.springframework.security.web.session.SessionManagementFilter@39e91bda, org.springframework.security.web.access.ExceptionTranslationFilter@709c6768, org.springframework.security.web.access.intercept.AuthorizationFilter@380cd266]
+2026-03-01 23:04:28 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:04:28 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:04:28 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.649 seconds (process running for 9.68)
+2026-03-01 23:04:35 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:04:35 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:04:35 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-03-01 23:04:35 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:04:35 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:06:13 [http-nio-8080-exec-5] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:06:13 [http-nio-8080-exec-5] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:06:13 [http-nio-8080-exec-5] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:06:13 [http-nio-8080-exec-5] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:06:13 [http-nio-8080-exec-5] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:06:22 [http-nio-8080-exec-7] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:06:22 [http-nio-8080-exec-7] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:06:22 [http-nio-8080-exec-7] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:06:22 [http-nio-8080-exec-7] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:06:22 [http-nio-8080-exec-7] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:07:11 [http-nio-8080-exec-9] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:07:11 [http-nio-8080-exec-9] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:07:11 [http-nio-8080-exec-9] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:07:11 [http-nio-8080-exec-9] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:07:11 [http-nio-8080-exec-9] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:07:46 [http-nio-8080-exec-10] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:07:46 [http-nio-8080-exec-10] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:07:46 [http-nio-8080-exec-10] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:07:46 [http-nio-8080-exec-10] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:07:46 [http-nio-8080-exec-10] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:07:50 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:07:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:07:50 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:07:58 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:07:58 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 7268 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:07:58 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:08:00 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:08:00 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 175 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:08:01 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:08:01 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:08:01 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:08:01 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:08:01 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:08:01 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2872 ms
+2026-03-01 23:08:01 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:08:01 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@138f0661
+2026-03-01 23:08:01 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:08:01 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:08:01 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:08:02 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:08:02 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:08:02 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:08:02 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:08:02 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:08:02 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:08:05 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:08:05 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:08:05 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:08:06 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:08:07 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@7671922b, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6829b897, org.springframework.security.web.context.SecurityContextHolderFilter@e50e308, org.springframework.security.web.header.HeaderWriterFilter@7892635c, org.springframework.web.filter.CorsFilter@519e0814, org.springframework.security.web.authentication.logout.LogoutFilter@42d4de20, com.paynest.security.JwtAuthenticationFilter@4690a37e, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@47a05ad8, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@5b3427c4, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@d1b9dd7, org.springframework.security.web.session.SessionManagementFilter@729a98e9, org.springframework.security.web.access.ExceptionTranslationFilter@6dacde96, org.springframework.security.web.access.intercept.AuthorizationFilter@dd26290]
+2026-03-01 23:08:07 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:08:07 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:08:07 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.367 seconds (process running for 12.019)
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:08:22 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:08:28 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:08:28 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:08:28 [http-nio-8080-exec-4] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:08:28 [http-nio-8080-exec-4] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:08:33 [http-nio-8080-exec-4] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:09:19 [http-nio-8080-exec-3] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:09:19 [http-nio-8080-exec-3] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:09:19 [http-nio-8080-exec-3] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:09:19 [http-nio-8080-exec-3] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:09:25 [http-nio-8080-exec-3] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:09:34 [http-nio-8080-exec-6] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:09:34 [http-nio-8080-exec-6] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:09:34 [http-nio-8080-exec-6] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:09:34 [http-nio-8080-exec-6] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:09:37 [http-nio-8080-exec-6] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:10:10 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:10:10 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:10:10 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:10:54 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:10:54 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 13896 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:10:54 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:10:55 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:10:55 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 191 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:10:57 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:10:57 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:10:57 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:10:57 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:10:57 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:10:57 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2795 ms
+2026-03-01 23:10:57 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:10:57 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@38159384
+2026-03-01 23:10:57 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:10:57 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:10:57 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:10:57 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:10:57 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:10:57 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:10:57 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:10:58 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:10:58 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:11:00 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:11:00 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:11:01 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:11:01 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:11:02 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2cc9a5a2, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1ff35ee7, org.springframework.security.web.context.SecurityContextHolderFilter@32180efb, org.springframework.security.web.header.HeaderWriterFilter@1ed763aa, org.springframework.web.filter.CorsFilter@4a9c188f, org.springframework.security.web.authentication.logout.LogoutFilter@ac71bd7, com.paynest.security.JwtAuthenticationFilter@1d3bf0af, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@6ea0dfaa, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@5852605c, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2e5dea22, org.springframework.security.web.session.SessionManagementFilter@4e6881e, org.springframework.security.web.access.ExceptionTranslationFilter@f1e8753, org.springframework.security.web.access.intercept.AuthorizationFilter@3670af2b]
+2026-03-01 23:11:03 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:11:03 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:11:03 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.091 seconds (process running for 11.734)
+2026-03-01 23:11:46 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:11:46 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:11:46 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 23:11:46 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:11:46 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:11:46 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:11:46 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:11:51 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:12:31 [http-nio-8080-exec-5] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:12:31 [http-nio-8080-exec-5] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:12:31 [http-nio-8080-exec-5] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:12:31 [http-nio-8080-exec-5] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:12:31 [http-nio-8080-exec-5] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:16:27 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:16:27 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:16:27 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:21:42 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:21:42 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 3508 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:21:42 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:21:43 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:21:43 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 176 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:21:44 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:21:44 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:21:44 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:21:44 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:21:44 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:21:44 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2319 ms
+2026-03-01 23:21:44 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:21:44 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@34c53688
+2026-03-01 23:21:45 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:21:45 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:21:45 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:21:45 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:21:45 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:21:45 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:21:45 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:21:45 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:21:45 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:21:47 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:21:47 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:21:47 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:21:48 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:21:49 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@42ceb67f, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@52e44f71, org.springframework.security.web.context.SecurityContextHolderFilter@11703cc8, org.springframework.security.web.header.HeaderWriterFilter@1c294a17, org.springframework.web.filter.CorsFilter@2e1b1d22, org.springframework.security.web.authentication.logout.LogoutFilter@77a14911, com.paynest.security.JwtAuthenticationFilter@48b744fd, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@2f6ede9, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@4583a186, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@653c0c9c, org.springframework.security.web.session.SessionManagementFilter@47a72c32, org.springframework.security.web.access.ExceptionTranslationFilter@581cb879, org.springframework.security.web.access.intercept.AuthorizationFilter@5e2ab1c]
+2026-03-01 23:21:49 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:21:49 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:21:49 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.011 seconds (process running for 9.093)
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:22:03 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:22:25 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:22:25 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:22:25 [http-nio-8080-exec-4] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:22:25 [http-nio-8080-exec-4] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:22:25 [http-nio-8080-exec-4] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:23:00 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:23:00 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:23:00 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:23:06 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:23:07 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 14184 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:23:07 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:23:08 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:23:08 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 200 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:23:10 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:23:10 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:23:10 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:23:10 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:23:10 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:23:10 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2958 ms
+2026-03-01 23:23:10 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:23:10 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6b70d1fb
+2026-03-01 23:23:10 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:23:10 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:23:10 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:23:10 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:23:10 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:23:10 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:23:10 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:23:11 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:23:11 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:23:13 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:23:14 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:23:14 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:23:14 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:23:15 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@3670af2b, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7c8537e9, org.springframework.security.web.context.SecurityContextHolderFilter@4e6881e, org.springframework.security.web.header.HeaderWriterFilter@7e93e396, org.springframework.web.filter.CorsFilter@42d4de20, org.springframework.security.web.authentication.logout.LogoutFilter@388ad8aa, com.paynest.security.JwtAuthenticationFilter@4c5379f5, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@76d654, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@32180efb, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2cc9a5a2, org.springframework.security.web.session.SessionManagementFilter@1676e501, org.springframework.security.web.access.ExceptionTranslationFilter@39240aa3, org.springframework.security.web.access.intercept.AuthorizationFilter@58f259bd]
+2026-03-01 23:23:16 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:23:16 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:23:16 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.586 seconds (process running for 12.277)
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:23:24 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:23:38 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:23:38 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:23:38 [http-nio-8080-exec-4] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:23:38 [http-nio-8080-exec-4] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:23:38 [http-nio-8080-exec-4] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:24:09 [http-nio-8080-exec-6] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:24:09 [http-nio-8080-exec-6] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:24:09 [http-nio-8080-exec-6] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:24:09 [http-nio-8080-exec-6] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:24:09 [http-nio-8080-exec-6] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:24:29 [http-nio-8080-exec-8] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:24:29 [http-nio-8080-exec-8] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:24:29 [http-nio-8080-exec-8] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:24:29 [http-nio-8080-exec-8] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:24:29 [http-nio-8080-exec-8] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:25:03 [HikariPool-1 housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=50s445ms691µs400ns).
+2026-03-01 23:26:12 [HikariPool-1 housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m8s959ms12µs800ns).
+2026-03-01 23:26:19 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:26:19 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:26:19 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:27:17 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:27:17 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 14004 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:27:17 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:27:19 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:27:19 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 175 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:27:20 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:27:20 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:27:20 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:27:20 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:27:20 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:27:20 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2455 ms
+2026-03-01 23:27:20 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:27:20 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@740b6628
+2026-03-01 23:27:20 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:27:20 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:27:20 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:27:20 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:27:20 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:27:20 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:27:20 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:27:21 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:27:21 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:27:23 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:27:23 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:27:23 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:27:23 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:27:25 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@5dcec8e9, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@4bc49d70, org.springframework.security.web.context.SecurityContextHolderFilter@2898c70d, org.springframework.security.web.header.HeaderWriterFilter@3b446d7, org.springframework.web.filter.CorsFilter@73543048, org.springframework.security.web.authentication.logout.LogoutFilter@33293b34, com.paynest.security.JwtAuthenticationFilter@31885b4b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@64a00fe0, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@347f0950, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1851f19f, org.springframework.security.web.session.SessionManagementFilter@2b71a12e, org.springframework.security.web.access.ExceptionTranslationFilter@3a0f5141, org.springframework.security.web.access.intercept.AuthorizationFilter@6c8f5262]
+2026-03-01 23:27:25 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:27:25 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:27:25 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 8.87 seconds (process running for 9.93)
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:27:32 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:28:12 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:28:12 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:28:12 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:28:39 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:28:39 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 1240 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:28:39 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:28:41 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:28:41 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 163 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:28:42 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:28:42 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:28:42 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:28:42 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:28:42 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:28:42 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2879 ms
+2026-03-01 23:28:42 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:28:43 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@632b305d
+2026-03-01 23:28:43 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:28:43 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:28:43 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:28:43 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:28:43 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:28:43 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:28:43 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:28:43 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:28:43 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:28:45 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:28:45 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:28:46 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:28:46 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:28:47 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2f46bc25, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@72bef795, org.springframework.security.web.context.SecurityContextHolderFilter@631c6ef4, org.springframework.security.web.header.HeaderWriterFilter@18f1260, org.springframework.web.filter.CorsFilter@1f4d9c7f, org.springframework.security.web.authentication.logout.LogoutFilter@7a458c73, com.paynest.security.JwtAuthenticationFilter@3687b83c, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@7441edeb, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@58df431e, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@6dcb4f30, org.springframework.security.web.session.SessionManagementFilter@1aee0f49, org.springframework.security.web.access.ExceptionTranslationFilter@59d6a4d1, org.springframework.security.web.access.intercept.AuthorizationFilter@3e3c6323]
+2026-03-01 23:28:47 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:28:47 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:28:47 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 9.057 seconds (process running for 10.682)
+2026-03-01 23:28:59 [http-nio-8080-exec-4] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:28:59 [http-nio-8080-exec-4] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:28:59 [http-nio-8080-exec-4] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-01 23:28:59 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:29:00 [http-nio-8080-exec-4] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:29:00 [http-nio-8080-exec-4] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:29:00 [http-nio-8080-exec-4] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:29:00 [http-nio-8080-exec-4] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:34:41 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:34:41 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:34:41 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-01 23:34:56 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-01 23:34:57 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.18 with PID 13612 (C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode\target\classes started by Lenovo in C:\Users\Lenovo\OneDrive\Desktop\PayNest\paynestCode)
+2026-03-01 23:34:57 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-01 23:34:58 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-01 23:34:58 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 307 ms. Found 11 JPA repository interfaces.
+2026-03-01 23:35:00 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-01 23:35:00 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:35:00 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-01 23:35:00 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-01 23:35:00 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-01 23:35:00 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3275 ms
+2026-03-01 23:35:00 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-01 23:35:00 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7f977fba
+2026-03-01 23:35:00 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-01 23:35:00 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-01 23:35:00 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-01 23:35:00 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-01 23:35:01 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-01 23:35:01 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-01 23:35:01 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-01 23:35:01 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-01 23:35:01 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-01 23:35:04 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-01 23:35:04 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:35:05 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-01 23:35:05 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-01 23:35:06 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@47bae235, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7f588bc6, org.springframework.security.web.context.SecurityContextHolderFilter@1d0f03f6, org.springframework.security.web.header.HeaderWriterFilter@1b4bc7b9, org.springframework.web.filter.CorsFilter@3da8a302, org.springframework.security.web.authentication.logout.LogoutFilter@392af2e0, com.paynest.security.JwtAuthenticationFilter@4b1ad751, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@78c9c38a, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@8a0a1d1, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@21b75073, org.springframework.security.web.session.SessionManagementFilter@16bbb59c, org.springframework.security.web.access.ExceptionTranslationFilter@715ea64a, org.springframework.security.web.access.intercept.AuthorizationFilter@2643c33f]
+2026-03-01 23:35:06 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-01 23:35:06 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-01 23:35:06 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 10.63 seconds (process running for 11.938)
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :movii
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: movii
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : movii
+2026-03-01 23:35:13 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Inside TenantFilter
+2026-03-01 23:36:09 [SpringApplicationShutdownHook] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-01 23:36:09 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-01 23:36:09 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

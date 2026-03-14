@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -190,7 +191,7 @@ public class U2UPaymentService {
     private AccountIdentifier validateIdentifierMapping(Party party) {
 
         Identifier identifier = party.getIdentifier();
-        List<AccountIdentifier> identifiers =
+        Optional<AccountIdentifier> identifiers =
                 accountIdentifierRepository
                         .findByIdentifierTypeAndIdentifierValueAndStatus(
                                 identifier.getType().name(),
@@ -203,7 +204,7 @@ public class U2UPaymentService {
                     "No active account identifier found for identifier value: " + identifier.getValue()
             );
         }
-
+/*
         if (identifiers.size() > 1) {
             throw new ApplicationException(
                     "VALID_ACCOUNT_IDENTIFIER_NOT_FOUND",
@@ -211,7 +212,9 @@ public class U2UPaymentService {
             );
         }
 
-        return identifiers.get(0);
+ */
+
+        return identifiers.get();
     }
 
     private Account identifyAccountFromAccountId(AccountIdentifier accountIdentifier) {

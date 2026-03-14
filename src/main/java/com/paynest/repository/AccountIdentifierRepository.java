@@ -18,7 +18,8 @@ public interface AccountIdentifierRepository extends JpaRepository<AccountIdenti
             String status
     );
 
-    List<AccountIdentifier> findByIdentifierTypeAndIdentifierValueAndStatus(
+
+    Optional<AccountIdentifier> findByIdentifierTypeAndIdentifierValueAndStatus(
             String identifierType,
             String identifierValue,
             String status

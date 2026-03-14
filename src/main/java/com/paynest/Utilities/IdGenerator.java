@@ -3,6 +3,9 @@ package com.paynest.Utilities;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +20,14 @@ public class IdGenerator {
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HHmmss");
+
+    private static final String CHAR_POOL =
+            "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No 0,O,1,I
+    private static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String LOWER = "abcdefghijklmnopqrstuvwxyz";
+    private static final String DIGITS = "0123456789";
+    private static final String SPECIAL = "@#$%&*!?";
+    private static final String ALL = UPPER + LOWER + DIGITS + SPECIAL;
 
     public static String generateAccountId() {
 
@@ -50,6 +61,43 @@ public class IdGenerator {
         int pin = secureRandom.nextInt(9000) + 1000;
         log.info("generated Pin is : " + pin);
         return String.valueOf(pin);
+    }
+
+
+    public static String generatePassword(int length) {
+
+        if (length < 8) {
+            throw new IllegalArgumentException("Password length must be >= 8");
+        }
+
+        List<Character> password = new ArrayList<>();
+        password.add(UPPER.charAt(secureRandom.nextInt(UPPER.length())));
+        password.add(LOWER.charAt(secureRandom.nextInt(LOWER.length())));
+        password.add(DIGITS.charAt(secureRandom.nextInt(DIGITS.length())));
+        password.add(SPECIAL.charAt(secureRandom.nextInt(SPECIAL.length())));
+        for (int i = 4; i < length; i++) {
+            password.add(ALL.charAt(secureRandom.nextInt(ALL.length())));
+        }
+        Collections.shuffle(password, secureRandom);
+        StringBuilder sb = new StringBuilder();
+        for (char ch : password) {
+            sb.append(ch);
+        }
+        log.info("generated Password is : " + sb.toString());
+        return sb.toString();
+    }
+
+    public static String generateLoginId(int length) {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < length; i++) {
+            sb.append(
+                    CHAR_POOL.charAt(secureRandom.nextInt(CHAR_POOL.length()))
+            );
+        }
+        log.info("generated LoginId is : " + sb.toString());
+        return sb.toString();
     }
 
     public static String hashPin(String pin, String uuid) {

@@ -1,7 +1,7 @@
 package com.paynest.exception;
 
 
-import com.paynest.dto.ApiErrorResponse;
+import com.paynest.dto.response.ApiErrorResponse;
 import com.paynest.enums.TransactionStatus;
 import com.paynest.payment.dto.U2UPaymentResponse;
 import com.paynest.tenant.TraceContext;
