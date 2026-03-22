@@ -32,7 +32,7 @@ public class WalletLedger {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "currency", nullable = false, length = 3)
+    @Column(name = "currency", nullable = false, length = 10)
     private String currency;
 
     @Column(name = "balance_before")

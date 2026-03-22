@@ -75,8 +75,24 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            Date expiry = extractAllClaims(token).getExpiration();
-            return expiry.after(new Date());
+            Claims claims = extractAllClaims(token);
+            Date now = new Date();
+            Date issuedAt = claims.getIssuedAt();
+            Date expiry = claims.getExpiration();
+
+            if (issuedAt == null || expiry == null) {
+                return false;
+            }
+
+            if (issuedAt.after(now)) {
+                return false;
+            }
+
+            if (!expiry.after(now)) {
+                return false;
+            }
+
+            return !expiry.before(issuedAt);
         } catch (Exception ex) {
             return false;
         }

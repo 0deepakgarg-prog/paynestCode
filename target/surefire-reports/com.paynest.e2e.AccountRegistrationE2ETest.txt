@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.paynest.e2e.AccountRegistrationE2ETest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 24.81 s -- in com.paynest.e2e.AccountRegistrationE2ETest

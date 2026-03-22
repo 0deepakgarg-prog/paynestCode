@@ -1,7 +1,22 @@
 package com.paynest.payment.controller;
 
+import com.paynest.payment.dto.BillPayPaymentRequest;
+import com.paynest.payment.dto.BillPayPaymentResponse;
+import com.paynest.payment.dto.CashInPaymentRequest;
+import com.paynest.payment.dto.CashInPaymentResponse;
+import com.paynest.payment.dto.CashOutPaymentRequest;
+import com.paynest.payment.dto.CashOutPaymentResponse;
+import com.paynest.payment.dto.MerchpayPaymentRequest;
+import com.paynest.payment.dto.MerchpayPaymentResponse;
+import com.paynest.payment.dto.SettleTransactionRequest;
+import com.paynest.payment.dto.SettleTransactionResponse;
 import com.paynest.payment.dto.U2UPaymentRequest;
 import com.paynest.payment.dto.U2UPaymentResponse;
+import com.paynest.payment.service.BillPayPaymentService;
+import com.paynest.payment.service.CashInPaymentService;
+import com.paynest.payment.service.CashOutPaymentService;
+import com.paynest.payment.service.MerchPayPaymentService;
+import com.paynest.payment.service.TransactionSettlementService;
 import com.paynest.payment.service.U2UPaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +31,62 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class FinancialTransactionController {
     private final U2UPaymentService u2uPaymentService;
+    private final MerchPayPaymentService merchpayPaymentService;
+    private final CashInPaymentService cashInPaymentService;
+    private final CashOutPaymentService cashOutPaymentService;
+    private final BillPayPaymentService billPayPaymentService;
+    private final TransactionSettlementService transactionSettlementService;
 
     @PostMapping("/U2U")
-    public ResponseEntity<U2UPaymentResponse> transferMoney(
+    public ResponseEntity<U2UPaymentResponse> transferU2UMoney(
             @Valid @RequestBody U2UPaymentRequest request) {
-
-        U2UPaymentResponse response = u2uPaymentService.processPayment(request);
+        request.setOperationType("U2U");
+        U2UPaymentResponse response = u2uPaymentService.processPayment(request, true);
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/MERCHANTPAY")
+    public ResponseEntity<MerchpayPaymentResponse> transferMERCHPAYMoney(
+            @Valid @RequestBody MerchpayPaymentRequest request) {
+        request.setOperationType("MERCHANTPAY");
+        MerchpayPaymentResponse response = merchpayPaymentService.processPayment(request, true);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/CASHIN")
+    public ResponseEntity<CashInPaymentResponse> transferCashIn(
+            @Valid @RequestBody CashInPaymentRequest request) {
+        request.setOperationType("CASHIN");
+        CashInPaymentResponse response = cashInPaymentService.processPayment(request, true);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/CASHOUT")
+    public ResponseEntity<CashOutPaymentResponse> transferCashOut(
+            @Valid @RequestBody CashOutPaymentRequest request) {
+        request.setOperationType("CASHOUT");
+        CashOutPaymentResponse response = cashOutPaymentService.processPayment(request, true);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/BILLPAY")
+    public ResponseEntity<BillPayPaymentResponse> transferBillPayment(
+            @Valid @RequestBody BillPayPaymentRequest request) {
+        request.setOperationType("BILLPAY");
+        BillPayPaymentResponse response = billPayPaymentService.processPayment(request, true);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/settleTxn")
+    public ResponseEntity<SettleTransactionResponse> settleTransaction(
+            @RequestBody SettleTransactionRequest request) {
+        SettleTransactionResponse response = transactionSettlementService.settleTransaction(request);
+        return ResponseEntity.ok(response);
+    }
+
 }

@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.paynest.payment.validation.BasePaymentRequestValidatorTest
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.666 s -- in com.paynest.payment.validation.BasePaymentRequestValidatorTest

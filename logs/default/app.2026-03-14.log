@@ -1,0 +1,1223 @@
+2026-03-14 23:19:25 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-03-14 23:19:25 [main] INFO  com.paynest.PayNestApplication - Starting PayNestApplication using Java 17.0.12 with PID 3068 (E:\Projects\paynestCode\target\classes started by win in E:\Projects\paynestCode)
+2026-03-14 23:19:25 [main] DEBUG com.paynest.PayNestApplication - Running with Spring Boot v3.2.1, Spring v6.1.2
+2026-03-14 23:19:25 [main] INFO  com.paynest.PayNestApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-14 23:19:26 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-14 23:19:26 [main] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 102 ms. Found 19 JPA repository interfaces.
+2026-03-14 23:19:27 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-14 23:19:27 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-14 23:19:27 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-14 23:19:27 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-03-14 23:19:27 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-14 23:19:27 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1478 ms
+2026-03-14 23:19:27 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-14 23:19:27 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@31b0f02
+2026-03-14 23:19:27 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-14 23:19:27 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl
+2026-03-14 23:19:27 [main] INFO  com.paynest.tenant.TenantIdentifierResolver - TenantIdentifierResolver loaded
+2026-03-14 23:19:27 [main] INFO  com.paynest.config.HibernateTenantConfig - Multi-tenant configuration loaded
+2026-03-14 23:19:27 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-14 23:19:27 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-14 23:19:27 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-14 23:19:27 [main] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-14 23:19:27 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - Calling getAnyConnection
+2026-03-14 23:19:29 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-14 23:19:29 [main] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-14 23:19:29 [main] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-14 23:19:29 [main] DEBUG org.hibernate.SQL - select tr1_0.tenant_id,tr1_0.created_at,tr1_0.schema_name,tr1_0.status,tr1_0.tenant_name,tr1_0.updated_at from public.tenant_registry tr1_0
+2026-03-14 23:19:29 [main] INFO  com.paynest.service.TenantRegistryService - Loaded 1 tenant mappings
+2026-03-14 23:19:29 [main] INFO  org.springframework.boot.web.servlet.RegistrationBean - Filter tenantFilterRegistration was not registered (disabled)
+2026-03-14 23:19:29 [main] INFO  org.springframework.boot.web.servlet.RegistrationBean - Filter apiAuditKafkaFilterRegistration was not registered (disabled)
+2026-03-14 23:19:29 [main] DEBUG com.paynest.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-03-14 23:19:30 [main] INFO  org.springframework.data.jpa.repository.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-14 23:19:31 [main] INFO  org.springframework.security.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]
+2026-03-14 23:19:31 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-14 23:19:31 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-03-14 23:19:31 [main] INFO  com.paynest.PayNestApplication - Started PayNestApplication in 6.202 seconds (process running for 6.591)
+
+
+
+
+
+2026-03-14 23:19:53 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-14 23:19:53 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-14 23:19:53 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/pay/U2U
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:19:53 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :tenant_movii
+2026-03-14 23:19:53 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-14 23:19:53 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314205018524074]
+2026-03-14 23:19:53 [http-nio-8080-exec-1] WARN  org.hibernate.engine.jdbc.spi.SqlExceptionHelper - SQL Error: 0, SQLState: 42P01
+2026-03-14 23:19:53 [http-nio-8080-exec-1] ERROR org.hibernate.engine.jdbc.spi.SqlExceptionHelper - ERROR: relation "account" does not exist
+  Position: 414
+2026-03-14 23:19:53 [http-nio-8080-exec-1] INFO  org.hibernate.event.internal.DefaultLoadEventListener - HHH000327: Error performing load command
+org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:91)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:265)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.getResultSet(DeferredResultSetAccess.java:167)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.advanceNext(JdbcValuesResultSetImpl.java:218)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.processNext(JdbcValuesResultSetImpl.java:98)
+	at org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues.next(AbstractJdbcValues.java:19)
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.next(RowProcessingStateStandardImpl.java:66)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:188)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:209)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:83)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:76)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:65)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:145)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:117)
+	at org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl.load(SingleIdEntityLoaderStandardImpl.java:75)
+	at org.hibernate.persister.entity.AbstractEntityPersister.doLoad(AbstractEntityPersister.java:3715)
+	at org.hibernate.persister.entity.AbstractEntityPersister.load(AbstractEntityPersister.java:3704)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromDatasource(DefaultLoadEventListener.java:604)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromCacheOrDatasource(DefaultLoadEventListener.java:590)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:560)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doLoad(DefaultLoadEventListener.java:544)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:207)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadWithRegularProxy(DefaultLoadEventListener.java:290)
+	at org.hibernate.event.internal.DefaultLoadEventListener.proxyOrLoad(DefaultLoadEventListener.java:242)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doOnLoad(DefaultLoadEventListener.java:111)
+	at org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:68)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1242)
+	at org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1230)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:209)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.doLoad(IdentifierLoadAccessImpl.java:160)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.lambda$load$1(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.perform(IdentifierLoadAccessImpl.java:112)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2444)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2415)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:319)
+	at jdk.proxy2/jdk.proxy2.$Proxy128.find(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findById(SimpleJpaRepository.java:313)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:352)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:516)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:285)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:628)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:168)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:143)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:137)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:164)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:249)
+	at jdk.proxy2/jdk.proxy2.$Proxy131.findById(Unknown Source)
+	at com.paynest.security.PaynestUserDetailsService.loadUserByUsername(PaynestUserDetailsService.java:23)
+	at com.paynest.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:58)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:225)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "account" does not exist
+  Position: 414
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:134)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:246)
+	... 133 common frames omitted
+2026-03-14 23:19:53 [http-nio-8080-exec-1] ERROR org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet] - Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+org.springframework.dao.InvalidDataAccessResourceUsageException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]; SQL [n/a]
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:277)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241)
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:550)
+	at org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61)
+	at org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:335)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:152)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:164)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:249)
+	at jdk.proxy2/jdk.proxy2.$Proxy131.findById(Unknown Source)
+	at com.paynest.security.PaynestUserDetailsService.loadUserByUsername(PaynestUserDetailsService.java:23)
+	at com.paynest.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:58)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:225)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:91)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:265)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.getResultSet(DeferredResultSetAccess.java:167)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.advanceNext(JdbcValuesResultSetImpl.java:218)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.processNext(JdbcValuesResultSetImpl.java:98)
+	at org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues.next(AbstractJdbcValues.java:19)
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.next(RowProcessingStateStandardImpl.java:66)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:188)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:209)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:83)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:76)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:65)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:145)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:117)
+	at org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl.load(SingleIdEntityLoaderStandardImpl.java:75)
+	at org.hibernate.persister.entity.AbstractEntityPersister.doLoad(AbstractEntityPersister.java:3715)
+	at org.hibernate.persister.entity.AbstractEntityPersister.load(AbstractEntityPersister.java:3704)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromDatasource(DefaultLoadEventListener.java:604)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromCacheOrDatasource(DefaultLoadEventListener.java:590)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:560)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doLoad(DefaultLoadEventListener.java:544)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:207)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadWithRegularProxy(DefaultLoadEventListener.java:290)
+	at org.hibernate.event.internal.DefaultLoadEventListener.proxyOrLoad(DefaultLoadEventListener.java:242)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doOnLoad(DefaultLoadEventListener.java:111)
+	at org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:68)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1242)
+	at org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1230)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:209)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.doLoad(IdentifierLoadAccessImpl.java:160)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.lambda$load$1(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.perform(IdentifierLoadAccessImpl.java:112)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2444)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2415)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:319)
+	at jdk.proxy2/jdk.proxy2.$Proxy128.find(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findById(SimpleJpaRepository.java:313)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:352)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:516)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:285)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:628)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:168)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:143)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:137)
+	... 69 common frames omitted
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "account" does not exist
+  Position: 414
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:134)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:246)
+	... 133 common frames omitted
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /error
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:19:53 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/register/selfGenOtp
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId 68ac7585-4261-4230-815b-516cb28dca63
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-14 23:26:53 [http-nio-8080-exec-2] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/register/selfGenOtp
+2026-03-14 23:26:53 [http-nio-8080-exec-2] INFO  com.paynest.controller.AccountController - Generate Otp for new registration
+2026-03-14 23:26:53 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:26:53 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:26:53 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.mobile_number=?
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [9414473582]
+2026-03-14 23:26:53 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - select o1_0.otp_id,o1_0.attempt_count,o1_0.created_at,o1_0.expires_at,o1_0.max_attempt,o1_0.mobile_number,o1_0.otp_value,o1_0.reference_id,o1_0.reference_type,o1_0.status,o1_0.updated_at,o1_0.verified_at from otp o1_0 where o1_0.mobile_number=? and o1_0.reference_type=? and o1_0.status=? order by o1_0.created_at desc fetch first ? rows only
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [9414473582]
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [REGISTRATION]
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [CREATED]
+2026-03-14 23:26:53 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:INTEGER) <- [1]
+2026-03-14 23:26:53 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - insert into otp (attempt_count,created_at,expires_at,max_attempt,mobile_number,otp_value,reference_id,reference_type,status,updated_at,verified_at) values (?,?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:INTEGER) <- [0]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-14T23:26:53.971259800]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:TIMESTAMP) <- [2026-03-14T23:36:53.965958]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:INTEGER) <- [3]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:VARCHAR) <- [9414473582]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:INTEGER) <- [523617]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [null]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [REGISTRATION]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [CREATED]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:TIMESTAMP) <- [null]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (11:TIMESTAMP) <- [null]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] INFO  com.paynest.service.AccountService - Generated OTP 523617 for mobile number 9414473582
+2026-03-14 23:26:54 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:26:54 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:26:54 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-14T23:26:54.081127700]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [200]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [270]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"12321321322323324","user":{"mobileNumber":"9414473582"}}]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"status":"SUCCESS","requestId":"12321321322323324","message":"OTP generated successfully","accountId":null}]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [68ac7585-4261-4230-815b-516cb28dca63]
+2026-03-14 23:26:54 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context 68ac7585-4261-4230-815b-516cb28dca63
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/register/selfWithOtp
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId af0cbeb8-a103-4294-b58c-7748553c895c
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/register/selfWithOtp
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.controller.AccountController - User registration started
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.mobile_number=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [9414473582]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select o1_0.otp_id,o1_0.attempt_count,o1_0.created_at,o1_0.expires_at,o1_0.max_attempt,o1_0.mobile_number,o1_0.otp_value,o1_0.reference_id,o1_0.reference_type,o1_0.status,o1_0.updated_at,o1_0.verified_at from otp o1_0 where o1_0.otp_value=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:INTEGER) <- [523617]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.service.AccountService - Otp validation done. registering user
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select e1_0.id,e1_0.created_at,e1_0.description,e1_0.display_order,e1_0.enum_code,e1_0.enum_type,e1_0.enum_value,e1_0.is_active,e1_0.is_system,e1_0.updated_at from enumerations e1_0 where e1_0.enum_type=? and e1_0.is_active=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [CURRENCY]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BOOLEAN) <- [true]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select e1_0.id,e1_0.created_at,e1_0.description,e1_0.display_order,e1_0.enum_code,e1_0.enum_type,e1_0.enum_value,e1_0.is_active,e1_0.is_system,e1_0.updated_at from enumerations e1_0 where e1_0.enum_type=? and e1_0.is_active=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [WALLET_TYPE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BOOLEAN) <- [true]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into account (account_type,address,attr1,attr10,attr2,attr3,attr4,attr5,attr6,attr7,attr8,attr9,created_at,created_by,date_of_birth,email,first_name,gender,kyc_status,last_name,mobile_number,nationality,preferred_lang,remarks,ssn,status,updated_at,updated_by,account_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [SUBSCRIBER]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (11:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (12:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (13:TIMESTAMP) <- [2026-03-14T23:27:56.627430200]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (14:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (15:DATE) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (16:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (17:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (18:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (19:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (20:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (21:VARCHAR) <- [9414473582]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (22:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (23:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (24:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (25:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (26:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (27:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (28:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (29:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select r1_0.role_id,r1_0.created_at,r1_0.description,r1_0.role_code,r1_0.role_name,r1_0.role_type,r1_0.status from roles r1_0 where r1_0.role_code=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [CUSTOMER]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into user_roles (assigned_at,assigned_by,role_id,user_id) values (?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-14T23:27:56.733189700]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:BIGINT) <- [2]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [19]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [20]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [21]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [22]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [23]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [24]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.Utilities.IdGenerator - generated Pin is : 5077
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-14T23:27:56.749244500]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [USD]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [true]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [MAIN]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [19]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-14T23:27:56.750277300]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [INR]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [MAIN]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [20]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-14T23:27:56.753237100]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [USD]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [BONUS]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [21]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-14T23:27:56.754235]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [INR]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [BONUS]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [22]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-14T23:27:56.755270100]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [USD]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [SALARY]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [23]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-14T23:27:56.756261300]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [INR]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [SALARY]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [24]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-14T23:27:56.760217800]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [19]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-14T23:27:56.761308500]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [20]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-14T23:27:56.761308500]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [21]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-14T23:27:56.761308500]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [22]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-14T23:27:56.761308500]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [23]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-14T23:27:56.761308500]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [24]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into account_identifiers (account_id,auth_id,created_at,identifier_type,identifier_value,status,updated_at) values (?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314232756907250]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BIGINT) <- [1773511076762155]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:TIMESTAMP) <- [2026-03-14T23:27:56.779264300]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [MOBILE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:VARCHAR) <- [9414473582]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - select aa1_0.auth_id,aa1_0.auth_hash,aa1_0.auth_type,aa1_0.auth_value,aa1_0.created_at,aa1_0.failed_attempts,aa1_0.is_first_time_login,aa1_0.last_failed_at,aa1_0.last_login_at,aa1_0.last_login_ip,aa1_0.password_changed_at,aa1_0.status,aa1_0.updated_at from account_auth aa1_0 where aa1_0.auth_id=?
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1773511076762155]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into account_auth (auth_hash,auth_type,auth_value,created_at,failed_attempts,is_first_time_login,last_failed_at,last_login_at,last_login_ip,password_changed_at,status,updated_at,auth_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [e9022ec5-b637-4c57-a731-8581375efac4]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [PIN]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [fcc41cce7e5e5963d007bfaa45bec07f42f157ed533b3593361c3af227fb9440]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-14T23:27:56.822528]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:INTEGER) <- [0]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BOOLEAN) <- [true]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (11:VARCHAR) <- [ACTIVE]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (12:TIMESTAMP) <- [null]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (13:BIGINT) <- [1773511076762155]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.controller.AccountController - User registration completed
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:27:56 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-14T23:27:56.828514]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [200]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [226]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"12321321322323323","user":{"mobileNumber":"9414473582","otp":"523617"}}]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"status":"SUCCESS","requestId":"12321321322323323","message":"User registered successfully","accountId":"AC20260314232756907250"}]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [af0cbeb8-a103-4294-b58c-7748553c895c]
+2026-03-14 23:27:56 [http-nio-8080-exec-7] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context af0cbeb8-a103-4294-b58c-7748553c895c
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/pin/changeDefault
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId a8a3c6a0-212f-40b9-8a75-4deb0ee5d251
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-14 23:30:24 [http-nio-8080-exec-10] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/pin/changeDefault
+2026-03-14 23:30:24 [http-nio-8080-exec-10] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:30:25 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select ai1_0.id,ai1_0.account_id,ai1_0.auth_id,ai1_0.created_at,ai1_0.identifier_type,ai1_0.identifier_value,ai1_0.status,ai1_0.updated_at from account_identifiers ai1_0 where ai1_0.identifier_type=? and ai1_0.identifier_value=? and ai1_0.status=?
+2026-03-14 23:30:25 [http-nio-8080-exec-10] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [MOBILE]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [9414473582]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [ACTIVE]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:30:25 [http-nio-8080-exec-10] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:30:25 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select aa1_0.auth_id,aa1_0.auth_hash,aa1_0.auth_type,aa1_0.auth_value,aa1_0.created_at,aa1_0.failed_attempts,aa1_0.is_first_time_login,aa1_0.last_failed_at,aa1_0.last_login_at,aa1_0.last_login_ip,aa1_0.password_changed_at,aa1_0.status,aa1_0.updated_at from account_auth aa1_0 where aa1_0.auth_id=?
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1773511076762155]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:30:25 [http-nio-8080-exec-10] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:30:25 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-14T23:30:25.052202900]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [400]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [165]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"12321321322323323","identifierType":"MOBILE","identifierValue":"9414473582","oldPin":"2647","newPin":"1357"}]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"responseStatus":"FAILURE","code":"INVALID_OLD_PIN","message":"Invalid old PIN","timestamp":"2026-03-14T18:00:25.036415400Z","traceId":"a8a3c6a0-212f-40b9-8a75-4deb0ee5d251"}]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [a8a3c6a0-212f-40b9-8a75-4deb0ee5d251]
+2026-03-14 23:30:25 [http-nio-8080-exec-10] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context a8a3c6a0-212f-40b9-8a75-4deb0ee5d251
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/pin/changeDefault
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId a648f84b-83ed-41db-b8bf-9d957b7f5a19
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/pin/changeDefault
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:31:42 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - select ai1_0.id,ai1_0.account_id,ai1_0.auth_id,ai1_0.created_at,ai1_0.identifier_type,ai1_0.identifier_value,ai1_0.status,ai1_0.updated_at from account_identifiers ai1_0 where ai1_0.identifier_type=? and ai1_0.identifier_value=? and ai1_0.status=?
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [MOBILE]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [9414473582]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [ACTIVE]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:31:42 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - select aa1_0.auth_id,aa1_0.auth_hash,aa1_0.auth_type,aa1_0.auth_value,aa1_0.created_at,aa1_0.failed_attempts,aa1_0.is_first_time_login,aa1_0.last_failed_at,aa1_0.last_login_at,aa1_0.last_login_ip,aa1_0.password_changed_at,aa1_0.status,aa1_0.updated_at from account_auth aa1_0 where aa1_0.auth_id=?
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1773511076762155]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:31:42 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-14T23:31:42.583215600]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [400]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [11]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"12321321322323323","identifierType":"MOBILE","identifierValue":"9414473582","oldPin":"1357","newPin":"1357"}]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"responseStatus":"FAILURE","code":"INVALID_OLD_PIN","message":"Invalid old PIN","timestamp":"2026-03-14T18:01:42.581217800Z","traceId":"a648f84b-83ed-41db-b8bf-9d957b7f5a19"}]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [a648f84b-83ed-41db-b8bf-9d957b7f5a19]
+2026-03-14 23:31:42 [http-nio-8080-exec-1] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context a648f84b-83ed-41db-b8bf-9d957b7f5a19
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/pin/changeDefault
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId f150b2c2-cb72-4323-9b1c-1cc3d7841247
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/pin/changeDefault
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:31:56 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - select ai1_0.id,ai1_0.account_id,ai1_0.auth_id,ai1_0.created_at,ai1_0.identifier_type,ai1_0.identifier_value,ai1_0.status,ai1_0.updated_at from account_identifiers ai1_0 where ai1_0.identifier_type=? and ai1_0.identifier_value=? and ai1_0.status=?
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [MOBILE]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [9414473582]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [ACTIVE]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:31:56 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - select aa1_0.auth_id,aa1_0.auth_hash,aa1_0.auth_type,aa1_0.auth_value,aa1_0.created_at,aa1_0.failed_attempts,aa1_0.is_first_time_login,aa1_0.last_failed_at,aa1_0.last_login_at,aa1_0.last_login_ip,aa1_0.password_changed_at,aa1_0.status,aa1_0.updated_at from account_auth aa1_0 where aa1_0.auth_id=?
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1773511076762155]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:31:56 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-14T23:31:56.182050200]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [400]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [13]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"12321321322323323","identifierType":"MOBILE","identifierValue":"9414473582","oldPin":"1357","newPin":"1359"}]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"responseStatus":"FAILURE","code":"INVALID_OLD_PIN","message":"Invalid old PIN","timestamp":"2026-03-14T18:01:56.177062700Z","traceId":"f150b2c2-cb72-4323-9b1c-1cc3d7841247"}]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [f150b2c2-cb72-4323-9b1c-1cc3d7841247]
+2026-03-14 23:31:56 [http-nio-8080-exec-2] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context f150b2c2-cb72-4323-9b1c-1cc3d7841247
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/pin/changeDefault
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId a4a7bd46-bc20-4733-8559-5a3e7ff45fd2
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/pin/changeDefault
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select ai1_0.id,ai1_0.account_id,ai1_0.auth_id,ai1_0.created_at,ai1_0.identifier_type,ai1_0.identifier_value,ai1_0.status,ai1_0.updated_at from account_identifiers ai1_0 where ai1_0.identifier_type=? and ai1_0.identifier_value=? and ai1_0.status=?
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [MOBILE]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [9414473582]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [ACTIVE]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select aa1_0.auth_id,aa1_0.auth_hash,aa1_0.auth_type,aa1_0.auth_value,aa1_0.created_at,aa1_0.failed_attempts,aa1_0.is_first_time_login,aa1_0.last_failed_at,aa1_0.last_login_at,aa1_0.last_login_ip,aa1_0.password_changed_at,aa1_0.status,aa1_0.updated_at from account_auth aa1_0 where aa1_0.auth_id=?
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1773511076762155]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select aa1_0.auth_id,aa1_0.auth_hash,aa1_0.auth_type,aa1_0.auth_value,aa1_0.created_at,aa1_0.failed_attempts,aa1_0.is_first_time_login,aa1_0.last_failed_at,aa1_0.last_login_at,aa1_0.last_login_ip,aa1_0.password_changed_at,aa1_0.status,aa1_0.updated_at from account_auth aa1_0 where aa1_0.auth_id=?
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1773511076762155]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - update account_auth set auth_hash=?,auth_type=?,auth_value=?,failed_attempts=?,is_first_time_login=?,last_failed_at=?,last_login_at=?,last_login_ip=?,password_changed_at=?,status=?,updated_at=? where auth_id=?
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [e63f2c51-8b38-48ee-b39c-1cc00bdcc725]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [PIN]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [f99d6ed6c9cb012c7c66a4752ff42af76b0b20b5060d86758cd85b16da466e8f]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:INTEGER) <- [0]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:TIMESTAMP) <- [null]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:TIMESTAMP) <- [null]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [null]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:TIMESTAMP) <- [null]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:VARCHAR) <- [ACTIVE]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (11:TIMESTAMP) <- [2026-03-14T23:33:19.152799800]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (12:BIGINT) <- [1773511076762155]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-14 23:33:19 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-14T23:33:19.179727200]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [200]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [45]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"12321321322323323","identifierType":"MOBILE","identifierValue":"9414473582","oldPin":"1357","newPin":"1359"}]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"status":"SUCCESS","message":"PIN changed successfully"}]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [a4a7bd46-bc20-4733-8559-5a3e7ff45fd2]
+2026-03-14 23:33:19 [http-nio-8080-exec-8] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context a4a7bd46-bc20-4733-8559-5a3e7ff45fd2
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/pay/U2U
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-14 23:37:07 [http-nio-8080-exec-6] INFO  com.paynest.security.JwtAuthenticationFilter - tenant is :tenant_movii
+2026-03-14 23:37:07 [http-nio-8080-exec-6] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : public
+2026-03-14 23:37:07 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260314205018524074]
+2026-03-14 23:37:07 [http-nio-8080-exec-6] WARN  org.hibernate.engine.jdbc.spi.SqlExceptionHelper - SQL Error: 0, SQLState: 42P01
+2026-03-14 23:37:07 [http-nio-8080-exec-6] ERROR org.hibernate.engine.jdbc.spi.SqlExceptionHelper - ERROR: relation "account" does not exist
+  Position: 414
+2026-03-14 23:37:07 [http-nio-8080-exec-6] INFO  org.hibernate.event.internal.DefaultLoadEventListener - HHH000327: Error performing load command
+org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:91)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:265)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.getResultSet(DeferredResultSetAccess.java:167)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.advanceNext(JdbcValuesResultSetImpl.java:218)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.processNext(JdbcValuesResultSetImpl.java:98)
+	at org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues.next(AbstractJdbcValues.java:19)
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.next(RowProcessingStateStandardImpl.java:66)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:188)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:209)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:83)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:76)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:65)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:145)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:117)
+	at org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl.load(SingleIdEntityLoaderStandardImpl.java:75)
+	at org.hibernate.persister.entity.AbstractEntityPersister.doLoad(AbstractEntityPersister.java:3715)
+	at org.hibernate.persister.entity.AbstractEntityPersister.load(AbstractEntityPersister.java:3704)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromDatasource(DefaultLoadEventListener.java:604)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromCacheOrDatasource(DefaultLoadEventListener.java:590)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:560)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doLoad(DefaultLoadEventListener.java:544)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:207)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadWithRegularProxy(DefaultLoadEventListener.java:290)
+	at org.hibernate.event.internal.DefaultLoadEventListener.proxyOrLoad(DefaultLoadEventListener.java:242)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doOnLoad(DefaultLoadEventListener.java:111)
+	at org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:68)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1242)
+	at org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1230)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:209)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.doLoad(IdentifierLoadAccessImpl.java:160)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.lambda$load$1(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.perform(IdentifierLoadAccessImpl.java:112)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2444)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2415)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:319)
+	at jdk.proxy2/jdk.proxy2.$Proxy128.find(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findById(SimpleJpaRepository.java:313)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:352)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:516)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:285)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:628)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:168)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:143)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:137)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:164)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:249)
+	at jdk.proxy2/jdk.proxy2.$Proxy131.findById(Unknown Source)
+	at com.paynest.security.PaynestUserDetailsService.loadUserByUsername(PaynestUserDetailsService.java:23)
+	at com.paynest.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:58)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:225)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "account" does not exist
+  Position: 414
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:134)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:246)
+	... 133 common frames omitted
+2026-03-14 23:37:07 [http-nio-8080-exec-6] ERROR org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet] - Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+org.springframework.dao.InvalidDataAccessResourceUsageException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]; SQL [n/a]
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:277)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241)
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:550)
+	at org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61)
+	at org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:335)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:152)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:164)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:249)
+	at jdk.proxy2/jdk.proxy2.$Proxy131.findById(Unknown Source)
+	at com.paynest.security.PaynestUserDetailsService.loadUserByUsername(PaynestUserDetailsService.java:23)
+	at com.paynest.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:58)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:225)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?] [ERROR: relation "account" does not exist
+  Position: 414] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:91)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:265)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.getResultSet(DeferredResultSetAccess.java:167)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.advanceNext(JdbcValuesResultSetImpl.java:218)
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.processNext(JdbcValuesResultSetImpl.java:98)
+	at org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues.next(AbstractJdbcValues.java:19)
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.next(RowProcessingStateStandardImpl.java:66)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:188)
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:209)
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:83)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:76)
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:65)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:145)
+	at org.hibernate.loader.ast.internal.SingleIdLoadPlan.load(SingleIdLoadPlan.java:117)
+	at org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl.load(SingleIdEntityLoaderStandardImpl.java:75)
+	at org.hibernate.persister.entity.AbstractEntityPersister.doLoad(AbstractEntityPersister.java:3715)
+	at org.hibernate.persister.entity.AbstractEntityPersister.load(AbstractEntityPersister.java:3704)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromDatasource(DefaultLoadEventListener.java:604)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadFromCacheOrDatasource(DefaultLoadEventListener.java:590)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:560)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doLoad(DefaultLoadEventListener.java:544)
+	at org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:207)
+	at org.hibernate.event.internal.DefaultLoadEventListener.loadWithRegularProxy(DefaultLoadEventListener.java:290)
+	at org.hibernate.event.internal.DefaultLoadEventListener.proxyOrLoad(DefaultLoadEventListener.java:242)
+	at org.hibernate.event.internal.DefaultLoadEventListener.doOnLoad(DefaultLoadEventListener.java:111)
+	at org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:68)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)
+	at org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1242)
+	at org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1230)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:209)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.doLoad(IdentifierLoadAccessImpl.java:160)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.lambda$load$1(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.perform(IdentifierLoadAccessImpl.java:112)
+	at org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:149)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2444)
+	at org.hibernate.internal.SessionImpl.find(SessionImpl.java:2415)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:319)
+	at jdk.proxy2/jdk.proxy2.$Proxy128.find(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findById(SimpleJpaRepository.java:313)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:352)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:516)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:285)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:628)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:168)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:143)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:137)
+	... 69 common frames omitted
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "account" does not exist
+  Position: 414
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:134)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:246)
+	... 133 common frames omitted
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@207fce87, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@67171221, org.springframework.security.web.context.SecurityContextHolderFilter@1026a011, org.springframework.security.web.header.HeaderWriterFilter@12f85dc8, org.springframework.web.filter.CorsFilter@2f3a3fec, org.springframework.security.web.authentication.logout.LogoutFilter@56f3f9da, com.paynest.security.JwtAuthenticationFilter@58397dd, com.paynest.config.TenantFilter@620260ad, com.paynest.config.ApiAuditKafkaFilter@392af2e0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@353aadd7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@39595a8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1d7d2345, org.springframework.security.web.session.SessionManagementFilter@1b8d0c21, org.springframework.security.web.access.ExceptionTranslationFilter@383c94ed, org.springframework.security.web.access.intercept.AuthorizationFilter@4b9187de]] (1/1)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /error
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-14 23:37:07 [http-nio-8080-exec-6] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)

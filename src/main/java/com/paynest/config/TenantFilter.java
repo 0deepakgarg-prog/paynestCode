@@ -1,7 +1,10 @@
 
 package com.paynest.config;
 
+import com.paynest.exception.ApiErrorResponseWriter;
+import com.paynest.exception.CommonErrorCode;
 import com.paynest.service.TenantRegistryService;
+import com.paynest.tenant.RequestLanguageContext;
 import com.paynest.tenant.TenantContext;
 import com.paynest.tenant.TraceContext;
 import jakarta.servlet.FilterChain;
@@ -23,6 +26,7 @@ import java.util.UUID;
 public class TenantFilter extends OncePerRequestFilter {
 
     private final TenantRegistryService tenantService;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -36,13 +40,13 @@ public class TenantFilter extends OncePerRequestFilter {
             tenant = request.getHeader("X-Tenant-Id");
         }
         if (tenant == null) {
-            response.sendError(400, "X-Tenant-Id missing");
+            apiErrorResponseWriter.write(request, response, CommonErrorCode.TENANT_HEADER_MISSING);
             return;
         }
 
         String schema = tenantService.getSchema(tenant);
         if (schema == null || schema.isBlank()) {
-            response.sendError(404, "Unknown tenant");
+            apiErrorResponseWriter.write(request, response, CommonErrorCode.UNKNOWN_TENANT);
             return;
         }
 
@@ -56,6 +60,7 @@ public class TenantFilter extends OncePerRequestFilter {
         } finally {
             log.info("Clearing tenant context for tenant ID: {} and Trace Context {}", tenant,TraceContext.getTraceId());
             MDC.clear();
+            RequestLanguageContext.clear();
             TenantContext.clear();
             TraceContext.clear();
         }

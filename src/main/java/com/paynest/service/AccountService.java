@@ -133,7 +133,6 @@ public class AccountService {
     public Account registerAccountByRole(RegisterUserRequest accountRequest) {
 
         String accountType = accountRequest.getUser().getAccountType();
-
         String normalizedAccountType = accountType == null ? "" : accountType.toUpperCase(Locale.ROOT);
         Set<String> allowedAccountTypes = Set.of("ADMIN", "AGENT", "MERCHANT", "BILLER");
         if (!allowedAccountTypes.contains(normalizedAccountType)) {

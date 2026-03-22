@@ -4,10 +4,10 @@ package com.paynest.service;
 import com.paynest.dto.response.BalanceResponse;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
-import com.paynest.entity.Wallet;
-import com.paynest.entity.WalletBalance;
-import com.paynest.entity.WalletLedger;
+import com.paynest.entity.*;
+import com.paynest.enums.InitiatedBy;
 import com.paynest.exception.ApplicationException;
+import com.paynest.exception.PaymentErrorCode;
 import com.paynest.repository.AccountRepository;
 import com.paynest.repository.WalletBalanceRepository;
 import com.paynest.repository.WalletRepository;
@@ -18,7 +18,10 @@ import com.paynest.tenant.TraceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,14 +39,11 @@ public class BalanceService {
     private final PropertyReader propertyReader;
     private final WalletBalanceRepository balanceRepo;
     private final WalletLedgerRepository ledgerRepo;
-    private final TransactionsService transactionsService;
-
 
     public BalanceService(WalletRepository walletRepository,
                           WalletBalanceRepository balanceRepository, AccountRepository accountRepo, TransactionsRepository transactionsRepository,
                           TransactionDetailsRepository transactionDetailsRepository, PropertyReader propertyReader,
-                          WalletBalanceRepository balanceRepo, WalletLedgerRepository ledgerRepo,
-                          TransactionsService transactionsService) {
+                          WalletBalanceRepository balanceRepo, WalletLedgerRepository ledgerRepo) {
         this.walletRepository = walletRepository;
         this.balanceRepository = balanceRepository;
         this.accountRepo = accountRepo;
@@ -52,7 +52,6 @@ public class BalanceService {
         this.propertyReader = propertyReader;
         this.balanceRepo = balanceRepo;
         this.ledgerRepo = ledgerRepo;
-        this.transactionsService = transactionsService;
     }
 
     public BalanceResponse getBalance(Long walletId) {
@@ -101,129 +100,260 @@ public class BalanceService {
             Wallet creditorWallet,
             BigDecimal amount,
             String serviceCode,
-            String txnId) throws ApplicationException {
+            InitiatedBy initiatedBy,
+            String txnId) {
 
-        try {
-            BigDecimal currencyFactor =
-                    new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
+        BigDecimal currencyFactor =
+                new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
+        LocalDateTime now = LocalDateTime.now();
+        BigDecimal dbAmount = amount
+                .multiply(currencyFactor)
+                .setScale(2, RoundingMode.HALF_UP);
 
-            BigDecimal dbAmount = amount
-                    .multiply(currencyFactor)
-                    .setScale(2, RoundingMode.HALF_UP);
+        boolean lockDebitorFirst = debitorWallet.getWalletId() <= creditorWallet.getWalletId();
+        WalletBalance firstLockedBalance = lockBalance(lockDebitorFirst
+                ? debitorWallet.getWalletId()
+                : creditorWallet.getWalletId());
+        WalletBalance secondLockedBalance = lockBalance(lockDebitorFirst
+                ? creditorWallet.getWalletId()
+                : debitorWallet.getWalletId());
 
-            WalletBalance debitorBalance =
-                    balanceRepo.lockBalance(debitorWallet.getWalletId());
+        WalletBalance debitorBalance = lockDebitorFirst ? firstLockedBalance : secondLockedBalance;
+        WalletBalance creditorBalance = lockDebitorFirst ? secondLockedBalance : firstLockedBalance;
 
-            WalletBalance creditorBalance =
-                    balanceRepo.lockBalance(creditorWallet.getWalletId());
+        BigDecimal senderBalBefore = debitorBalance.getAvailableBalance();
+        BigDecimal senderFicBefore = debitorBalance.getFicBalance();
+        BigDecimal senderFrozenBefore = debitorBalance.getFrozenBalance();
 
-            BigDecimal senderBalBefore = debitorBalance.getAvailableBalance();
-            BigDecimal senderFicBefore = debitorBalance.getFicBalance();
-            BigDecimal senderFrozenBefore = debitorBalance.getFrozenBalance();
+        BigDecimal senderNetBalance = senderBalBefore
+                .subtract(senderFicBefore)
+                .subtract(senderFrozenBefore);
 
-            BigDecimal senderNetBalance = senderBalBefore
-                    .subtract(senderFicBefore)
-                    .subtract(senderFrozenBefore);
+        if (senderNetBalance.compareTo(dbAmount) < 0) {
+            throw new ApplicationException(
+                    PaymentErrorCode.INSUFFICIENT_BALANCE,
+                    null,
+                    txnId,
+                    Map.of(
+                            "amount", dbAmount.toPlainString(),
+                            "walletId", debitorWallet.getWalletId()
+                    ));
+        }
 
-            if (senderNetBalance.compareTo(dbAmount) < 0) {
-                transactionsService.updateFailedTransactionRecord(txnId,"INSUFFICIENT_BALANCE",debitorWallet.getAccountId());
-                throw new ApplicationException(
-                        "INSUFFICIENT_BALANCE",
-                        "Insufficient balance");
+        BigDecimal receiverBalBefore = creditorBalance.getAvailableBalance();
+        BigDecimal receiverFicBefore = creditorBalance.getFicBalance();
+        BigDecimal receiverFrozenBefore = creditorBalance.getFrozenBalance();
+
+        BigDecimal senderBalAfter = senderBalBefore.subtract(dbAmount);
+        BigDecimal receiverBalAfter = receiverBalBefore.add(dbAmount);
+
+        BigDecimal senderFicAfter = senderFicBefore;
+        BigDecimal senderFrozenAfter = senderFrozenBefore;
+
+        BigDecimal receiverFicAfter = receiverFicBefore;
+        BigDecimal receiverFrozenAfter = receiverFrozenBefore;
+
+        WalletLedger debitLedger = new WalletLedger();
+        debitLedger.setTxnId(txnId);
+        debitLedger.setWalletId(debitorWallet.getWalletId());
+        debitLedger.setAccountId(debitorWallet.getAccountId());
+        debitLedger.setCurrency(debitorWallet.getCurrency());
+        debitLedger.setEntryType(Constants.TXN_TYPE_DR);
+        debitLedger.setAmount(dbAmount);
+        debitLedger.setBalanceBefore(senderBalBefore);
+        debitLedger.setBalanceAfter(senderBalAfter);
+        debitLedger.setTxnType(serviceCode);
+        debitLedger.setReferenceId(TraceContext.getTraceId());
+        ledgerRepo.save(debitLedger);
+
+        WalletLedger creditLedger = new WalletLedger();
+        creditLedger.setTxnId(txnId);
+        creditLedger.setWalletId(creditorWallet.getWalletId());
+        creditLedger.setAccountId(creditorWallet.getAccountId());
+        creditLedger.setCurrency(creditorWallet.getCurrency());
+        creditLedger.setEntryType(Constants.TXN_TYPE_CR);
+        creditLedger.setAmount(dbAmount);
+        creditLedger.setBalanceBefore(receiverBalBefore);
+        creditLedger.setBalanceAfter(receiverBalAfter);
+        creditLedger.setTxnType(serviceCode);
+        creditLedger.setReferenceId(TraceContext.getTraceId());
+        ledgerRepo.save(creditLedger);
+
+        debitorBalance.setAvailableBalance(senderBalAfter);
+        creditorBalance.setAvailableBalance(receiverBalAfter);
+
+        balanceRepo.save(debitorBalance);
+        balanceRepo.save(creditorBalance);
+
+        Transactions transaction = transactionsRepository.findByTransactionId(txnId);
+        transaction.setTransferOn(now);
+        transaction.setModifiedOn(now);
+        if(initiatedBy == InitiatedBy.DEBITOR){
+            transaction.setModifiedBy(debitorWallet.getAccountId());
+        } else if (initiatedBy == InitiatedBy.CREDITOR) {
+            transaction.setModifiedBy(creditorWallet.getAccountId());
+        }
+        transaction.setPreviousStatus(transaction.getTransferStatus());
+        transaction.setTransferStatus(Constants.TRANSACTION_SUCCESS);
+        transactionsRepository.save(transaction);
+
+        List<TransactionDetails> transactionDetails = transactionDetailsRepository.findByIdTransactionId(txnId);
+        for (TransactionDetails transactionDetail : transactionDetails){
+            transactionDetail.setTransferOn(now);
+            transactionDetail.setTransferStatus(Constants.TRANSACTION_SUCCESS);
+            if(transactionDetail.getEntryType().equalsIgnoreCase(Constants.TXN_TYPE_DR)){
+                transactionDetail.setPreviousBalance(senderBalBefore);
+                transactionDetail.setPostBalance(senderBalAfter);
+                transactionDetail.setPreviousFrozenBalance(senderFrozenBefore);
+                transactionDetail.setPostFrozenBalance(senderFrozenAfter);
+                transactionDetail.setPreviousFicBalance(senderFicBefore);
+                transactionDetail.setPostFicBalance(senderFicAfter);
             }
+            if (transactionDetail.getEntryType().equalsIgnoreCase(Constants.TXN_TYPE_CR)){
+                transactionDetail.setPreviousBalance(receiverBalBefore);
+                transactionDetail.setPostBalance(receiverBalAfter);
+                transactionDetail.setPreviousFrozenBalance(receiverFrozenBefore);
+                transactionDetail.setPostFrozenBalance(receiverFrozenAfter);
+                transactionDetail.setPreviousFicBalance(receiverFicBefore);
+                transactionDetail.setPostFicBalance(receiverFicAfter);
+            }
+        }
+        transactionDetailsRepository.saveAll(transactionDetails);
+    }
 
-            BigDecimal receiverBalBefore = creditorBalance.getAvailableBalance();
-            BigDecimal receiverFicBefore = creditorBalance.getFicBalance();
-            BigDecimal receiverFrozenBefore = creditorBalance.getFrozenBalance();
+    @Transactional
+    public void parkWalletAmountInFic(
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            BigDecimal amount,
+            String serviceCode,
+            InitiatedBy initiatedBy,
+            String txnId) {
 
-            BigDecimal senderBalAfter = senderBalBefore.subtract(dbAmount);
-            BigDecimal receiverBalAfter = receiverBalBefore.add(dbAmount);
+        BigDecimal currencyFactor =
+                new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
+        LocalDateTime now = LocalDateTime.now();
+        BigDecimal dbAmount = amount
+                .multiply(currencyFactor)
+                .setScale(2, RoundingMode.HALF_UP);
 
-            BigDecimal senderFicAfter = senderFicBefore;
-            BigDecimal senderFrozenAfter = senderFrozenBefore;
+        boolean lockDebitorFirst = debitorWallet.getWalletId() <= creditorWallet.getWalletId();
+        WalletBalance firstLockedBalance = lockBalance(lockDebitorFirst
+                ? debitorWallet.getWalletId()
+                : creditorWallet.getWalletId());
+        WalletBalance secondLockedBalance = lockBalance(lockDebitorFirst
+                ? creditorWallet.getWalletId()
+                : debitorWallet.getWalletId());
 
-            BigDecimal receiverFicAfter = receiverFicBefore;
-            BigDecimal receiverFrozenAfter = receiverFrozenBefore;
+        WalletBalance debitorBalance = lockDebitorFirst ? firstLockedBalance : secondLockedBalance;
+        WalletBalance creditorBalance = lockDebitorFirst ? secondLockedBalance : firstLockedBalance;
 
-            WalletLedger debitLedger = new WalletLedger();
-            debitLedger.setTxnId(txnId);
-            debitLedger.setWalletId(debitorWallet.getWalletId());
-            debitLedger.setAccountId(debitorWallet.getAccountId());
-            debitLedger.setCurrency(debitorWallet.getCurrency());
-            debitLedger.setEntryType(Constants.TXN_TYPE_DR);
-            debitLedger.setAmount(dbAmount);
-            debitLedger.setBalanceBefore(senderBalBefore);
-            debitLedger.setBalanceAfter(senderBalAfter);
-            debitLedger.setTxnType(serviceCode);
-            debitLedger.setReferenceId(TraceContext.getTraceId());
-            ledgerRepo.save(debitLedger);
+        BigDecimal senderBalBefore = debitorBalance.getAvailableBalance();
+        BigDecimal senderFicBefore = debitorBalance.getFicBalance();
+        BigDecimal senderFrozenBefore = debitorBalance.getFrozenBalance();
 
-            WalletLedger creditLedger = new WalletLedger();
-            creditLedger.setTxnId(txnId);
-            creditLedger.setWalletId(creditorWallet.getWalletId());
-            creditLedger.setAccountId(creditorWallet.getAccountId());
-            creditLedger.setCurrency(creditorWallet.getCurrency());
-            creditLedger.setEntryType(Constants.TXN_TYPE_CR);
-            creditLedger.setAmount(dbAmount);
-            creditLedger.setBalanceBefore(receiverBalBefore);
-            creditLedger.setBalanceAfter(receiverBalAfter);
-            creditLedger.setTxnType(serviceCode);
-            creditLedger.setReferenceId(TraceContext.getTraceId());
-            ledgerRepo.save(creditLedger);
+        BigDecimal senderNetBalance = senderBalBefore
+                .subtract(senderFicBefore)
+                .subtract(senderFrozenBefore);
 
-            debitorBalance.setAvailableBalance(senderBalAfter);
-            creditorBalance.setAvailableBalance(receiverBalAfter);
-
-            balanceRepo.save(debitorBalance);
-            balanceRepo.save(creditorBalance);
-
-            transactionsRepository.updateStatus(
+        if (senderNetBalance.compareTo(dbAmount) < 0) {
+            throw new ApplicationException(
+                    PaymentErrorCode.INSUFFICIENT_BALANCE,
+                    null,
                     txnId,
-                    Constants.TRANSACTION_SUCCESS,
-                    null);
+                    Map.of(
+                            "amount", dbAmount.toPlainString(),
+                            "walletId", debitorWallet.getWalletId()
+                    ));
+        }
 
-            transactionDetailsRepository.updateBalances(
-                    txnId,
-                    1L,
-                    senderBalBefore,
-                    senderBalAfter,
-                    senderFicBefore,
-                    senderFicAfter,
-                    senderFrozenBefore,
-                    senderFrozenAfter,
-                    Constants.TRANSACTION_SUCCESS
+        BigDecimal receiverBalBefore = creditorBalance.getAvailableBalance();
+        BigDecimal receiverFicBefore = creditorBalance.getFicBalance();
+        BigDecimal receiverFrozenBefore = creditorBalance.getFrozenBalance();
+
+        BigDecimal senderBalAfter = senderBalBefore.subtract(dbAmount);
+        BigDecimal receiverBalAfter = receiverBalBefore.add(dbAmount);
+        BigDecimal senderFicAfter = senderFicBefore;
+        BigDecimal receiverFicAfter = receiverFicBefore.add(dbAmount);
+
+        WalletLedger debitLedger = new WalletLedger();
+        debitLedger.setTxnId(txnId);
+        debitLedger.setWalletId(debitorWallet.getWalletId());
+        debitLedger.setAccountId(debitorWallet.getAccountId());
+        debitLedger.setCurrency(debitorWallet.getCurrency());
+        debitLedger.setEntryType(Constants.TXN_TYPE_DR);
+        debitLedger.setAmount(dbAmount);
+        debitLedger.setBalanceBefore(senderBalBefore);
+        debitLedger.setBalanceAfter(senderBalAfter);
+        debitLedger.setTxnType(serviceCode);
+        debitLedger.setReferenceId(TraceContext.getTraceId());
+        ledgerRepo.save(debitLedger);
+
+        WalletLedger creditLedger = new WalletLedger();
+        creditLedger.setTxnId(txnId);
+        creditLedger.setWalletId(creditorWallet.getWalletId());
+        creditLedger.setAccountId(creditorWallet.getAccountId());
+        creditLedger.setCurrency(creditorWallet.getCurrency());
+        creditLedger.setEntryType(Constants.TXN_TYPE_CR);
+        creditLedger.setAmount(dbAmount);
+        creditLedger.setBalanceBefore(receiverBalBefore);
+        creditLedger.setBalanceAfter(receiverBalAfter);
+        creditLedger.setTxnType(serviceCode);
+        creditLedger.setReferenceId(TraceContext.getTraceId());
+        ledgerRepo.save(creditLedger);
+
+        debitorBalance.setAvailableBalance(senderBalAfter);
+        creditorBalance.setAvailableBalance(receiverBalAfter);
+        creditorBalance.setFicBalance(receiverFicAfter);
+
+        balanceRepo.save(debitorBalance);
+        balanceRepo.save(creditorBalance);
+
+        Transactions transaction = transactionsRepository.findByTransactionId(txnId);
+        transaction.setTransferOn(now);
+        transaction.setModifiedOn(now);
+        if (initiatedBy == InitiatedBy.DEBITOR) {
+            transaction.setModifiedBy(debitorWallet.getAccountId());
+        } else if (initiatedBy == InitiatedBy.CREDITOR) {
+            transaction.setModifiedBy(creditorWallet.getAccountId());
+        }
+        transaction.setPreviousStatus(transaction.getTransferStatus());
+        transaction.setTransferStatus(Constants.TRANSACTION_AMBIGUOUS);
+        transactionsRepository.save(transaction);
+
+        List<TransactionDetails> transactionDetails = transactionDetailsRepository.findByIdTransactionId(txnId);
+        for (TransactionDetails transactionDetail : transactionDetails) {
+            transactionDetail.setTransferOn(now);
+            transactionDetail.setTransferStatus(Constants.TRANSACTION_AMBIGUOUS);
+            if (transactionDetail.getEntryType().equalsIgnoreCase(Constants.TXN_TYPE_DR)) {
+                transactionDetail.setPreviousBalance(senderBalBefore);
+                transactionDetail.setPostBalance(senderBalAfter);
+                transactionDetail.setPreviousFrozenBalance(senderFrozenBefore);
+                transactionDetail.setPostFrozenBalance(senderFrozenBefore);
+                transactionDetail.setPreviousFicBalance(senderFicBefore);
+                transactionDetail.setPostFicBalance(senderFicAfter);
+            }
+            if (transactionDetail.getEntryType().equalsIgnoreCase(Constants.TXN_TYPE_CR)) {
+                transactionDetail.setPreviousBalance(receiverBalBefore);
+                transactionDetail.setPostBalance(receiverBalAfter);
+                transactionDetail.setPreviousFrozenBalance(receiverFrozenBefore);
+                transactionDetail.setPostFrozenBalance(receiverFrozenBefore);
+                transactionDetail.setPreviousFicBalance(receiverFicBefore);
+                transactionDetail.setPostFicBalance(receiverFicAfter);
+            }
+        }
+        transactionDetailsRepository.saveAll(transactionDetails);
+    }
+
+    private WalletBalance lockBalance(Long walletId) {
+        WalletBalance walletBalance = balanceRepo.lockBalance(walletId);
+        if (walletBalance == null) {
+            throw new ApplicationException(
+                    PaymentErrorCode.WALLET_BALANCE_NOT_FOUND,
+                    null,
+                    Map.of("walletId", walletId)
             );
-
-            transactionDetailsRepository.updateBalances(
-                    txnId,
-                    2L,
-                    receiverBalBefore,
-                    receiverBalAfter,
-                    receiverFicBefore,
-                    receiverFicAfter,
-                    receiverFrozenBefore,
-                    receiverFrozenAfter,
-                    Constants.TRANSACTION_SUCCESS
-            );
-
         }
-        catch (ApplicationException ex) {
-
-            transactionsRepository.updateStatus(
-                    txnId,
-                    Constants.TRANSACTION_FAILED,
-                    ex.getErrorCode());
-
-            throw ex;
-        }
-        catch (Exception ex) {
-
-            transactionsRepository.updateStatus(
-                    txnId,
-                    Constants.TRANSACTION_FAILED,
-                    "SYSTEM_ERROR");
-
-            throw ex;
-        }
+        return walletBalance;
     }
 }

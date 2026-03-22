@@ -17,7 +17,7 @@ public class Wallet {
     @Column(name = "account_id", nullable = false)
     private String accountId;
 
-    @Column(name = "currency", nullable = false, length = 3)
+    @Column(name = "currency", nullable = false, length = 10)
     private String currency;
 
     @Column(name = "wallet_type", nullable = false)

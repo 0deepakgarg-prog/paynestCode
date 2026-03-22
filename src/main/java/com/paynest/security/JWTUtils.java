@@ -26,4 +26,11 @@ public class JWTUtils {
         return claims.get("tenant").toString();
     }
 
+    public static String getCurrentAuthType() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        Claims claims = (Claims) authentication.getDetails();
+        return claims.get("authType").toString();
+    }
+
 }

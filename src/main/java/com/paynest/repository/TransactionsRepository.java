@@ -7,22 +7,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import jakarta.transaction.Transactional;
 
+import java.util.Optional;
+
 
 @Repository
 public interface TransactionsRepository extends JpaRepository<Transactions, String> {
 
     Transactions findByTransactionId(String transactionId);
 
-    @Modifying
-    @Transactional
-    @Query("""
-        UPDATE Transactions t
-        SET t.transferStatus = :status,
-            t.errorCode = :errorCode
-        WHERE t.transactionId = :txnId
-    """)
-    void updateStatus(String txnId,String status,String errorCode);
-
+    Optional<Transactions> findFirstByTraceId(String traceId);
 
     @Modifying
     @Transactional

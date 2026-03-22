@@ -1,6 +1,8 @@
 package com.paynest.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paynest.exception.ApiErrorResponseWriter;
+import com.paynest.exception.CommonErrorCode;
 import com.paynest.repository.AuditApiLogRepository;
 import com.paynest.service.AsyncLogPublisher;
 import com.paynest.security.JwtAuthenticationFilter;
@@ -24,6 +26,7 @@ public class SecurityConfig {
     private final AsyncLogPublisher asyncLogPublisher;
     private final AuditApiLogRepository auditApiLogRepository;
     private final ObjectMapper objectMapper;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,17 +39,23 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/account/register/**",
-                                "/api/v1/account/pin/changeDefault/",
-                                "/api/v1/account/password/changeDefault/",
-                                "/api/v1/account/register/**",
-                                "/api/v1/account/registerUser"
+                                "/api/v1/account/pin/changeDefault",
+                                "/api/v1/account/password/changeDefault",
+                                "/api/v1/account/registerUser",
+                                "/api/v1/pay/settleTxn"
                 )
                 .permitAll()
                 .anyRequest()
                 .authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class)
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint((request, response, authException) ->
+                                apiErrorResponseWriter.write(request, response, CommonErrorCode.TOKEN_REQUIRED))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                apiErrorResponseWriter.write(request, response, CommonErrorCode.ACCESS_DENIED))
+                )
+                .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthenticationFilter, TenantFilter.class)
                 .addFilterAfter(apiAuditKafkaFilter(), TenantFilter.class);
 
         return http.build();

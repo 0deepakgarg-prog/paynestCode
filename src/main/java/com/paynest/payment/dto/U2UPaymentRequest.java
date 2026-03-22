@@ -1,11 +1,9 @@
 package com.paynest.payment.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.paynest.enums.InitiatedBy;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import com.paynest.enums.RequestGateway;
 import lombok.Data;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.Map;
 
@@ -14,12 +12,15 @@ public class U2UPaymentRequest implements BasePaymentRequest {
 
     private String operationType;
 
+    private RequestGateway requestGateway;
+
+    @JsonProperty("preferredLang")
+    private String preferredLang;
+
     private InitiatedBy initiatedBy;
 
-    @Size(max = 100)
     private String paymentReference;
 
-    @Size(max = 300)
     private String comments;
 
     private Party debitor;

@@ -1,0 +1,410 @@
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@6990f6af, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@27d38370, org.springframework.security.web.context.SecurityContextHolderFilter@4d619aa0, org.springframework.security.web.header.HeaderWriterFilter@7b6824db, org.springframework.web.filter.CorsFilter@200ef05b, org.springframework.security.web.authentication.logout.LogoutFilter@72117a6c, com.paynest.security.JwtAuthenticationFilter@232899d1, com.paynest.config.TenantFilter@522221e1, com.paynest.config.ApiAuditKafkaFilter@701a79b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@78181f7f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6682e9b0, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@298154d4, org.springframework.security.web.session.SessionManagementFilter@5a6dd1e7, org.springframework.security.web.access.ExceptionTranslationFilter@615d74e9, org.springframework.security.web.access.intercept.AuthorizationFilter@67253518]] (1/1)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/register/selfWithOtp
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@6990f6af, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@27d38370, org.springframework.security.web.context.SecurityContextHolderFilter@4d619aa0, org.springframework.security.web.header.HeaderWriterFilter@7b6824db, org.springframework.web.filter.CorsFilter@200ef05b, org.springframework.security.web.authentication.logout.LogoutFilter@72117a6c, com.paynest.security.JwtAuthenticationFilter@232899d1, com.paynest.config.TenantFilter@522221e1, com.paynest.config.ApiAuditKafkaFilter@701a79b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@78181f7f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6682e9b0, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@298154d4, org.springframework.security.web.session.SessionManagementFilter@5a6dd1e7, org.springframework.security.web.access.ExceptionTranslationFilter@615d74e9, org.springframework.security.web.access.intercept.AuthorizationFilter@67253518]] (1/1)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /error
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-19 23:46:58 [http-nio-8080-exec-7] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@6990f6af, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@27d38370, org.springframework.security.web.context.SecurityContextHolderFilter@4d619aa0, org.springframework.security.web.header.HeaderWriterFilter@7b6824db, org.springframework.web.filter.CorsFilter@200ef05b, org.springframework.security.web.authentication.logout.LogoutFilter@72117a6c, com.paynest.security.JwtAuthenticationFilter@232899d1, com.paynest.config.TenantFilter@522221e1, com.paynest.config.ApiAuditKafkaFilter@701a79b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@78181f7f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6682e9b0, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@298154d4, org.springframework.security.web.session.SessionManagementFilter@5a6dd1e7, org.springframework.security.web.access.ExceptionTranslationFilter@615d74e9, org.springframework.security.web.access.intercept.AuthorizationFilter@67253518]] (1/1)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/register/selfWithOtp
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId e49577b3-38c9-42e6-8740-5d6c26bc3996
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/register/selfWithOtp
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.controller.AccountController - User registration started
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.mobile_number=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [9003832992]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select o1_0.otp_id,o1_0.attempt_count,o1_0.created_at,o1_0.expires_at,o1_0.max_attempt,o1_0.mobile_number,o1_0.otp_value,o1_0.reference_id,o1_0.reference_type,o1_0.status,o1_0.updated_at,o1_0.verified_at from otp o1_0 where o1_0.otp_value=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:INTEGER) <- [531517]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.service.AccountService - Otp validation done. registering user
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select e1_0.id,e1_0.created_at,e1_0.description,e1_0.display_order,e1_0.enum_code,e1_0.enum_type,e1_0.enum_value,e1_0.is_active,e1_0.is_system,e1_0.updated_at from enumerations e1_0 where e1_0.enum_type=? and e1_0.is_active=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [CURRENCY]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BOOLEAN) <- [true]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select e1_0.id,e1_0.created_at,e1_0.description,e1_0.display_order,e1_0.enum_code,e1_0.enum_type,e1_0.enum_value,e1_0.is_active,e1_0.is_system,e1_0.updated_at from enumerations e1_0 where e1_0.enum_type=? and e1_0.is_active=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [WALLET_TYPE]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BOOLEAN) <- [true]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319234712330370]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - insert into account (account_type,address,attr1,attr10,attr2,attr3,attr4,attr5,attr6,attr7,attr8,attr9,created_at,created_by,date_of_birth,email,first_name,gender,kyc_status,last_name,mobile_number,nationality,preferred_lang,remarks,ssn,status,updated_at,updated_by,account_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [SUBSCRIBER]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (11:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (12:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (13:TIMESTAMP) <- [2026-03-19T23:47:12.092965100]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (14:VARCHAR) <- [AC20260319234712330370]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (15:DATE) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (16:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (17:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (18:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (19:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (20:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (21:VARCHAR) <- [9003832992]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (22:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (23:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (24:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (25:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (26:VARCHAR) <- [ACTIVE]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (27:TIMESTAMP) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (28:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (29:VARCHAR) <- [AC20260319234712330370]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select r1_0.role_id,r1_0.created_at,r1_0.description,r1_0.role_code,r1_0.role_name,r1_0.role_type,r1_0.status from roles r1_0 where r1_0.role_code=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [CUSTOMER]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - insert into user_roles (assigned_at,assigned_by,role_id,user_id) values (?,?,?,?)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-19T23:47:12.303991700]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [AC20260319234712330370]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:BIGINT) <- [2]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [AC20260319234712330370]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [2]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [3]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [4]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [5]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [6]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [7]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [8]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [9]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [10]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [11]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [12]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.Utilities.IdGenerator - generated Pin is : 5490
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319234712330370]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:47:12.326523600]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [USD]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [true]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [MAIN]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [1]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319234712330370]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:47:12.326523600]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [EURO]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [MAIN]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [2]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] WARN  org.hibernate.engine.jdbc.spi.SqlExceptionHelper - SQL Error: 0, SQLState: 22001
+2026-03-19 23:47:12 [http-nio-8080-exec-8] ERROR org.hibernate.engine.jdbc.spi.SqlExceptionHelper - ERROR: value too long for type character(3)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-19 23:47:12 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-19T23:47:12.417148600]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [500]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [386]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"c14f307b-d987-4d71-b49a-3044362c1ff4","user":{"mobileNumber":"9003832992","otp":"531517"}}]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"responseStatus":"FAILURE","code":"INTERNAL_ERROR","message":"Something went wrong","traceId":"e49577b3-38c9-42e6-8740-5d6c26bc3996","timestamp":"2026-03-19T23:47:12.4004839"}]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [e49577b3-38c9-42e6-8740-5d6c26bc3996]
+2026-03-19 23:47:12 [http-nio-8080-exec-8] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context e49577b3-38c9-42e6-8740-5d6c26bc3996
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Trying to match request against DefaultSecurityFilterChain [RequestMatcher=any request, Filters=[org.springframework.security.web.session.DisableEncodeUrlFilter@6990f6af, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@27d38370, org.springframework.security.web.context.SecurityContextHolderFilter@4d619aa0, org.springframework.security.web.header.HeaderWriterFilter@7b6824db, org.springframework.web.filter.CorsFilter@200ef05b, org.springframework.security.web.authentication.logout.LogoutFilter@72117a6c, com.paynest.security.JwtAuthenticationFilter@232899d1, com.paynest.config.TenantFilter@522221e1, com.paynest.config.ApiAuditKafkaFilter@701a79b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@78181f7f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@6682e9b0, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@298154d4, org.springframework.security.web.session.SessionManagementFilter@5a6dd1e7, org.springframework.security.web.access.ExceptionTranslationFilter@615d74e9, org.springframework.security.web.access.intercept.AuthorizationFilter@67253518]] (1/1)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.springframework.security.web.FilterChainProxy - Securing POST /api/v1/account/register/selfWithOtp
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking DisableEncodeUrlFilter (1/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking WebAsyncManagerIntegrationFilter (2/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderFilter (3/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking HeaderWriterFilter (4/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking CorsFilter (5/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking LogoutFilter (6/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking JwtAuthenticationFilter (7/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.security.JwtAuthenticationFilter - Inside JwtAuthenticationFilter
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking TenantFilter (8/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.config.TenantFilter - Tenant before filter chain: tenant_movii and request TraceId 82420750-106a-4279-b042-95156df0667e
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking ApiAuditKafkaFilter (9/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking RequestCacheAwareFilter (10/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking SecurityContextHolderAwareRequestFilter (11/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking AnonymousAuthenticationFilter (12/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking SessionManagementFilter (13/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking ExceptionTranslationFilter (14/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.springframework.security.web.FilterChainProxy - Invoking AuthorizationFilter (15/15)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.springframework.security.web.FilterChainProxy - Secured POST /api/v1/account/register/selfWithOtp
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.controller.AccountController - User registration started
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.mobile_number=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [9003832992]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select o1_0.otp_id,o1_0.attempt_count,o1_0.created_at,o1_0.expires_at,o1_0.max_attempt,o1_0.mobile_number,o1_0.otp_value,o1_0.reference_id,o1_0.reference_type,o1_0.status,o1_0.updated_at,o1_0.verified_at from otp o1_0 where o1_0.otp_value=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:INTEGER) <- [531517]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.service.AccountService - Otp validation done. registering user
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select e1_0.id,e1_0.created_at,e1_0.description,e1_0.display_order,e1_0.enum_code,e1_0.enum_type,e1_0.enum_value,e1_0.is_active,e1_0.is_system,e1_0.updated_at from enumerations e1_0 where e1_0.enum_type=? and e1_0.is_active=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [CURRENCY]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BOOLEAN) <- [true]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select e1_0.id,e1_0.created_at,e1_0.description,e1_0.display_order,e1_0.enum_code,e1_0.enum_type,e1_0.enum_value,e1_0.is_active,e1_0.is_system,e1_0.updated_at from enumerations e1_0 where e1_0.enum_type=? and e1_0.is_active=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [WALLET_TYPE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BOOLEAN) <- [true]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select a1_0.account_id,a1_0.account_type,a1_0.address,a1_0.attr1,a1_0.attr10,a1_0.attr2,a1_0.attr3,a1_0.attr4,a1_0.attr5,a1_0.attr6,a1_0.attr7,a1_0.attr8,a1_0.attr9,a1_0.created_at,a1_0.created_by,a1_0.date_of_birth,a1_0.email,a1_0.first_name,a1_0.gender,a1_0.kyc_status,a1_0.last_name,a1_0.mobile_number,a1_0.nationality,a1_0.preferred_lang,a1_0.remarks,a1_0.ssn,a1_0.status,a1_0.updated_at,a1_0.updated_by from account a1_0 where a1_0.account_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into account (account_type,address,attr1,attr10,attr2,attr3,attr4,attr5,attr6,attr7,attr8,attr9,created_at,created_by,date_of_birth,email,first_name,gender,kyc_status,last_name,mobile_number,nationality,preferred_lang,remarks,ssn,status,updated_at,updated_by,account_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [SUBSCRIBER]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (11:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (12:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (13:TIMESTAMP) <- [2026-03-19T23:50:39.423440500]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (14:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (15:DATE) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (16:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (17:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (18:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (19:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (20:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (21:VARCHAR) <- [9003832992]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (22:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (23:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (24:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (25:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (26:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (27:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (28:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (29:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - SELECT nextval('wallet_wallet_id_seq')
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select r1_0.role_id,r1_0.created_at,r1_0.description,r1_0.role_code,r1_0.role_name,r1_0.role_type,r1_0.status from roles r1_0 where r1_0.role_code=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [CUSTOMER]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into user_roles (assigned_at,assigned_by,role_id,user_id) values (?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-19T23:50:39.463615500]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:BIGINT) <- [2]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [13]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [14]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [15]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [16]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [17]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select w1_0.wallet_id,w1_0.account_id,w1_0.created_at,w1_0.currency,w1_0.is_default,w1_0.is_locked,w1_0.remarks,w1_0.status,w1_0.updated_at,w1_0.wallet_type from wallet w1_0 where w1_0.wallet_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [18]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.Utilities.IdGenerator - generated Pin is : 5240
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:50:39.463615500]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [USD]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [true]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [MAIN]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [13]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:50:39.473909800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [INR]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [MAIN]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [14]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:50:39.473909800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [USD]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [BONUS]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [15]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:50:39.473909800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [INR]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [BONUS]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [16]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [USD]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [SALARY]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [17]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet (account_id,created_at,currency,is_default,is_locked,remarks,status,updated_at,wallet_type,wallet_id) values (?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [INR]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BOOLEAN) <- [false]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [SALARY]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:BIGINT) <- [18]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [13]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [14]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [15]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [16]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [17]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into wallet_balance (available_balance,fic_balance,frozen_balance,updated_at,version,wallet_id) values (?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:NUMERIC) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:BIGINT) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BIGINT) <- [18]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into account_identifiers (account_id,auth_id,created_at,identifier_type,identifier_value,status,updated_at) values (?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [AC20260319235039994103]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:BIGINT) <- [1773944439480961]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:TIMESTAMP) <- [2026-03-19T23:50:39.480780800]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:VARCHAR) <- [MOBILE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:VARCHAR) <- [9003832992]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - select aa1_0.auth_id,aa1_0.auth_hash,aa1_0.auth_type,aa1_0.auth_value,aa1_0.created_at,aa1_0.failed_attempts,aa1_0.is_first_time_login,aa1_0.last_failed_at,aa1_0.last_login_at,aa1_0.last_login_ip,aa1_0.password_changed_at,aa1_0.status,aa1_0.updated_at from account_auth aa1_0 where aa1_0.auth_id=?
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1773944439480961]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into account_auth (auth_hash,auth_type,auth_value,created_at,failed_attempts,is_first_time_login,last_failed_at,last_login_at,last_login_ip,password_changed_at,status,updated_at,auth_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:VARCHAR) <- [24255b07-ae1a-4546-9000-ce1c962ea0d2]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [PIN]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:VARCHAR) <- [f5f3c5fc518a3b06777c5e64e18039f9bcae0abbc8daded437cce4a2d8a7b7cb]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:TIMESTAMP) <- [2026-03-19T23:50:39.549471500]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:INTEGER) <- [0]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:BOOLEAN) <- [true]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (9:VARCHAR) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (10:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (11:VARCHAR) <- [ACTIVE]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (12:TIMESTAMP) <- [null]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (13:BIGINT) <- [1773944439480961]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.controller.AccountController - User registration completed
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.tenant.TenantIdentifierResolver - Hibernate resolving tenant: tenant_movii
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.config.MultiTenantConnectionProviderImpl - tenantIdentifier in object : tenant_movii
+2026-03-19 23:50:39 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - insert into public.audit_api_logs (created_at,http_method,http_status,processing_time_ms,request_body,response_body,tenant_id,trace_id) values (?,?,?,?,?,?,?,?)
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:TIMESTAMP) <- [2026-03-19T23:50:39.573406]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (2:VARCHAR) <- [POST]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (3:INTEGER) <- [200]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (4:BIGINT) <- [175]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (5:JSON) <- [{"requestId":"c14f307b-d987-4d71-b49a-3044362c1ff4","user":{"mobileNumber":"9003832992","otp":"531517"}}]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (6:JSON) <- [{"status":"SUCCESS","requestId":"c14f307b-d987-4d71-b49a-3044362c1ff4","message":"User registered successfully","accountId":"AC20260319235039994103"}]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (7:VARCHAR) <- [movii]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] TRACE org.hibernate.orm.jdbc.bind - binding parameter (8:VARCHAR) <- [82420750-106a-4279-b042-95156df0667e]
+2026-03-19 23:50:39 [http-nio-8080-exec-10] INFO  com.paynest.config.TenantFilter - Clearing tenant context for tenant ID: movii and Trace Context 82420750-106a-4279-b042-95156df0667e

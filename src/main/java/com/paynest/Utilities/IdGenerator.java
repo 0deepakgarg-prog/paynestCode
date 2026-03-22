@@ -8,8 +8,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.paynest.config.PropertyReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class IdGenerator {
@@ -17,6 +19,8 @@ public class IdGenerator {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter SHORT_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyMMdd");
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HHmmss");
@@ -112,12 +116,17 @@ public class IdGenerator {
         return inputHash.equals(storedHash);
     }
 
-    public static String generateTransactionId(String prefix) {
+    public static String generateTransactionId(String prefix, String serverInstance) {
         LocalDateTime timeStamp=LocalDateTime.now();
-        String datePart = timeStamp.format(DATE_FORMAT);
+        String datePart = timeStamp.format(SHORT_DATE_FORMAT);
         String timePart = timeStamp.format(TIME_FORMAT);
         int randomNumber = secureRandom.nextInt(10000);
         String randomPart = String.format("%04d", randomNumber);
-        return prefix.concat(datePart).concat("-").concat(timePart).concat("-").concat(randomPart);
+        return prefix.concat(datePart)
+                .concat("-")
+                .concat(timePart)
+                .concat("-")
+                .concat(serverInstance)
+                .concat(randomPart);
     }
 }

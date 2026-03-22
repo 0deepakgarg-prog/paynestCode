@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.paynest.e2e.BillPayPaymentSecurityE2ETest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.525 s -- in com.paynest.e2e.BillPayPaymentSecurityE2ETest

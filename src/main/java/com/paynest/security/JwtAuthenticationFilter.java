@@ -1,5 +1,7 @@
 package com.paynest.security;
 
+import com.paynest.exception.ApiErrorResponseWriter;
+import com.paynest.exception.CommonErrorCode;
 import com.paynest.service.TenantRegistryService;
 import com.paynest.tenant.TenantContext;
 import io.jsonwebtoken.Claims;
@@ -27,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final TenantRegistryService tenantRegistryService;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -43,18 +46,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
         if (!jwtService.isTokenValid(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
+            apiErrorResponseWriter.write(request, response, CommonErrorCode.INVALID_TOKEN);
             return;
         }
 
         String accountId = jwtService.extractAccountId(token);
-        String tenantId = jwtService.extractTenant(token);
+        String tenantClaim = jwtService.extractTenant(token);
         Claims claims = jwtService.getClaims(token);
-        log.info("tenant is :" + tenantId);
+        String requestTenantSchema = TenantContext.getTenant();
+        String resolvedTokenTenantSchema = resolveTokenTenantSchema(tenantClaim, requestTenantSchema);
+
+        if (tenantClaim == null || tenantClaim.isBlank()
+                || resolvedTokenTenantSchema == null || resolvedTokenTenantSchema.isBlank()
+                || requestTenantSchema == null || requestTenantSchema.isBlank()
+                || !requestTenantSchema.equals(resolvedTokenTenantSchema)) {
+            apiErrorResponseWriter.write(request, response, CommonErrorCode.INVALID_TOKEN);
+            return;
+        }
+
+        log.info("tenant is :" + tenantClaim);
 
         if (accountId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            TenantContext.setTenant(tenantRegistryService.getSchema(tenantId));
+            TenantContext.setTenant(resolvedTokenTenantSchema);
             UserDetails userDetails = userDetailsService.loadUserByUsername(accountId);
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
@@ -66,5 +79,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String resolveTokenTenantSchema(String tenantClaim, String requestTenantSchema) {
+        if (tenantClaim == null || tenantClaim.isBlank()) {
+            return null;
+        }
+
+        if (requestTenantSchema != null && requestTenantSchema.equals(tenantClaim)) {
+            return tenantClaim;
+        }
+
+        return tenantRegistryService.getSchema(tenantClaim);
     }
 }
