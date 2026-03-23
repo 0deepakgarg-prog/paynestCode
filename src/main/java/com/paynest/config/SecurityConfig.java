@@ -1,9 +1,9 @@
 package com.paynest.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paynest.repository.AuditApiLogRepository;
-import com.paynest.service.AsyncLogPublisher;
-import com.paynest.security.JwtAuthenticationFilter;
+import com.paynest.config.repository.AuditApiLogRepository;
+import com.paynest.config.service.AsyncLogPublisher;
+import com.paynest.config.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +21,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final TenantFilter tenantFilter;
+    private final SecurityAuthenticationEntryPoint securityAuthenticationEntryPoint;
+    private final SecurityAccessDeniedHandler securityAccessDeniedHandler;
     private final AsyncLogPublisher asyncLogPublisher;
     private final AuditApiLogRepository auditApiLogRepository;
     private final ObjectMapper objectMapper;
@@ -31,13 +33,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(securityAuthenticationEntryPoint)
+                        .accessDeniedHandler(securityAccessDeniedHandler)
+                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/account/register/**",
-                                "/api/v1/account/pin/changeDefault/",
-                                "/api/v1/account/password/changeDefault/",
+                                "/api/v1/account/pin/changeDefault",
+                                "/api/v1/account/password/changeDefault",
                                 "/api/v1/account/register/**",
                                 "/api/v1/account/registerUser"
                 )
@@ -76,3 +82,4 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }
+

@@ -1,6 +1,6 @@
 package com.paynest.config;
 
-import com.paynest.tenant.TenantIdentifierResolver;
+import com.paynest.config.tenant.TenantIdentifierResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
@@ -33,3 +33,4 @@ public class HibernateTenantConfig {
         };
     }
 }
+

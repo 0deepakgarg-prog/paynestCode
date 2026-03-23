@@ -1,9 +1,9 @@
 
 package com.paynest.config;
 
-import com.paynest.service.TenantRegistryService;
-import com.paynest.tenant.TenantContext;
-import com.paynest.tenant.TraceContext;
+import com.paynest.config.service.TenantRegistryService;
+import com.paynest.config.tenant.TenantContext;
+import com.paynest.config.tenant.TraceContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.UUID;
+import com.paynest.exception.ApplicationException;
 
 @Component
 @RequiredArgsConstructor
@@ -28,31 +29,59 @@ public class TenantFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        tenantService.ensureTenantsLoaded();
 
-        String tenant = TenantContext.getTenant();
-
-        if(tenant == null) {
-            tenant = request.getHeader("X-Tenant-Id");
-        }
-        if (tenant == null) {
-            response.sendError(400, "X-Tenant-Id missing");
-            return;
-        }
-
-        String schema = tenantService.getSchema(tenant);
-        if (schema == null || schema.isBlank()) {
-            response.sendError(404, "Unknown tenant");
-            return;
-        }
-
-        TenantContext.setTenant( schema);
-        //MDC.put("tenantId", tenant);
         String traceId = UUID.randomUUID().toString();
         TraceContext.setTraceId(traceId);
-        log.info("Tenant before filter chain: {} and request TraceId {}", TenantContext.getTenant(),traceId);
+        String tenant = TenantContext.getTenant();
+
         try {
+            tenantService.ensureTenantsLoaded();
+
+            if (tenant == null) {
+                tenant = request.getHeader("X-Tenant-Id");
+            }
+            if (tenant == null) {
+                log.error("Filter error. code=X_TENANT_ID_MISSING, message=X-Tenant-Id missing, traceId={}", traceId);
+                FilterErrorResponseWriter.write(
+                        response,
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "X_TENANT_ID_MISSING",
+                        "X-Tenant-Id missing"
+                );
+                return;
+            }
+
+            String schema = tenantService.getSchema(tenant);
+            if (schema == null || schema.isBlank()) {
+                log.error("Filter error. code=UNKNOWN_TENANT, message=Unknown tenant, tenant={}, traceId={}", tenant, traceId);
+                FilterErrorResponseWriter.write(
+                        response,
+                        HttpServletResponse.SC_NOT_FOUND,
+                        "UNKNOWN_TENANT",
+                        "Unknown tenant"
+                );
+                return;
+            }
+
+            TenantContext.setTenant(schema);
+            log.info("Tenant before filter chain: {} and request TraceId {}", TenantContext.getTenant(), traceId);
             filterChain.doFilter(request, response);
+        } catch (ApplicationException ex) {
+            log.error("Filter error. code={}, message={}, traceId={}", ex.getErrorCode(), ex.getErrorMessage(), traceId, ex);
+            FilterErrorResponseWriter.write(
+                    response,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    ex.getErrorCode(),
+                    ex.getErrorMessage()
+            );
+        } catch (Exception ex) {
+            log.error("Filter error. code=FILTER_ERROR, message={}, traceId={}", ex.getMessage(), traceId, ex);
+            FilterErrorResponseWriter.write(
+                    response,
+                    FilterErrorResponseWriter.resolveHttpStatus(ex),
+                    "FILTER_ERROR",
+                    ex.getMessage() == null ? "Unexpected filter error" : ex.getMessage()
+            );
         } finally {
             log.info("Clearing tenant context for tenant ID: {} and Trace Context {}", tenant,TraceContext.getTraceId());
             MDC.clear();
@@ -61,3 +90,4 @@ public class TenantFilter extends OncePerRequestFilter {
         }
     }
 }
+

@@ -34,6 +34,11 @@ spring:
             add:
               type:
                 headers: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
 
 logging:
   level:
@@ -51,6 +56,8 @@ app:
   kafka:
     audit-enabled: false
     audit-topic: ${KAFKA_AUDIT_TOPIC:paynest.api.audit}
+  wallet-cache:
+    ttl-hours: 1
 
 security:
   jwt:

@@ -1,10 +1,10 @@
 package com.paynest.exception;
 
 
-import com.paynest.dto.response.ApiErrorResponse;
-import com.paynest.enums.TransactionStatus;
-import com.paynest.payment.dto.U2UPaymentResponse;
-import com.paynest.tenant.TraceContext;
+import com.paynest.config.dto.response.ApiErrorResponse;
+import com.paynest.payments.enums.TransactionStatus;
+import com.paynest.payments.dto.BasePaymentResponse;
+import com.paynest.config.tenant.TraceContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -67,10 +66,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ApplicationException.class)
-    public ResponseEntity<U2UPaymentResponse> handleAppExceptionV2(
+    public ResponseEntity<BasePaymentResponse> handleAppExceptionV2(
             ApplicationException ex) {
 
-        U2UPaymentResponse response = U2UPaymentResponse.builder()
+        BasePaymentResponse response = BasePaymentResponse.builder()
                 .message(ex.getErrorMessage())
                 .code(ex.getErrorCode())
                 .responseStatus(TransactionStatus.FAILURE)
@@ -83,3 +82,4 @@ public class GlobalExceptionHandler {
     }
 
 }
+

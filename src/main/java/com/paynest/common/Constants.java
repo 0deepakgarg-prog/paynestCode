@@ -31,3 +31,4 @@ package com.paynest.common;
         public static final String TRANSACTION_SUCCESS = "TS";
         public static final String TRANSACTION_FAILED = "TF";
     }
+
