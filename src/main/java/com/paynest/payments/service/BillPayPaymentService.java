@@ -1,4 +1,4 @@
-package com.paynest.payment.service;
+package com.paynest.payments.service;
 
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
@@ -13,10 +13,10 @@ import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.exception.ApplicationException;
 import com.paynest.exception.PaymentErrorCode;
 import com.paynest.payments.dto.Authentication;
+import com.paynest.payments.dto.BillPayPaymentRequest;
+import com.paynest.payments.dto.BillPayPaymentResponse;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
-import com.paynest.payments.dto.U2UPaymentRequest;
-import com.paynest.payments.dto.U2UPaymentResponse;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
@@ -38,44 +38,44 @@ import java.util.Map;
 
 @Service
 @Transactional
-public class U2UPaymentService {
+public class BillPayPaymentService {
 
-    private static final Logger log = LoggerFactory.getLogger(U2UPaymentService.class);
-    private static final String OPERATION_NAME = "U2U";
-    private static final String TRANSACTION_PREFIX = "UU";
+    private static final Logger log = LoggerFactory.getLogger(BillPayPaymentService.class);
+    private static final String OPERATION_NAME = "BILLPAY";
+    private static final String TRANSACTION_PREFIX = "BP";
     private static final AccountType DEBITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
-    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
+    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.BILLER;
 
-    private final WalletRepository walletRepository;
-    private final AccountRepository accountRepository;
-    private final AccountIdentifierRepository accountIdentifierRepository;
     private final BasePaymentRequestValidator basePaymentRequestValidator;
+    private final AccountIdentifierRepository accountIdentifierRepository;
+    private final AccountRepository accountRepository;
+    private final WalletRepository walletRepository;
     private final PropertyReader propertyReader;
     private final TransactionsService transactionsService;
     private final BalanceService balanceService;
     private final AuthService authService;
 
-    public U2UPaymentService(
-            WalletRepository walletRepository,
-            AccountRepository accountRepository,
-            AccountIdentifierRepository accountIdentifierRepository,
+    public BillPayPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
+            AccountIdentifierRepository accountIdentifierRepository,
+            AccountRepository accountRepository,
+            WalletRepository walletRepository,
             PropertyReader propertyReader,
             TransactionsService transactionsService,
             BalanceService balanceService,
             AuthService authService
     ) {
-        this.walletRepository = walletRepository;
-        this.accountRepository = accountRepository;
-        this.accountIdentifierRepository = accountIdentifierRepository;
         this.basePaymentRequestValidator = basePaymentRequestValidator;
+        this.accountIdentifierRepository = accountIdentifierRepository;
+        this.accountRepository = accountRepository;
+        this.walletRepository = walletRepository;
         this.propertyReader = propertyReader;
         this.transactionsService = transactionsService;
         this.balanceService = balanceService;
         this.authService = authService;
     }
 
-    public U2UPaymentResponse processPayment(U2UPaymentRequest request, boolean validateJWT) {
+    public BillPayPaymentResponse processPayment(BillPayPaymentRequest request, boolean validateJWT) {
         log.info("Processing {} payment request. traceId={}", OPERATION_NAME, TraceContext.getTraceId());
         basePaymentRequestValidator.validate(request);
         normalizeRequest(request);
@@ -83,6 +83,7 @@ public class U2UPaymentService {
 
         validateParty(request.getDebitor(), InitiatedBy.DEBITOR, DEBITOR_ACCOUNT_TYPE);
         validateParty(request.getCreditor(), InitiatedBy.CREDITOR, CREDITOR_ACCOUNT_TYPE);
+        validateCreditorIdentifierType(request.getCreditor());
         validateMatchingWalletTypes(request.getDebitor(), request.getCreditor());
 
         AccountIdentifier debitorIdentifier = getIdentifier(request.getDebitor());
@@ -139,7 +140,7 @@ public class U2UPaymentService {
                     creditorWallet
             );
 
-            balanceService.transferWalletAmount(
+            balanceService.parkWalletAmountInFic(
                     debitorWallet,
                     creditorWallet,
                     request.getTransaction().getAmount(),
@@ -151,15 +152,15 @@ public class U2UPaymentService {
             throw ex.withTransactionId(transactionId);
         }
 
-        return buildSuccessResponse(request, transactionId);
+        return buildPendingResponse(request, transactionId);
     }
 
-    private U2UPaymentResponse buildSuccessResponse(U2UPaymentRequest request, String transactionId) {
-        return U2UPaymentResponse.builder()
-                .responseStatus(TransactionStatus.SUCCESS)
+    private BillPayPaymentResponse buildPendingResponse(BillPayPaymentRequest request, String transactionId) {
+        return BillPayPaymentResponse.builder()
+                .responseStatus(TransactionStatus.PENDING)
                 .operationType(request.getOperationType())
-                .code("PAYMENT_SUCCESS")
-                .message("U2U Payment Successful")
+                .code("SETTLEMENT_PENDING")
+                .message("Bill payment parked pending settlement")
                 .timestamp(Instant.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
@@ -179,6 +180,23 @@ public class U2UPaymentService {
                             "role", role.name(),
                             "accountType", String.valueOf(party.getAccountType()),
                             "operationType", OPERATION_NAME
+                    )
+            );
+        }
+    }
+
+    private void validateCreditorIdentifierType(Party creditor) {
+        IdentifierType identifierType = creditor.getIdentifier().getType();
+        if (identifierType != IdentifierType.LOGINID
+                && identifierType != IdentifierType.MSISDN
+                && identifierType != IdentifierType.MOBILE) {
+            throw new ApplicationException(
+                    PaymentErrorCode.INVALID_CREDITOR_IDENTIFIER_TYPE,
+                    null,
+                    Map.of(
+                            "operationType", OPERATION_NAME,
+                            "accountType", CREDITOR_ACCOUNT_TYPE.name(),
+                            "allowedTypes", "MOBILE, MSISDN, LOGINID"
                     )
             );
         }
@@ -270,7 +288,7 @@ public class U2UPaymentService {
         }
     }
 
-    private void normalizeRequest(U2UPaymentRequest request) {
+    private void normalizeRequest(BillPayPaymentRequest request) {
         request.getTransaction().setCurrency(
                 request.getTransaction().getCurrency().trim().toUpperCase(Locale.ROOT)
         );
@@ -398,7 +416,7 @@ public class U2UPaymentService {
 
     private void createTransactionRecord(
             String transactionId,
-            U2UPaymentRequest request,
+            BillPayPaymentRequest request,
             AccountIdentifier debitorIdentifier,
             AccountIdentifier creditorIdentifier,
             String debitorAccountType,
@@ -428,11 +446,15 @@ public class U2UPaymentService {
             );
         }
 
+        JSONObject additionalInfo = new JSONObject();
         if (request.getAdditionalInfo() != null && !request.getAdditionalInfo().isEmpty()) {
-            transactionsService.updateAdditionalInfo(
-                    transactionId,
-                    new JSONObject(request.getAdditionalInfo())
-            );
+            for (String key : request.getAdditionalInfo().keySet()) {
+                additionalInfo.put(key, request.getAdditionalInfo().get(key));
+            }
+        }
+
+        if (additionalInfo.length() > 0) {
+            transactionsService.updateAdditionalInfo(transactionId, additionalInfo);
         }
 
         transactionsService.updatePaymentReference(

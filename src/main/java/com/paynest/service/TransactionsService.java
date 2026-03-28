@@ -24,7 +24,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service
+@Service("legacyTransactionsService")
 @RequiredArgsConstructor
 @Slf4j
 public class TransactionsService {

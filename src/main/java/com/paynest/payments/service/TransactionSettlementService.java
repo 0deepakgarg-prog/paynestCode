@@ -1,4 +1,4 @@
-package com.paynest.payment.service;
+package com.paynest.payments.service;
 
 import com.paynest.common.Constants;
 import com.paynest.payments.entity.TransactionDetails;

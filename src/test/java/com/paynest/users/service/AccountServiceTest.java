@@ -28,6 +28,7 @@ import com.paynest.users.repository.WalletBalanceRepository;
 import com.paynest.users.repository.WalletRepository;
 import com.paynest.config.security.JWTUtils;
 import com.paynest.payments.enums.InitiatedBy;
+import com.paynest.payments.service.TransactionsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -365,8 +367,16 @@ class AccountServiceTest {
                 org.mockito.ArgumentMatchers.eq(systemWallet),
                 org.mockito.ArgumentMatchers.eq(InitiatedBy.DEBITOR)
         );
-        verify(walletService).debitWallet(subscriberWallet, java.math.BigDecimal.valueOf(5), anyString());
-        verify(walletService).creditWallet(systemWallet, java.math.BigDecimal.valueOf(5), anyString());
+        verify(walletService).debitWallet(
+                eq(subscriberWallet),
+                eq(java.math.BigDecimal.valueOf(5)),
+                anyString()
+        );
+        verify(walletService).creditWallet(
+                eq(systemWallet),
+                eq(java.math.BigDecimal.valueOf(5)),
+                anyString()
+        );
         verify(accountRepository).save(subscriber);
         verify(walletRepository).saveAll(List.of(subscriberWallet));
         verify(accountIdentifierRepository).saveAll(List.of(identifier));

@@ -2,19 +2,22 @@ package com.paynest.service;
 
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
-import com.paynest.entity.TransactionDetails;
-import com.paynest.entity.TransactionDetailsId;
-import com.paynest.entity.Transactions;
-import com.paynest.entity.Wallet;
-import com.paynest.entity.WalletBalance;
+import com.paynest.config.tenant.TraceContext;
+import com.paynest.payments.entity.TransactionDetails;
+import com.paynest.payments.entity.TransactionDetailsId;
+import com.paynest.payments.entity.Transactions;
+import com.paynest.payments.enums.InitiatedBy;
+import com.paynest.payments.repository.TransactionDetailsRepository;
+import com.paynest.payments.repository.TransactionsRepository;
+import com.paynest.payments.repository.WalletLedgerRepository;
+import com.paynest.payments.service.BalanceService;
+import com.paynest.users.entity.Wallet;
+import com.paynest.users.entity.WalletBalance;
+import com.paynest.users.repository.AccountRepository;
+import com.paynest.users.repository.WalletBalanceRepository;
+import com.paynest.users.repository.WalletRepository;
+import com.paynest.users.service.WalletCacheService;
 import com.paynest.exception.ApplicationException;
-import com.paynest.repository.AccountRepository;
-import com.paynest.repository.TransactionDetailsRepository;
-import com.paynest.repository.TransactionsRepository;
-import com.paynest.repository.WalletBalanceRepository;
-import com.paynest.repository.WalletLedgerRepository;
-import com.paynest.repository.WalletRepository;
-import com.paynest.tenant.TraceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,6 +57,12 @@ class BalanceServiceTest {
     @Mock
     private WalletLedgerRepository ledgerRepo;
 
+    @Mock
+    private com.paynest.payments.service.TransactionsService transactionsService;
+
+    @Mock
+    private WalletCacheService walletCacheService;
+
     private BalanceService balanceService;
 
     @BeforeEach
@@ -66,7 +75,9 @@ class BalanceServiceTest {
                 transactionDetailsRepository,
                 propertyReader,
                 balanceRepository,
-                ledgerRepo
+                ledgerRepo,
+                transactionsService,
+                walletCacheService
         );
     }
 
@@ -98,7 +109,7 @@ class BalanceServiceTest {
                     creditorWallet,
                     new BigDecimal("10.00"),
                     "U2U",
-                    com.paynest.enums.InitiatedBy.DEBITOR,
+                    InitiatedBy.DEBITOR,
                     "txn-1"
             );
         } finally {
@@ -131,7 +142,7 @@ class BalanceServiceTest {
                         creditorWallet,
                         new BigDecimal("10.00"),
                         "U2U",
-                        com.paynest.enums.InitiatedBy.DEBITOR,
+                        InitiatedBy.DEBITOR,
                         "txn-1"
                 )
         );
@@ -168,7 +179,7 @@ class BalanceServiceTest {
                     creditorWallet,
                     new BigDecimal("10.00"),
                     "BILLPAY",
-                    com.paynest.enums.InitiatedBy.DEBITOR,
+                    InitiatedBy.DEBITOR,
                     "txn-2"
             );
         } finally {
@@ -187,6 +198,7 @@ class BalanceServiceTest {
         wallet.setWalletId(walletId);
         wallet.setAccountId(accountId);
         wallet.setCurrency("USD");
+        wallet.setWalletType("MAIN");
         wallet.setStatus(Constants.ACCOUNT_STATUS_ACTIVE);
         return wallet;
     }

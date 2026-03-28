@@ -1,13 +1,13 @@
 package com.paynest.service;
 
 import com.paynest.config.PropertyReader;
-import com.paynest.entity.AccountIdentifier;
-import com.paynest.entity.TransactionDetails;
-import com.paynest.entity.Wallet;
-import com.paynest.enums.InitiatedBy;
-import com.paynest.repository.TransactionDetailsRepository;
-import com.paynest.repository.TransactionsRepository;
-import com.paynest.tenant.TraceContext;
+import com.paynest.payments.entity.TransactionDetails;
+import com.paynest.payments.enums.InitiatedBy;
+import com.paynest.payments.repository.TransactionDetailsRepository;
+import com.paynest.payments.repository.TransactionsRepository;
+import com.paynest.config.tenant.TraceContext;
+import com.paynest.users.entity.AccountIdentifier;
+import com.paynest.users.entity.Wallet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

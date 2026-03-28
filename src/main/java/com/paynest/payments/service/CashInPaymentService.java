@@ -1,4 +1,4 @@
-package com.paynest.payment.service;
+package com.paynest.payments.service;
 
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
@@ -13,8 +13,8 @@ import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.exception.ApplicationException;
 import com.paynest.exception.PaymentErrorCode;
 import com.paynest.payments.dto.Authentication;
-import com.paynest.payments.dto.CashOutPaymentRequest;
-import com.paynest.payments.dto.CashOutPaymentResponse;
+import com.paynest.payments.dto.CashInPaymentRequest;
+import com.paynest.payments.dto.CashInPaymentResponse;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
@@ -38,13 +38,13 @@ import java.util.Map;
 
 @Service
 @Transactional
-public class CashOutPaymentService {
+public class CashInPaymentService {
 
-    private static final Logger log = LoggerFactory.getLogger(CashOutPaymentService.class);
-    private static final String OPERATION_NAME = "CASHOUT";
-    private static final String TRANSACTION_PREFIX = "CO";
-    private static final AccountType DEBITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
-    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.AGENT;
+    private static final Logger log = LoggerFactory.getLogger(CashInPaymentService.class);
+    private static final String OPERATION_NAME = "CASHIN";
+    private static final String TRANSACTION_PREFIX = "CI";
+    private static final AccountType DEBITOR_ACCOUNT_TYPE = AccountType.AGENT;
+    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
 
     private final BasePaymentRequestValidator basePaymentRequestValidator;
     private final AccountIdentifierRepository accountIdentifierRepository;
@@ -55,7 +55,7 @@ public class CashOutPaymentService {
     private final BalanceService balanceService;
     private final AuthService authService;
 
-    public CashOutPaymentService(
+    public CashInPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
             AccountIdentifierRepository accountIdentifierRepository,
             AccountRepository accountRepository,
@@ -75,7 +75,7 @@ public class CashOutPaymentService {
         this.authService = authService;
     }
 
-    public CashOutPaymentResponse processPayment(CashOutPaymentRequest request, boolean validateJWT) {
+    public CashInPaymentResponse processPayment(CashInPaymentRequest request, boolean validateJWT) {
         log.info("Processing {} payment request. traceId={}", OPERATION_NAME, TraceContext.getTraceId());
         basePaymentRequestValidator.validate(request);
         normalizeRequest(request);
@@ -83,7 +83,6 @@ public class CashOutPaymentService {
 
         validateParty(request.getDebitor(), InitiatedBy.DEBITOR, DEBITOR_ACCOUNT_TYPE);
         validateParty(request.getCreditor(), InitiatedBy.CREDITOR, CREDITOR_ACCOUNT_TYPE);
-        validateCreditorIdentifierType(request.getCreditor());
         validateMatchingWalletTypes(request.getDebitor(), request.getCreditor());
 
         AccountIdentifier debitorIdentifier = getIdentifier(request.getDebitor());
@@ -155,12 +154,12 @@ public class CashOutPaymentService {
         return buildSuccessResponse(request, transactionId);
     }
 
-    private CashOutPaymentResponse buildSuccessResponse(CashOutPaymentRequest request, String transactionId) {
-        return CashOutPaymentResponse.builder()
+    private CashInPaymentResponse buildSuccessResponse(CashInPaymentRequest request, String transactionId) {
+        return CashInPaymentResponse.builder()
                 .responseStatus(TransactionStatus.SUCCESS)
                 .operationType(request.getOperationType())
                 .code("PAYMENT_SUCCESS")
-                .message("Cash-out successful")
+                .message("Cash-in successful")
                 .timestamp(Instant.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
@@ -271,22 +270,7 @@ public class CashOutPaymentService {
         }
     }
 
-    private void validateCreditorIdentifierType(Party creditor) {
-        IdentifierType identifierType = creditor.getIdentifier().getType();
-        if (identifierType != IdentifierType.LOGINID && identifierType != IdentifierType.MSISDN) {
-            throw new ApplicationException(
-                    PaymentErrorCode.INVALID_CREDITOR_IDENTIFIER_TYPE,
-                    null,
-                    Map.of(
-                            "operationType", OPERATION_NAME,
-                            "accountType", CREDITOR_ACCOUNT_TYPE.name(),
-                            "allowedTypes", "MSISDN, LOGINID"
-                    )
-            );
-        }
-    }
-
-    private void normalizeRequest(CashOutPaymentRequest request) {
+    private void normalizeRequest(CashInPaymentRequest request) {
         request.getTransaction().setCurrency(
                 request.getTransaction().getCurrency().trim().toUpperCase(Locale.ROOT)
         );
@@ -414,7 +398,7 @@ public class CashOutPaymentService {
 
     private void createTransactionRecord(
             String transactionId,
-            CashOutPaymentRequest request,
+            CashInPaymentRequest request,
             AccountIdentifier debitorIdentifier,
             AccountIdentifier creditorIdentifier,
             String debitorAccountType,

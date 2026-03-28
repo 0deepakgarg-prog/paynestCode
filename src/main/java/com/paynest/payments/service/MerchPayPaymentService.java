@@ -1,4 +1,4 @@
-package com.paynest.payment.service;
+package com.paynest.payments.service;
 
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
@@ -13,9 +13,9 @@ import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.exception.ApplicationException;
 import com.paynest.exception.PaymentErrorCode;
 import com.paynest.payments.dto.Authentication;
-import com.paynest.payments.dto.BillPayPaymentRequest;
-import com.paynest.payments.dto.BillPayPaymentResponse;
 import com.paynest.payments.dto.Identifier;
+import com.paynest.payments.dto.MerchpayPaymentRequest;
+import com.paynest.payments.dto.MerchpayPaymentResponse;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
 import com.paynest.users.repository.AccountIdentifierRepository;
@@ -38,13 +38,13 @@ import java.util.Map;
 
 @Service
 @Transactional
-public class BillPayPaymentService {
+public class MerchPayPaymentService {
 
-    private static final Logger log = LoggerFactory.getLogger(BillPayPaymentService.class);
-    private static final String OPERATION_NAME = "BILLPAY";
-    private static final String TRANSACTION_PREFIX = "BP";
+    private static final Logger log = LoggerFactory.getLogger(MerchPayPaymentService.class);
+    private static final String OPERATION_NAME = "MERCHANTPAY";
+    private static final String TRANSACTION_PREFIX = "MP";
     private static final AccountType DEBITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
-    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.BILLER;
+    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.MERCHANT;
 
     private final BasePaymentRequestValidator basePaymentRequestValidator;
     private final AccountIdentifierRepository accountIdentifierRepository;
@@ -55,7 +55,7 @@ public class BillPayPaymentService {
     private final BalanceService balanceService;
     private final AuthService authService;
 
-    public BillPayPaymentService(
+    public MerchPayPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
             AccountIdentifierRepository accountIdentifierRepository,
             AccountRepository accountRepository,
@@ -75,7 +75,7 @@ public class BillPayPaymentService {
         this.authService = authService;
     }
 
-    public BillPayPaymentResponse processPayment(BillPayPaymentRequest request, boolean validateJWT) {
+    public MerchpayPaymentResponse processPayment(MerchpayPaymentRequest request, boolean validateJWT) {
         log.info("Processing {} payment request. traceId={}", OPERATION_NAME, TraceContext.getTraceId());
         basePaymentRequestValidator.validate(request);
         normalizeRequest(request);
@@ -140,7 +140,7 @@ public class BillPayPaymentService {
                     creditorWallet
             );
 
-            balanceService.parkWalletAmountInFic(
+            balanceService.transferWalletAmount(
                     debitorWallet,
                     creditorWallet,
                     request.getTransaction().getAmount(),
@@ -152,15 +152,15 @@ public class BillPayPaymentService {
             throw ex.withTransactionId(transactionId);
         }
 
-        return buildPendingResponse(request, transactionId);
+        return buildSuccessResponse(request, transactionId);
     }
 
-    private BillPayPaymentResponse buildPendingResponse(BillPayPaymentRequest request, String transactionId) {
-        return BillPayPaymentResponse.builder()
-                .responseStatus(TransactionStatus.PENDING)
+    private MerchpayPaymentResponse buildSuccessResponse(MerchpayPaymentRequest request, String transactionId) {
+        return MerchpayPaymentResponse.builder()
+                .responseStatus(TransactionStatus.SUCCESS)
                 .operationType(request.getOperationType())
-                .code("SETTLEMENT_PENDING")
-                .message("Bill payment parked pending settlement")
+                .code("PAYMENT_SUCCESS")
+                .message("Merchant payment successful")
                 .timestamp(Instant.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
@@ -180,23 +180,6 @@ public class BillPayPaymentService {
                             "role", role.name(),
                             "accountType", String.valueOf(party.getAccountType()),
                             "operationType", OPERATION_NAME
-                    )
-            );
-        }
-    }
-
-    private void validateCreditorIdentifierType(Party creditor) {
-        IdentifierType identifierType = creditor.getIdentifier().getType();
-        if (identifierType != IdentifierType.LOGINID
-                && identifierType != IdentifierType.MSISDN
-                && identifierType != IdentifierType.MOBILE) {
-            throw new ApplicationException(
-                    PaymentErrorCode.INVALID_CREDITOR_IDENTIFIER_TYPE,
-                    null,
-                    Map.of(
-                            "operationType", OPERATION_NAME,
-                            "accountType", CREDITOR_ACCOUNT_TYPE.name(),
-                            "allowedTypes", "MOBILE, MSISDN, LOGINID"
                     )
             );
         }
@@ -288,7 +271,22 @@ public class BillPayPaymentService {
         }
     }
 
-    private void normalizeRequest(BillPayPaymentRequest request) {
+    private void validateCreditorIdentifierType(Party creditor) {
+        IdentifierType identifierType = creditor.getIdentifier().getType();
+        if (identifierType != IdentifierType.LOGINID && identifierType != IdentifierType.MSISDN) {
+            throw new ApplicationException(
+                    PaymentErrorCode.INVALID_CREDITOR_IDENTIFIER_TYPE,
+                    null,
+                    Map.of(
+                            "operationType", OPERATION_NAME,
+                            "accountType", CREDITOR_ACCOUNT_TYPE.name(),
+                            "allowedTypes", "MSISDN, LOGINID"
+                    )
+            );
+        }
+    }
+
+    private void normalizeRequest(MerchpayPaymentRequest request) {
         request.getTransaction().setCurrency(
                 request.getTransaction().getCurrency().trim().toUpperCase(Locale.ROOT)
         );
@@ -416,7 +414,7 @@ public class BillPayPaymentService {
 
     private void createTransactionRecord(
             String transactionId,
-            BillPayPaymentRequest request,
+            MerchpayPaymentRequest request,
             AccountIdentifier debitorIdentifier,
             AccountIdentifier creditorIdentifier,
             String debitorAccountType,
@@ -446,15 +444,11 @@ public class BillPayPaymentService {
             );
         }
 
-        JSONObject additionalInfo = new JSONObject();
         if (request.getAdditionalInfo() != null && !request.getAdditionalInfo().isEmpty()) {
-            for (String key : request.getAdditionalInfo().keySet()) {
-                additionalInfo.put(key, request.getAdditionalInfo().get(key));
-            }
-        }
-
-        if (additionalInfo.length() > 0) {
-            transactionsService.updateAdditionalInfo(transactionId, additionalInfo);
+            transactionsService.updateAdditionalInfo(
+                    transactionId,
+                    new JSONObject(request.getAdditionalInfo())
+            );
         }
 
         transactionsService.updatePaymentReference(

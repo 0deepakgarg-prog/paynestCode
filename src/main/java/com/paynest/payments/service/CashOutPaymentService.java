@@ -1,4 +1,4 @@
-package com.paynest.payment.service;
+package com.paynest.payments.service;
 
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
@@ -13,9 +13,9 @@ import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.exception.ApplicationException;
 import com.paynest.exception.PaymentErrorCode;
 import com.paynest.payments.dto.Authentication;
+import com.paynest.payments.dto.CashOutPaymentRequest;
+import com.paynest.payments.dto.CashOutPaymentResponse;
 import com.paynest.payments.dto.Identifier;
-import com.paynest.payments.dto.MerchpayPaymentRequest;
-import com.paynest.payments.dto.MerchpayPaymentResponse;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
 import com.paynest.users.repository.AccountIdentifierRepository;
@@ -38,13 +38,13 @@ import java.util.Map;
 
 @Service
 @Transactional
-public class MerchPayPaymentService {
+public class CashOutPaymentService {
 
-    private static final Logger log = LoggerFactory.getLogger(MerchPayPaymentService.class);
-    private static final String OPERATION_NAME = "MERCHANTPAY";
-    private static final String TRANSACTION_PREFIX = "MP";
+    private static final Logger log = LoggerFactory.getLogger(CashOutPaymentService.class);
+    private static final String OPERATION_NAME = "CASHOUT";
+    private static final String TRANSACTION_PREFIX = "CO";
     private static final AccountType DEBITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
-    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.MERCHANT;
+    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.AGENT;
 
     private final BasePaymentRequestValidator basePaymentRequestValidator;
     private final AccountIdentifierRepository accountIdentifierRepository;
@@ -55,7 +55,7 @@ public class MerchPayPaymentService {
     private final BalanceService balanceService;
     private final AuthService authService;
 
-    public MerchPayPaymentService(
+    public CashOutPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
             AccountIdentifierRepository accountIdentifierRepository,
             AccountRepository accountRepository,
@@ -75,7 +75,7 @@ public class MerchPayPaymentService {
         this.authService = authService;
     }
 
-    public MerchpayPaymentResponse processPayment(MerchpayPaymentRequest request, boolean validateJWT) {
+    public CashOutPaymentResponse processPayment(CashOutPaymentRequest request, boolean validateJWT) {
         log.info("Processing {} payment request. traceId={}", OPERATION_NAME, TraceContext.getTraceId());
         basePaymentRequestValidator.validate(request);
         normalizeRequest(request);
@@ -155,12 +155,12 @@ public class MerchPayPaymentService {
         return buildSuccessResponse(request, transactionId);
     }
 
-    private MerchpayPaymentResponse buildSuccessResponse(MerchpayPaymentRequest request, String transactionId) {
-        return MerchpayPaymentResponse.builder()
+    private CashOutPaymentResponse buildSuccessResponse(CashOutPaymentRequest request, String transactionId) {
+        return CashOutPaymentResponse.builder()
                 .responseStatus(TransactionStatus.SUCCESS)
                 .operationType(request.getOperationType())
                 .code("PAYMENT_SUCCESS")
-                .message("Merchant payment successful")
+                .message("Cash-out successful")
                 .timestamp(Instant.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
@@ -286,7 +286,7 @@ public class MerchPayPaymentService {
         }
     }
 
-    private void normalizeRequest(MerchpayPaymentRequest request) {
+    private void normalizeRequest(CashOutPaymentRequest request) {
         request.getTransaction().setCurrency(
                 request.getTransaction().getCurrency().trim().toUpperCase(Locale.ROOT)
         );
@@ -414,7 +414,7 @@ public class MerchPayPaymentService {
 
     private void createTransactionRecord(
             String transactionId,
-            MerchpayPaymentRequest request,
+            CashOutPaymentRequest request,
             AccountIdentifier debitorIdentifier,
             AccountIdentifier creditorIdentifier,
             String debitorAccountType,

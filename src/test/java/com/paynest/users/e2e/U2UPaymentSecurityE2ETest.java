@@ -1,7 +1,7 @@
 package com.paynest.e2e;
 
-import com.paynest.security.JwtService;
-import com.paynest.service.TenantRegistryService;
+import com.paynest.config.security.JwtService;
+import com.paynest.config.service.TenantRegistryService;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;

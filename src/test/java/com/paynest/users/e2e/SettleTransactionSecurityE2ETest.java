@@ -1,6 +1,6 @@
 package com.paynest.e2e;
 
-import com.paynest.service.TenantRegistryService;
+import com.paynest.config.service.TenantRegistryService;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;

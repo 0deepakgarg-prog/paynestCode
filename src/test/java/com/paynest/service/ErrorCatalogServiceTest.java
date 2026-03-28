@@ -1,11 +1,11 @@
 package com.paynest.service;
 
 import com.paynest.entity.ErrorCatalog;
-import com.paynest.entity.SupportedLanguage;
+import com.paynest.config.entity.SupportedLanguage;
+import com.paynest.config.repository.SupportedLanguageRepository;
+import com.paynest.config.tenant.TenantContext;
 import com.paynest.repository.ErrorCatalogRepository;
-import com.paynest.repository.SupportedLanguageRepository;
 import com.paynest.tenant.RequestLanguageContext;
-import com.paynest.tenant.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
 package com.paynest.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.paynest.payment.dto.U2UPaymentResponse;
-import com.paynest.payment.dto.Party;
-import com.paynest.payment.dto.U2UPaymentRequest;
+import com.paynest.payments.dto.BasePaymentResponse;
+import com.paynest.payments.dto.Party;
+import com.paynest.payments.dto.U2UPaymentRequest;
 import com.paynest.enums.WalletType;
 import com.paynest.service.ErrorCatalogService;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<?> response = handler.handleApplicationException(exception, request);
 
         assertEquals(400, response.getStatusCode().value());
-        U2UPaymentResponse body = assertInstanceOf(U2UPaymentResponse.class, response.getBody());
+        BasePaymentResponse body = assertInstanceOf(BasePaymentResponse.class, response.getBody());
         assertEquals("INSUFFICIENT_BALANCE", body.getCode());
         assertEquals("Insufficient balance", body.getMessage());
         assertEquals("UU123", body.getTransactionId());
@@ -79,7 +79,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<?> response = handler.handleHttpMessageNotReadable(exception, request);
 
         assertEquals(400, response.getStatusCode().value());
-        U2UPaymentResponse body = assertInstanceOf(U2UPaymentResponse.class, response.getBody());
+        BasePaymentResponse body = assertInstanceOf(BasePaymentResponse.class, response.getBody());
         assertEquals("INVALID_ENUM_VALUE", body.getCode());
         assertTrue(body.getMessage().contains("debitor.walletType"));
         assertTrue(body.getMessage().contains("MAIN"));
