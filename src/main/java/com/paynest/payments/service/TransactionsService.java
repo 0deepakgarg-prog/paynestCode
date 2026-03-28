@@ -122,7 +122,7 @@ public class TransactionsService {
         transaction.setModifiedBy(actorAccountId);
         transaction.setCreatedOn(currentDateTime);
         transaction.setModifiedOn(currentDateTime);
-        transaction.setDebtorAccountId(debtorAccountId);
+        transaction.setDebitorAccountId(debtorAccountId);
         transaction.setCreditorAccountId(creditorAccountId);
         transaction.setErrorCode(errorCode);
         transactionsRepository.save(transaction);

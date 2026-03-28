@@ -71,8 +71,8 @@ public class Transactions {
     @Column(name = "comments")
     private String comments;
 
-    @Column(name = "debtor_account_id")
-    private String debtorAccountId;
+    @Column(name = "debitor_account_id")
+    private String debitorAccountId;
 
     @Column(name = "creditor_account_id")
     private String creditorAccountId;
@@ -119,11 +119,11 @@ public class Transactions {
     @Column(name = "core_service_code")
     private String coreServiceCode;
 
-    @Column(name = "debtor_identifier_type")
-    private String debtorIdentifierType;
+    @Column(name = "debitor_identifier_type")
+    private String debitorIdentifierType;
 
-    @Column(name = "debtor_identifier_value")
-    private String debtorIdentifierValue;
+    @Column(name = "debitor_identifier_value")
+    private String debitorIdentifierValue;
 
     @Column(name = "creditor_identifier_type")
     private String creditorIdentifierType;

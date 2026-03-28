@@ -1,0 +1,5 @@
+logs/
+LOG_HOME_IS_UNDEFINED/
+target/
+*.log
+.idea/

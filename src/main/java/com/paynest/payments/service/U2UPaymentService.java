@@ -17,7 +17,7 @@ import com.paynest.users.entity.Account;
 import com.paynest.users.entity.AccountAuth;
 import com.paynest.users.entity.AccountIdentifier;
 import com.paynest.users.entity.Wallet;
-import com.paynest.users.enums.AccountType;
+import com.paynest.enums.AccountType;
 import com.paynest.users.repository.AccountAuthRepository;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
@@ -310,7 +310,7 @@ public class U2UPaymentService {
     }
 
     private void validateParty(Party party, InitiatedBy role) {
-        if (party.getAccountType() != AccountType.CUSTOMER) {
+        if (party.getAccountType() != AccountType.SUBSCRIBER) {
             throw new ApplicationException(
                     ErrorCodes.INVALID_ROLE_USER_TYPE_PREFIX + role + ErrorCodes.USER_TYPE_SUFFIX,
                     role + " user type " + party.getAccountType() + " not allowed"

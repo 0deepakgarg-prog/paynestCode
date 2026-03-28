@@ -1,17 +1,20 @@
 package com.paynest.payments.repository;
 
 import com.paynest.payments.entity.Transactions;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import jakarta.transaction.Transactional;
 
+import java.util.Optional;
 
 @Repository
 public interface TransactionsRepository extends JpaRepository<Transactions, String> {
 
     Transactions findByTransactionId(String transactionId);
+
+    Optional<Transactions> findFirstByTraceId(String traceId);
 
     @Modifying
     @Transactional
@@ -22,8 +25,7 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
             t.modifiedOn = CURRENT_TIMESTAMP
         WHERE t.transactionId = :txnId
     """)
-    void updateStatus(String txnId,String status,String errorCode);
-
+    void updateStatus(String txnId, String status, String errorCode);
 
     @Modifying
     @Transactional
@@ -33,7 +35,6 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
         WHERE transaction_id = :txnId
     """, nativeQuery = true)
     void updateMetadata(String txnId, String metadata);
-
 
     @Modifying
     @Transactional
@@ -62,7 +63,6 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
 """)
     int updateComments(String txnId, String comments);
 
-
     @Modifying
     @Transactional
     @Query("""
@@ -71,6 +71,4 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
     WHERE t.transactionId = :txnId
 """)
     int updateApproveOrRejectComments(String txnId, String comments);
-
 }
-

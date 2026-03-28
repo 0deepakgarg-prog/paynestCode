@@ -17,33 +17,38 @@ public interface TransactionDetailsRepository extends JpaRepository<TransactionD
 
     @Modifying
     @Transactional
-    @Query("UPDATE TransactionDetails td SET td.transferStatus = :status WHERE td.id.transactionId = :transactionId")
-    int updateTransferStatusByTransactionId(String transactionId, String status);
+    @Query("""
+        UPDATE TransactionDetails td
+        SET td.previousBalance = :previousBalance,
+            td.postBalance = :postBalance,
+            td.previousFicBalance = :previousFicBalance,
+            td.postFicBalance = :postFicBalance,
+            td.previousFrozenBalance = :previousFrozenBalance,
+            td.postFrozenBalance = :postFrozenBalance,
+            td.transferStatus = :transferStatus,
+            td.transferOn = CURRENT_TIMESTAMP
+        WHERE td.id.transactionId = :transactionId
+          AND td.id.txnSequenceNumber = :txnSequenceNumber
+    """)
+    int updateBalances(
+            String transactionId,
+            Long txnSequenceNumber,
+            BigDecimal previousBalance,
+            BigDecimal postBalance,
+            BigDecimal previousFicBalance,
+            BigDecimal postFicBalance,
+            BigDecimal previousFrozenBalance,
+            BigDecimal postFrozenBalance,
+            String transferStatus
+    );
 
     @Modifying
     @Transactional
     @Query("""
-    UPDATE TransactionDetails td
-    SET td.previousBalance = :balanceBefore,
-        td.postBalance = :balanceAfter,
-        td.previousFicBalance = :ficBefore,
-        td.postFicBalance = :ficAfter,
-        td.previousFrozenBalance = :frozenBefore,
-        td.postFrozenBalance = :frozenAfter,
-        td.transferStatus = :transferStatus
-    WHERE td.id.transactionId = :txnId
-    AND td.id.txnSequenceNumber = :entrySeq
+        UPDATE TransactionDetails td
+        SET td.transferStatus = :transferStatus,
+            td.transferOn = CURRENT_TIMESTAMP
+        WHERE td.id.transactionId = :transactionId
     """)
-    int updateBalances(
-            String txnId,
-            Long entrySeq,
-            BigDecimal balanceBefore,
-            BigDecimal balanceAfter,
-            BigDecimal ficBefore,
-            BigDecimal ficAfter,
-            BigDecimal frozenBefore,
-            BigDecimal frozenAfter,
-            String transferStatus
-    );
+    int updateTransferStatusByTransactionId(String transactionId, String transferStatus);
 }
-

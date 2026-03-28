@@ -23,6 +23,16 @@ public class ApiErrorResponse {
         this.timestamp = timestamp;
     }
 
-    // getters
+    public boolean isSuccess() {
+        return false;
+    }
+
+    public String getErrorCode() {
+        return code;
+    }
+
+    public String getErrorMessage() {
+        return message;
+    }
 }
 
