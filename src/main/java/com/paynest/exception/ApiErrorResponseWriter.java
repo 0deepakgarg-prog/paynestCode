@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Map;
 
 @Component
@@ -128,7 +129,22 @@ public class ApiErrorResponseWriter {
         }
 
         String uri = request.getRequestURI();
-        int lastSlashIndex = uri.lastIndexOf('/');
-        return lastSlashIndex >= 0 ? uri.substring(lastSlashIndex + 1) : null;
+        String prefix = "/api/v1/pay/";
+        if (!uri.startsWith(prefix) || uri.length() <= prefix.length()) {
+            return null;
+        }
+
+        String operationType = uri.substring(prefix.length());
+        if (operationType.endsWith("/")) {
+            operationType = operationType.substring(0, operationType.length() - 1);
+        }
+        if (operationType.isBlank()) {
+            return null;
+        }
+        if (!operationType.contains("/")) {
+            return operationType;
+        }
+
+        return operationType.replace('/', '_').toUpperCase(Locale.ROOT);
     }
 }

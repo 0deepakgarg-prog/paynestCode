@@ -4,10 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "transaction_details")
@@ -16,19 +13,19 @@ public class TransactionDetails {
     @EmbeddedId
     private TransactionDetailsId id;
 
-    @Column(name = "account_id", nullable = false)
+    @Column(name = "account_id", nullable = false, length = 30)
     private String accountId;
 
-    @Column(name = "user_type", nullable = false)
+    @Column(name = "user_type", nullable = false, length = 10)
     private String userType;
 
-    @Column(name = "entry_type", nullable = false)
+    @Column(name = "entry_type", nullable = false, length = 5)
     private String entryType;
 
-    @Column(name = "identifier_id", nullable = false)
+    @Column(name = "identifier_id", nullable = false, length = 80)
     private String identifierId;
 
-    @Column(name = "second_identifier_id", nullable = false)
+    @Column(name = "second_identifier_id", nullable = false, length = 20)
     private String secondIdentifierId;
 
     @Column(name = "transaction_value")
@@ -46,13 +43,13 @@ public class TransactionDetails {
     @Column(name = "transfer_on")
     private LocalDateTime transferOn;
 
-    @Column(name = "service_code", nullable = false)
+    @Column(name = "service_code", nullable = false, length = 15)
     private String serviceCode;
 
-    @Column(name = "transfer_status")
+    @Column(name = "transfer_status", length = 3)
     private String transferStatus;
 
-    @Column(name = "wallet_number")
+    @Column(name = "wallet_number", length = 25)
     private String walletNumber;
 
     @Column(name = "previous_fic_balance")

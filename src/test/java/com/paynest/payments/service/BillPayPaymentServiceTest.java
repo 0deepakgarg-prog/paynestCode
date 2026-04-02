@@ -2,14 +2,11 @@ package com.paynest.payments.service;
 
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
-import com.paynest.users.entity.Account;
-import com.paynest.users.entity.AccountIdentifier;
-import com.paynest.users.entity.Wallet;
+import com.paynest.config.security.JWTUtils;
+import com.paynest.config.tenant.TraceContext;
 import com.paynest.enums.AccountType;
 import com.paynest.enums.RequestGateway;
 import com.paynest.enums.WalletType;
-import com.paynest.users.enums.AuthType;
-import com.paynest.users.enums.IdentifierType;
 import com.paynest.exception.ApplicationException;
 import com.paynest.payments.dto.Authentication;
 import com.paynest.payments.dto.BillPayPaymentRequest;
@@ -17,21 +14,22 @@ import com.paynest.payments.dto.BillPayPaymentResponse;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.dto.TransactionInfo;
+import com.paynest.payments.enums.BillPaymentStatus;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
+import com.paynest.users.entity.Account;
+import com.paynest.users.entity.AccountIdentifier;
+import com.paynest.users.entity.Wallet;
+import com.paynest.users.enums.AuthType;
+import com.paynest.users.enums.IdentifierType;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.WalletRepository;
-import com.paynest.config.security.JWTUtils;
 import com.paynest.users.service.AuthService;
-import com.paynest.payments.service.BalanceService;
-import com.paynest.service.TransactionsService;
-import com.paynest.config.tenant.TraceContext;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,7 +43,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -72,7 +69,7 @@ class BillPayPaymentServiceTest {
     private PropertyReader propertyReader;
 
     @Mock
-    private TransactionsService transactionsService;
+    private PaymentTransactionRecorderService paymentTransactionRecorderService;
 
     @Mock
     private BalanceService balanceService;
@@ -80,8 +77,11 @@ class BillPayPaymentServiceTest {
     @Mock
     private AuthService authService;
 
+    @Mock
+    private BillPaymentStatusService billPaymentStatusService;
+
     @Test
-    void processPayment_shouldParkFundsAndReturnPending() {
+    void processPayment_shouldTransferFundsCreatePendingBillStatusAndReturnSuccess() {
         BillPayPaymentService billPayPaymentService = billPayPaymentService();
         BillPayPaymentRequest request = validRequest();
         AccountIdentifier debitorIdentifier = identifier("sub-1", "9999999999", "MOBILE", 10L);
@@ -114,13 +114,20 @@ class BillPayPaymentServiceTest {
 
             BillPayPaymentResponse response = billPayPaymentService.processPayment(request, true);
 
-            assertEquals(TransactionStatus.PENDING, response.getResponseStatus());
+            assertEquals(TransactionStatus.SUCCESS, response.getResponseStatus());
             assertEquals("BILLPAY", response.getOperationType());
-            assertEquals("SETTLEMENT_PENDING", response.getCode());
+            assertEquals("PAYMENT_SUCCESS", response.getCode());
+            assertEquals(BillPaymentStatus.PENDING, response.getBillStatus());
             assertNotNull(response.getTransactionId());
 
             verify(authService).validateAuthentication("1234", AuthType.PIN, debitorIdentifier);
-            verify(transactionsService).generateTransactionRecord(
+
+            InOrder inOrder = org.mockito.Mockito.inOrder(
+                    paymentTransactionRecorderService,
+                    billPaymentStatusService,
+                    balanceService
+            );
+            inOrder.verify(paymentTransactionRecorderService).recordTransaction(
                     any(),
                     eq(new BigDecimal("10.50")),
                     eq(RequestGateway.MOBILE.name()),
@@ -132,9 +139,19 @@ class BillPayPaymentServiceTest {
                     eq("BILLER"),
                     eq(debitorWallet),
                     eq(creditorWallet),
-                    eq(InitiatedBy.DEBITOR)
+                    eq(InitiatedBy.DEBITOR),
+                    eq(null),
+                    eq(request.getAdditionalInfo()),
+                    eq("pay-ref-1"),
+                    eq("April electricity bill")
             );
-            verify(balanceService).parkWalletAmountInFic(
+            inOrder.verify(billPaymentStatusService).createPendingStatus(
+                    eq(response.getTransactionId()),
+                    eq("trace-1"),
+                    eq("sub-1"),
+                    eq("biller-1")
+            );
+            inOrder.verify(balanceService).transferWalletAmount(
                     debitorWallet,
                     creditorWallet,
                     new BigDecimal("10.50"),
@@ -142,12 +159,6 @@ class BillPayPaymentServiceTest {
                     InitiatedBy.DEBITOR,
                     response.getTransactionId()
             );
-
-            ArgumentCaptor<JSONObject> additionalInfoCaptor = ArgumentCaptor.forClass(JSONObject.class);
-            verify(transactionsService).updateAdditionalInfo(any(), additionalInfoCaptor.capture());
-            String additionalInfo = additionalInfoCaptor.getValue().toString();
-            assertTrue(additionalInfo.contains("\"note\":\"customer initiated\""));
-            assertTrue(additionalInfo.contains("\"meterNumber\":\"MTR-001\""));
         } finally {
             TraceContext.clear();
         }
@@ -177,9 +188,10 @@ class BillPayPaymentServiceTest {
                 accountRepository,
                 walletRepository,
                 propertyReader,
-                transactionsService,
+                paymentTransactionRecorderService,
                 balanceService,
-                authService
+                authService,
+                billPaymentStatusService
         );
     }
 

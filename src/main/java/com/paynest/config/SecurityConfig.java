@@ -50,7 +50,8 @@ public class SecurityConfig {
                                 "/api/v1/account/password/changeDefault",
                                 "/api/v1/account/register/**",
                                 "/api/v1/account/registerUser",
-                                "/api/v1/pay/settleTxn"
+                                "/api/v1/pay/settleTxn",
+                                "/api/v1/pay/BILLPAY/settle"
 
                 )
                 .permitAll()

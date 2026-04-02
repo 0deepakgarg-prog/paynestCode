@@ -2,6 +2,8 @@ package com.paynest.payments.controller;
 
 import com.paynest.payments.dto.BillPayPaymentRequest;
 import com.paynest.payments.dto.BillPayPaymentResponse;
+import com.paynest.payments.dto.BillPaymentSettlementRequest;
+import com.paynest.payments.dto.BillPaymentSettlementResponse;
 import com.paynest.payments.dto.CashInPaymentRequest;
 import com.paynest.payments.dto.CashInPaymentResponse;
 import com.paynest.payments.dto.CashOutPaymentRequest;
@@ -17,6 +19,7 @@ import com.paynest.payments.dto.BasePaymentResponse;
 import com.paynest.payments.dto.U2UPaymentRequest;
 import com.paynest.payments.dto.U2UPaymentResponse;
 import com.paynest.payments.service.BillPayPaymentService;
+import com.paynest.payments.service.BillPaymentSettlementService;
 import com.paynest.payments.service.CashInPaymentService;
 import com.paynest.payments.service.CashOutPaymentService;
 import com.paynest.payments.service.MerchPayPaymentService;
@@ -40,6 +43,7 @@ public class FinancialTransactionController {
     private final CashInPaymentService cashInPaymentService;
     private final CashOutPaymentService cashOutPaymentService;
     private final BillPayPaymentService billPayPaymentService;
+    private final BillPaymentSettlementService billPaymentSettlementService;
     private final TransactionSettlementService transactionSettlementService;
     private final StockService stockService;
 
@@ -80,6 +84,13 @@ public class FinancialTransactionController {
             @Valid @RequestBody BillPayPaymentRequest request) {
         request.setOperationType("BILLPAY");
         BillPayPaymentResponse response = billPayPaymentService.processPayment(request, true);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/BILLPAY/settle")
+    public ResponseEntity<BillPaymentSettlementResponse> settleBillPayment(
+            @RequestBody BillPaymentSettlementRequest request) {
+        BillPaymentSettlementResponse response = billPaymentSettlementService.settle(request);
         return ResponseEntity.ok(response);
     }
 

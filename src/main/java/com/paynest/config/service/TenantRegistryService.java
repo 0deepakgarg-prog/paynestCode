@@ -1,5 +1,6 @@
 package com.paynest.config.service;
 
+import com.paynest.payments.service.BillPaymentStatusSchemaInitializer;
 import com.paynest.config.repository.TenantRegistryRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TenantRegistryService {
 
     private final TenantRegistryRepository repository;
+    private final BillPaymentStatusSchemaInitializer billPaymentStatusSchemaInitializer;
 
     private final Map<String, String> tenantSchemaMap =
             new ConcurrentHashMap<>();
@@ -29,6 +31,7 @@ public class TenantRegistryService {
                         t.getSchemaName()
                 ));
 
+        billPaymentStatusSchemaInitializer.ensureTableExistsForSchemas(tenantSchemaMap.values());
         log.info("Loaded {} tenant mappings", tenantSchemaMap.size());
     }
 

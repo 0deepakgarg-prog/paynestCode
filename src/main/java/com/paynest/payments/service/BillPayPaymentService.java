@@ -17,16 +17,14 @@ import com.paynest.payments.dto.BillPayPaymentRequest;
 import com.paynest.payments.dto.BillPayPaymentResponse;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
+import com.paynest.payments.enums.BillPaymentStatus;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.WalletRepository;
 import com.paynest.config.security.JWTUtils;
 import com.paynest.users.service.AuthService;
-import com.paynest.payments.service.BalanceService;
-import com.paynest.service.TransactionsService;
 import com.paynest.config.tenant.TraceContext;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -51,9 +49,10 @@ public class BillPayPaymentService {
     private final AccountRepository accountRepository;
     private final WalletRepository walletRepository;
     private final PropertyReader propertyReader;
-    private final TransactionsService transactionsService;
+    private final PaymentTransactionRecorderService paymentTransactionRecorderService;
     private final BalanceService balanceService;
     private final AuthService authService;
+    private final BillPaymentStatusService billPaymentStatusService;
 
     public BillPayPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
@@ -61,18 +60,20 @@ public class BillPayPaymentService {
             AccountRepository accountRepository,
             WalletRepository walletRepository,
             PropertyReader propertyReader,
-            TransactionsService transactionsService,
+            PaymentTransactionRecorderService paymentTransactionRecorderService,
             BalanceService balanceService,
-            AuthService authService
+            AuthService authService,
+            BillPaymentStatusService billPaymentStatusService
     ) {
         this.basePaymentRequestValidator = basePaymentRequestValidator;
         this.accountIdentifierRepository = accountIdentifierRepository;
         this.accountRepository = accountRepository;
         this.walletRepository = walletRepository;
         this.propertyReader = propertyReader;
-        this.transactionsService = transactionsService;
+        this.paymentTransactionRecorderService = paymentTransactionRecorderService;
         this.balanceService = balanceService;
         this.authService = authService;
+        this.billPaymentStatusService = billPaymentStatusService;
     }
 
     public BillPayPaymentResponse processPayment(BillPayPaymentRequest request, boolean validateJWT) {
@@ -140,7 +141,14 @@ public class BillPayPaymentService {
                     creditorWallet
             );
 
-            balanceService.parkWalletAmountInFic(
+            billPaymentStatusService.createPendingStatus(
+                    transactionId,
+                    TraceContext.getTraceId(),
+                    debitorAccount.getAccountId(),
+                    creditorAccount.getAccountId()
+            );
+
+            balanceService.transferWalletAmount(
                     debitorWallet,
                     creditorWallet,
                     request.getTransaction().getAmount(),
@@ -152,20 +160,21 @@ public class BillPayPaymentService {
             throw ex.withTransactionId(transactionId);
         }
 
-        return buildPendingResponse(request, transactionId);
+        return buildSuccessResponse(request, transactionId);
     }
 
-    private BillPayPaymentResponse buildPendingResponse(BillPayPaymentRequest request, String transactionId) {
+    private BillPayPaymentResponse buildSuccessResponse(BillPayPaymentRequest request, String transactionId) {
         return BillPayPaymentResponse.builder()
-                .responseStatus(TransactionStatus.PENDING)
+                .responseStatus(TransactionStatus.SUCCESS)
                 .operationType(request.getOperationType())
-                .code("SETTLEMENT_PENDING")
-                .message("Bill payment parked pending settlement")
+                .code("PAYMENT_SUCCESS")
+                .message("Bill payment successful and pending settlement")
                 .timestamp(Instant.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())
                 .currency(request.getTransaction().getCurrency())
+                .billStatus(BillPaymentStatus.PENDING)
                 .build();
     }
 
@@ -424,7 +433,7 @@ public class BillPayPaymentService {
             Wallet debitorWallet,
             Wallet creditorWallet
     ) {
-        transactionsService.generateTransactionRecord(
+        paymentTransactionRecorderService.recordTransaction(
                 transactionId,
                 request.getTransaction().getAmount(),
                 request.getRequestGateway().name(),
@@ -436,34 +445,10 @@ public class BillPayPaymentService {
                 creditorAccountType,
                 debitorWallet,
                 creditorWallet,
-                request.getInitiatedBy()
-        );
-
-        if (request.getMetadata() != null && !request.getMetadata().isEmpty()) {
-            transactionsService.updateMetadata(
-                    transactionId,
-                    new JSONObject(request.getMetadata())
-            );
-        }
-
-        JSONObject additionalInfo = new JSONObject();
-        if (request.getAdditionalInfo() != null && !request.getAdditionalInfo().isEmpty()) {
-            for (String key : request.getAdditionalInfo().keySet()) {
-                additionalInfo.put(key, request.getAdditionalInfo().get(key));
-            }
-        }
-
-        if (additionalInfo.length() > 0) {
-            transactionsService.updateAdditionalInfo(transactionId, additionalInfo);
-        }
-
-        transactionsService.updatePaymentReference(
-                transactionId,
-                request.getPaymentReference()
-        );
-
-        transactionsService.updateComments(
-                transactionId,
+                request.getInitiatedBy(),
+                request.getMetadata(),
+                request.getAdditionalInfo(),
+                request.getPaymentReference(),
                 request.getComments()
         );
     }

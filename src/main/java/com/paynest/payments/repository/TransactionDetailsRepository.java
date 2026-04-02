@@ -1,6 +1,7 @@
 package com.paynest.payments.repository;
 
 import com.paynest.payments.entity.TransactionDetails;
+import com.paynest.payments.entity.TransactionDetailsId;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
-public interface TransactionDetailsRepository extends JpaRepository<TransactionDetails, String> {
+public interface TransactionDetailsRepository extends JpaRepository<TransactionDetails, TransactionDetailsId> {
 
     List<TransactionDetails> findByIdTransactionId(String transactionId);
 

@@ -75,4 +75,25 @@ class BillPayPaymentSecurityE2ETest {
                 .body("operationType", equalTo("BILLPAY"))
                 .body("code", equalTo("TOKEN_REQUIRED"));
     }
+
+    @Test
+    void billPaySettlementShouldNotRequireAuthorizationHeader() {
+        String payload = """
+                {
+                  "settlementStatus": true
+                }
+                """;
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("X-Tenant-Id", "tenant-1")
+                .body(payload)
+                .when()
+                .post("/api/v1/pay/BILLPAY/settle")
+                .then()
+                .statusCode(404)
+                .body("responseStatus", equalTo("FAILURE"))
+                .body("operationType", equalTo("BILLPAY_SETTLE"))
+                .body("code", equalTo("BILL_PAYMENT_NOT_FOUND"));
+    }
 }
