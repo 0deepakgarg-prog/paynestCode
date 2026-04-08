@@ -28,8 +28,31 @@ import static com.paynest.config.tenant.TenantContext.setTenant;
 @Slf4j
 public class TenantFilter extends OncePerRequestFilter {
 
+    private static final String[] EXCLUDED_PATH_PREFIXES = {
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/swagger-resources",
+            "/webjars"
+    };
+
     private final TenantRegistryService tenantService;
     private final ApiErrorResponseWriter apiErrorResponseWriter;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        if (path == null || path.isBlank()) {
+            return false;
+        }
+
+        for (String prefix : EXCLUDED_PATH_PREFIXES) {
+            if (path.startsWith(prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
