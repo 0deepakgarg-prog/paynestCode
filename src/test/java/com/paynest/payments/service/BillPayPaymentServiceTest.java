@@ -81,7 +81,7 @@ class BillPayPaymentServiceTest {
     private BillPaymentStatusService billPaymentStatusService;
 
     @Test
-    void processPayment_shouldTransferFundsCreatePendingBillStatusAndReturnSuccess() {
+    void processPayment_shouldParkFundsInBillerFicCreatePendingBillStatusAndReturnSuccess() {
         BillPayPaymentService billPayPaymentService = billPayPaymentService();
         BillPayPaymentRequest request = validRequest();
         AccountIdentifier debitorIdentifier = identifier("sub-1", "9999999999", "MOBILE", 10L);
@@ -151,7 +151,7 @@ class BillPayPaymentServiceTest {
                     eq("sub-1"),
                     eq("biller-1")
             );
-            inOrder.verify(balanceService).transferWalletAmount(
+            inOrder.verify(balanceService).parkWalletAmountInFic(
                     debitorWallet,
                     creditorWallet,
                     new BigDecimal("10.50"),

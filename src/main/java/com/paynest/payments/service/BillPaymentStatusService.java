@@ -66,7 +66,7 @@ public class BillPaymentStatusService {
             String comments,
             Map<String, Object> additionalInfo
     ) {
-        updateRecord(record, BillPaymentStatus.SUCCESS, comments, additionalInfo, null);
+        updateRecord(record, BillPaymentStatus.SUCCESS, settledBy, comments, additionalInfo, null);
     }
 
     public void markFailed(
@@ -76,18 +76,20 @@ public class BillPaymentStatusService {
             Map<String, Object> additionalInfo,
             String rollbackTransactionId
     ) {
-        updateRecord(record, BillPaymentStatus.FAILED, comments, additionalInfo, rollbackTransactionId);
+        updateRecord(record, BillPaymentStatus.FAILED, settledBy, comments, additionalInfo, rollbackTransactionId);
     }
 
     private void updateRecord(
             BillPaymentStatusRecord record,
             BillPaymentStatus status,
+            String settledBy,
             String comments,
             Map<String, Object> additionalInfo,
             String rollbackTransactionId
     ) {
         LocalDateTime now = LocalDateTime.now();
         record.setStatus(status);
+        record.setSettledBy(normalizeOptionalText(settledBy));
         record.setSettledOn(now);
         record.setComments(normalizeOptionalText(comments));
         record.setAdditionalInfo(mergeAdditionalInfo(record.getAdditionalInfo(), additionalInfo));

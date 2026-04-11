@@ -148,7 +148,7 @@ public class BillPayPaymentService {
                     creditorAccount.getAccountId()
             );
 
-            balanceService.transferWalletAmount(
+            balanceService.parkWalletAmountInFic(
                     debitorWallet,
                     creditorWallet,
                     request.getTransaction().getAmount(),

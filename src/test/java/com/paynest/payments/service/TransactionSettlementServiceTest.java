@@ -1,6 +1,7 @@
 package com.paynest.payments.service;
 
 import com.paynest.common.Constants;
+import com.paynest.payments.entity.BillPaymentStatusRecord;
 import com.paynest.payments.entity.TransactionDetails;
 import com.paynest.payments.entity.TransactionDetailsId;
 import com.paynest.payments.entity.Transactions;
@@ -9,6 +10,7 @@ import com.paynest.users.entity.WalletBalance;
 import com.paynest.exception.ApplicationException;
 import com.paynest.payments.dto.SettleTransactionRequest;
 import com.paynest.payments.dto.SettleTransactionResponse;
+import com.paynest.payments.enums.BillPaymentStatus;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.payments.repository.TransactionDetailsRepository;
 import com.paynest.payments.repository.TransactionsRepository;
@@ -60,6 +62,9 @@ class TransactionSettlementServiceTest {
     @Mock
     private TransactionsService transactionsService;
 
+    @Mock
+    private BillPaymentStatusService billPaymentStatusService;
+
     @Test
     void settleTransaction_shouldClearFicAndMarkTransactionSuccessful() {
         TransactionSettlementService service = service();
@@ -74,6 +79,8 @@ class TransactionSettlementServiceTest {
         when(walletRepository.findById(10L)).thenReturn(Optional.of(wallet(10L, "sub-1")));
         when(walletRepository.findById(20L)).thenReturn(Optional.of(creditorWallet));
         when(walletBalanceRepository.lockBalance(20L)).thenReturn(creditorBalance);
+        BillPaymentStatusRecord billPaymentStatusRecord = pendingBillPaymentStatusRecord();
+        when(billPaymentStatusService.getPendingRecord("txn-1")).thenReturn(billPaymentStatusRecord);
 
         SettleTransactionRequest request = new SettleTransactionRequest();
         request.setTraceId("trace-1");
@@ -95,6 +102,12 @@ class TransactionSettlementServiceTest {
 
             verify(walletBalanceRepository).save(creditorBalance);
             verify(transactionsService).updateComments("txn-1", "settled");
+            verify(billPaymentStatusService).markSuccess(
+                    billPaymentStatusRecord,
+                    "ops-1",
+                    "settled",
+                    java.util.Map.of("providerRef", "ABC-1")
+            );
             ArgumentCaptor<JSONObject> additionalInfoCaptor = ArgumentCaptor.forClass(JSONObject.class);
             verify(transactionsService).updateAdditionalInfo(any(), additionalInfoCaptor.capture());
             assertTrue(additionalInfoCaptor.getValue().toString().contains("\"providerRef\":\"ABC-1\""));
@@ -120,6 +133,8 @@ class TransactionSettlementServiceTest {
         when(walletRepository.findById(20L)).thenReturn(Optional.of(creditorWallet));
         when(walletBalanceRepository.lockBalance(10L)).thenReturn(debitorBalance);
         when(walletBalanceRepository.lockBalance(20L)).thenReturn(creditorBalance);
+        BillPaymentStatusRecord billPaymentStatusRecord = pendingBillPaymentStatusRecord();
+        when(billPaymentStatusService.getPendingRecord("txn-1")).thenReturn(billPaymentStatusRecord);
 
         SettleTransactionRequest request = new SettleTransactionRequest();
         request.setTraceId("trace-1");
@@ -138,6 +153,13 @@ class TransactionSettlementServiceTest {
             assertEquals(Constants.TRANSACTION_FAILED, transaction.getTransferStatus());
 
             verify(walletLedgerRepository, times(2)).save(any());
+            verify(billPaymentStatusService).markFailed(
+                    billPaymentStatusRecord,
+                    "ops-1",
+                    null,
+                    null,
+                    null
+            );
             verify(transactionsService, never()).updateComments(any(), any());
         } finally {
             TraceContext.clear();
@@ -178,6 +200,7 @@ class TransactionSettlementServiceTest {
         when(walletRepository.findById(10L)).thenReturn(Optional.of(wallet(10L, "sub-1")));
         when(walletRepository.findById(20L)).thenReturn(Optional.of(creditorWallet));
         when(walletBalanceRepository.lockBalance(20L)).thenReturn(creditorBalance);
+        when(billPaymentStatusService.getPendingRecord("txn-1")).thenReturn(pendingBillPaymentStatusRecord());
 
         SettleTransactionRequest request = new SettleTransactionRequest();
         request.setTraceId("trace-1");
@@ -198,8 +221,16 @@ class TransactionSettlementServiceTest {
                 walletRepository,
                 walletBalanceRepository,
                 walletLedgerRepository,
-                transactionsService
+                transactionsService,
+                billPaymentStatusService
         );
+    }
+
+    private BillPaymentStatusRecord pendingBillPaymentStatusRecord() {
+        BillPaymentStatusRecord record = new BillPaymentStatusRecord();
+        record.setTransactionId("txn-1");
+        record.setStatus(BillPaymentStatus.PENDING);
+        return record;
     }
 
     private Transactions ambiguousTransaction() {

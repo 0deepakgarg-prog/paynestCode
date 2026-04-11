@@ -14,7 +14,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
@@ -67,21 +66,21 @@ class BillPaymentStatusServiceTest {
     }
 
     @Test
-    void markSuccess_shouldKeepSettledByNull() {
+    void markSuccess_shouldStoreSettledBy() {
         BillPaymentStatusService service = new BillPaymentStatusService(billPaymentStatusRepository);
         BillPaymentStatusRecord record = record(BillPaymentStatus.PENDING);
 
         service.markSuccess(record, "ops-1", "provider confirmed", Map.of("providerRef", "ELEC-1"));
 
         assertEquals(BillPaymentStatus.SUCCESS, record.getStatus());
-        assertNull(record.getSettledBy());
+        assertEquals("ops-1", record.getSettledBy());
         assertNotNull(record.getSettledOn());
         assertEquals("provider confirmed", record.getComments());
         verify(billPaymentStatusRepository).save(record);
     }
 
     @Test
-    void markFailed_shouldKeepSettledByNull() {
+    void markFailed_shouldStoreSettledBy() {
         BillPaymentStatusService service = new BillPaymentStatusService(billPaymentStatusRepository);
         BillPaymentStatusRecord record = record(BillPaymentStatus.PENDING);
 
@@ -94,7 +93,7 @@ class BillPaymentStatusServiceTest {
         );
 
         assertEquals(BillPaymentStatus.FAILED, record.getStatus());
-        assertNull(record.getSettledBy());
+        assertEquals("ops-1", record.getSettledBy());
         assertNotNull(record.getSettledOn());
         assertEquals("RB240401-123456-A0001", record.getRollbackTransactionId());
         verify(billPaymentStatusRepository).save(record);

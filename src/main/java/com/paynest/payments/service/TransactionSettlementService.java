@@ -1,6 +1,7 @@
 package com.paynest.payments.service;
 
 import com.paynest.common.Constants;
+import com.paynest.payments.entity.BillPaymentStatusRecord;
 import com.paynest.payments.entity.TransactionDetails;
 import com.paynest.payments.entity.Transactions;
 import com.paynest.users.entity.Wallet;
@@ -41,6 +42,7 @@ public class TransactionSettlementService {
     private final WalletBalanceRepository walletBalanceRepository;
     private final WalletLedgerRepository walletLedgerRepository;
     private final TransactionsService transactionsService;
+    private final BillPaymentStatusService billPaymentStatusService;
 
     public TransactionSettlementService(
             TransactionsRepository transactionsRepository,
@@ -48,7 +50,8 @@ public class TransactionSettlementService {
             WalletRepository walletRepository,
             WalletBalanceRepository walletBalanceRepository,
             WalletLedgerRepository walletLedgerRepository,
-            TransactionsService transactionsService
+            TransactionsService transactionsService,
+            BillPaymentStatusService billPaymentStatusService
     ) {
         this.transactionsRepository = transactionsRepository;
         this.transactionDetailsRepository = transactionDetailsRepository;
@@ -56,6 +59,7 @@ public class TransactionSettlementService {
         this.walletBalanceRepository = walletBalanceRepository;
         this.walletLedgerRepository = walletLedgerRepository;
         this.transactionsService = transactionsService;
+        this.billPaymentStatusService = billPaymentStatusService;
     }
 
     public SettleTransactionResponse settleTransaction(SettleTransactionRequest request) {
@@ -80,6 +84,7 @@ public class TransactionSettlementService {
             );
         }
 
+        BillPaymentStatusRecord billPaymentStatusRecord = getPendingBillPaymentStatusIfRequired(transaction);
         List<TransactionDetails> transactionDetails = transactionDetailsRepository
                 .findByIdTransactionId(transaction.getTransactionId());
         TransactionDetails debitDetail = getRequiredDetail(transactionDetails, Constants.TXN_TYPE_DR);
@@ -91,13 +96,55 @@ public class TransactionSettlementService {
 
         if (Boolean.TRUE.equals(request.getSettlementStatus())) {
             settleSuccess(transaction, transactionDetails, creditDetail, creditorWallet, modifiedBy);
+            markBillPaymentSuccessIfRequired(billPaymentStatusRecord, modifiedBy, request);
         } else {
             rollbackSettlement(transaction, transactionDetails, debitDetail, creditDetail, debitorWallet, creditorWallet, modifiedBy);
+            markBillPaymentFailedIfRequired(billPaymentStatusRecord, modifiedBy, request);
         }
 
         applyOptionalUpdates(transaction.getTransactionId(), request);
 
         return buildResponse(transaction, request.getSettlementStatus());
+    }
+
+    private BillPaymentStatusRecord getPendingBillPaymentStatusIfRequired(Transactions transaction) {
+        if (!"BILLPAY".equalsIgnoreCase(transaction.getServiceCode())) {
+            return null;
+        }
+        return billPaymentStatusService.getPendingRecord(transaction.getTransactionId());
+    }
+
+    private void markBillPaymentSuccessIfRequired(
+            BillPaymentStatusRecord record,
+            String modifiedBy,
+            SettleTransactionRequest request
+    ) {
+        if (record == null) {
+            return;
+        }
+        billPaymentStatusService.markSuccess(
+                record,
+                modifiedBy,
+                request.getComments(),
+                request.getAdditionalInfo()
+        );
+    }
+
+    private void markBillPaymentFailedIfRequired(
+            BillPaymentStatusRecord record,
+            String modifiedBy,
+            SettleTransactionRequest request
+    ) {
+        if (record == null) {
+            return;
+        }
+        billPaymentStatusService.markFailed(
+                record,
+                modifiedBy,
+                request.getComments(),
+                request.getAdditionalInfo(),
+                null
+        );
     }
 
     private void validateRequest(SettleTransactionRequest request) {

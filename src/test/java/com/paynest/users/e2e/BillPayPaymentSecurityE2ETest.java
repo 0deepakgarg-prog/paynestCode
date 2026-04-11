@@ -77,7 +77,7 @@ class BillPayPaymentSecurityE2ETest {
     }
 
     @Test
-    void billPaySettlementShouldNotRequireAuthorizationHeader() {
+    void billPaySettlementShouldUseSettleTxnEndpoint() {
         String payload = """
                 {
                   "settlementStatus": true
@@ -89,11 +89,11 @@ class BillPayPaymentSecurityE2ETest {
                 .header("X-Tenant-Id", "tenant-1")
                 .body(payload)
                 .when()
-                .post("/api/v1/pay/BILLPAY/settle")
+                .post("/api/v1/pay/settleTxn")
                 .then()
-                .statusCode(404)
+                .statusCode(400)
                 .body("responseStatus", equalTo("FAILURE"))
-                .body("operationType", equalTo("BILLPAY_SETTLE"))
-                .body("code", equalTo("BILL_PAYMENT_NOT_FOUND"));
+                .body("operationType", equalTo("settleTxn"))
+                .body("code", equalTo("TRACE_ID_MISSING"));
     }
 }
