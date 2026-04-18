@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
 import com.paynest.config.PropertyReader;
@@ -137,7 +139,7 @@ public class BalanceService {
         try {
             BigDecimal currencyFactor =
                     new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = TenantTime.now();
             BigDecimal dbAmount = amount
                     .multiply(currencyFactor)
                     .setScale(2, RoundingMode.HALF_UP);
@@ -270,7 +272,7 @@ public class BalanceService {
         try {
             BigDecimal currencyFactor =
                     new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = TenantTime.now();
             BigDecimal dbAmount = amount
                     .multiply(currencyFactor)
                     .setScale(2, RoundingMode.HALF_UP);

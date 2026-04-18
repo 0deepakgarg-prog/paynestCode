@@ -1,5 +1,7 @@
 package com.paynest.exception;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.paynest.config.dto.response.ApiErrorResponse;
@@ -150,7 +152,7 @@ public class GlobalExceptionHandler {
                 code,
                 message,
                 TraceContext.getTraceId(),
-                LocalDateTime.now()
+                TenantTime.now()
         );
     }
 
@@ -164,7 +166,7 @@ public class GlobalExceptionHandler {
                 .message(message)
                 .code(code)
                 .responseStatus(TransactionStatus.FAILURE)
-                .timestamp(Instant.now())
+                .timestamp(TenantTime.instant())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .build();

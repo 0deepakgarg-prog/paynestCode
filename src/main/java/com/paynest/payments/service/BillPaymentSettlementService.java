@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
@@ -253,7 +255,7 @@ public class BillPaymentSettlementService {
     }
 
     private void touchSettledTransaction(Transactions transaction) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         transaction.setTransferOn(now);
         transaction.setModifiedOn(now);
         transactionsRepository.save(transaction);
@@ -263,7 +265,7 @@ public class BillPaymentSettlementService {
             Transactions transaction,
             String reconciliationStatus
     ) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         transaction.setTransferOn(now);
         transaction.setModifiedOn(now);
         transaction.setReconciliationDone(resolveReconciliationStatus(reconciliationStatus));
@@ -282,7 +284,7 @@ public class BillPaymentSettlementService {
             throw new IllegalStateException("Rollback transaction not found: " + rollbackTransactionId);
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         rollbackTransaction.setAttr1Name(ROLLBACK_ATTR1_NAME);
         rollbackTransaction.setAttr1Value(originalTransactionId);
         rollbackTransaction.setAttr2Name(ROLLBACK_ATTR2_NAME);
@@ -335,7 +337,7 @@ public class BillPaymentSettlementService {
                 .message(success
                         ? "Bill payment settled successfully"
                         : "Bill payment marked failed and rollback completed")
-                .timestamp(Instant.now())
+                .timestamp(TenantTime.instant())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .rollbackTransactionId(rollbackTransactionId)

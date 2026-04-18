@@ -3,11 +3,11 @@ package com.paynest.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.exception.ApplicationException;
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.config.tenant.TraceContext;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -32,7 +32,7 @@ public final class FilterErrorResponseWriter {
         body.put("code", errorCode);
         body.put("message", errorMessage);
         body.put("traceId", TraceContext.getTraceId());
-        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("timestamp", TenantTime.now().toString());
 
         response.getWriter().write(OBJECT_MAPPER.writeValueAsString(body));
         response.getWriter().flush();

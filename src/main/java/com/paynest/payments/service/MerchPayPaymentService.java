@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
@@ -161,7 +163,7 @@ public class MerchPayPaymentService {
                 .operationType(request.getOperationType())
                 .code("PAYMENT_SUCCESS")
                 .message("Merchant payment successful")
-                .timestamp(Instant.now())
+                .timestamp(TenantTime.instant())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())

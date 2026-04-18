@@ -3,18 +3,23 @@ package com.paynest.payments.repository;
 import com.paynest.payments.entity.TransactionDetails;
 import com.paynest.payments.entity.TransactionDetailsId;
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface TransactionDetailsRepository extends JpaRepository<TransactionDetails, TransactionDetailsId> {
+public interface TransactionDetailsRepository extends JpaRepository<TransactionDetails, TransactionDetailsId>,
+        JpaSpecificationExecutor<TransactionDetails> {
 
     List<TransactionDetails> findByIdTransactionId(String transactionId);
+
+    List<TransactionDetails> findByIdTransactionIdIn(Collection<String> transactionIds);
 
     @Modifying
     @Transactional

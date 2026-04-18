@@ -1,0 +1,500 @@
+{
+  "serviceCode": "U2U",
+  "language": "en",
+  "templateVersion": "1.0",
+  "page": {
+    "size": "A4",
+    "backgroundColor": "#FFFFFF"
+  },
+  "styles": {
+    "title": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 22,
+      "color": "#0F172A"
+    },
+    "sectionTitle": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 13,
+      "color": "#0E7490"
+    },
+    "label": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 9,
+      "color": "#475569"
+    },
+    "value": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 11,
+      "color": "#0F172A"
+    },
+    "highlightValue": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 13,
+      "color": "#0F766E"
+    },
+    "amount": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 22,
+      "color": "#0F172A"
+    },
+    "success": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 12,
+      "color": "#047857"
+    },
+    "footer": {
+      "font": "HELVETICA",
+      "fontSize": 8,
+      "color": "#64748B"
+    },
+    "line": {
+      "strokeColor": "#A5F3FC",
+      "lineWidth": 0.75
+    },
+    "box": {
+      "fillColor": "#ECFEFF",
+      "strokeColor": "#A5F3FC",
+      "lineWidth": 0.75
+    }
+  },
+  "elements": [
+    {
+      "id": "headerBox",
+      "type": "rect",
+      "x": 36,
+      "y": 32,
+      "width": 523,
+      "height": 76,
+      "style": "box"
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "text": "Payment Receipt",
+      "x": 52,
+      "y": 52,
+      "width": 300,
+      "height": 22,
+      "style": "title",
+      "align": "left"
+    },
+    {
+      "id": "headerServiceName",
+      "type": "field",
+      "field": "serviceName",
+      "x": 52,
+      "y": 82,
+      "width": 220,
+      "height": 14,
+      "style": "value",
+      "align": "left",
+      "visible": false
+    },
+    {
+      "id": "status",
+      "type": "field",
+      "field": "status",
+      "x": 420,
+      "y": 56,
+      "width": 110,
+      "height": 14,
+      "style": "success",
+      "align": "right"
+    },
+    {
+      "id": "amount",
+      "type": "fieldGroup",
+      "template": "{{transactionAmount}} {{currency}}",
+      "x": 350,
+      "y": 80,
+      "width": 180,
+      "height": 20,
+      "style": "amount",
+      "align": "right"
+    },
+    {
+      "id": "transactionSection",
+      "type": "text",
+      "text": "Transaction Details",
+      "x": 40,
+      "y": 135,
+      "width": 200,
+      "height": 14,
+      "style": "sectionTitle"
+    },
+    {
+      "id": "transactionLine",
+      "type": "line",
+      "x": 40,
+      "y": 154,
+      "width": 515,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "transactionIdLabel",
+      "type": "text",
+      "text": "Transaction ID",
+      "x": 40,
+      "y": 175,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "transactionIdValue",
+      "type": "field",
+      "field": "transactionId",
+      "x": 200,
+      "y": 175,
+      "width": 300,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "transferOnLabel",
+      "type": "text",
+      "text": "Transaction Date",
+      "x": 40,
+      "y": 198,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "transferOnValue",
+      "type": "field",
+      "field": "transferOn",
+      "x": 200,
+      "y": 198,
+      "width": 300,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "serviceNameLabel",
+      "type": "text",
+      "text": "Service Name",
+      "x": 40,
+      "y": 221,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "serviceNameValue",
+      "type": "field",
+      "field": "serviceName",
+      "x": 200,
+      "y": 221,
+      "width": 300,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "serviceCodeLabel",
+      "type": "text",
+      "text": "Operation Type",
+      "x": 40,
+      "y": 244,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "serviceCodeValue",
+      "type": "field",
+      "field": "transactionDirection",
+      "x": 200,
+      "y": 244,
+      "width": 300,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "remarksLabel",
+      "type": "text",
+      "text": "Remarks",
+      "x": 40,
+      "y": 267,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "remarksValue",
+      "type": "field",
+      "field": "remarks",
+      "x": 200,
+      "y": 267,
+      "width": 320,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "senderSection",
+      "type": "text",
+      "text": "Sender",
+      "x": 40,
+      "y": 315,
+      "width": 200,
+      "height": 14,
+      "style": "sectionTitle"
+    },
+    {
+      "id": "senderLine",
+      "type": "line",
+      "x": 40,
+      "y": 334,
+      "width": 245,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "senderName",
+      "type": "fieldGroup",
+      "template": "Sender Name: {{debtor.accountName}}",
+      "x": 40,
+      "y": 357,
+      "width": 220,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "senderMobile",
+      "type": "fieldGroup",
+      "template": "Mobile: {{debtor.mobileNumber}}",
+      "x": 40,
+      "y": 380,
+      "width": 220,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "senderWallet",
+      "type": "fieldGroup",
+      "template": "",
+      "x": 40,
+      "y": 403,
+      "width": 220,
+      "height": 12,
+      "style": "label",
+      "visible": false
+    },
+    {
+      "id": "receiverSection",
+      "type": "text",
+      "text": "Receiver",
+      "x": 310,
+      "y": 315,
+      "width": 200,
+      "height": 14,
+      "style": "sectionTitle"
+    },
+    {
+      "id": "receiverLine",
+      "type": "line",
+      "x": 310,
+      "y": 334,
+      "width": 245,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "receiverName",
+      "type": "fieldGroup",
+      "template": "Receiver Name: {{creditor.accountName}}",
+      "x": 310,
+      "y": 357,
+      "width": 220,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "receiverMobile",
+      "type": "fieldGroup",
+      "template": "Mobile: {{creditor.mobileNumber}}",
+      "x": 310,
+      "y": 380,
+      "width": 220,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "receiverWallet",
+      "type": "fieldGroup",
+      "template": "",
+      "x": 310,
+      "y": 403,
+      "width": 220,
+      "height": 12,
+      "style": "label",
+      "visible": false
+    },
+    {
+      "id": "balanceSection",
+      "type": "text",
+      "text": "Payment Summary",
+      "x": 40,
+      "y": 445,
+      "width": 200,
+      "height": 14,
+      "style": "sectionTitle"
+    },
+    {
+      "id": "balanceLine",
+      "type": "line",
+      "x": 40,
+      "y": 464,
+      "width": 515,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "amountPaidLabel",
+      "type": "text",
+      "text": "Amount",
+      "x": 40,
+      "y": 487,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "amountPaidValue",
+      "type": "fieldGroup",
+      "template": "{{transactionAmount}} {{currency}}",
+      "x": 200,
+      "y": 487,
+      "width": 220,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "serviceChargePaidLabel",
+      "type": "text",
+      "text": "Service Charge Paid",
+      "x": 40,
+      "y": 510,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "serviceChargePaidValue",
+      "type": "fieldGroup",
+      "template": "{{serviceChargePaid}} {{currency}}",
+      "x": 200,
+      "y": 510,
+      "width": 220,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "totalAmountPaidLabel",
+      "type": "field",
+      "field": "totalAmountLabel",
+      "x": 40,
+      "y": 535,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "totalAmountPaidValue",
+      "type": "fieldGroup",
+      "template": "{{totalAmountPaid}} {{currency}}",
+      "x": 200,
+      "y": 535,
+      "width": 220,
+      "height": 12,
+      "style": "highlightValue"
+    },
+    {
+      "id": "previousBalanceLabel",
+      "type": "text",
+      "text": "Previous Balance",
+      "x": 40,
+      "y": 562,
+      "width": 150,
+      "height": 12,
+      "style": "label",
+      "visible": false
+    },
+    {
+      "id": "previousBalanceValue",
+      "type": "fieldGroup",
+      "template": "{{previousBalance}} {{currency}}",
+      "x": 200,
+      "y": 562,
+      "width": 220,
+      "height": 12,
+      "style": "value",
+      "visible": false
+    },
+    {
+      "id": "postBalanceLabel",
+      "type": "text",
+      "text": "Post Balance",
+      "x": 40,
+      "y": 585,
+      "width": 150,
+      "height": 12,
+      "style": "label",
+      "visible": false
+    },
+    {
+      "id": "postBalanceValue",
+      "type": "fieldGroup",
+      "template": "{{postBalance}} {{currency}}",
+      "x": 200,
+      "y": 585,
+      "width": 220,
+      "height": 12,
+      "style": "value",
+      "visible": false
+    },
+    {
+      "id": "footerLine",
+      "type": "line",
+      "x": 40,
+      "y": 748,
+      "width": 515,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "footerDisclaimer",
+      "type": "text",
+      "text": "This is a system-generated receipt and does not require a signature.",
+      "x": 40,
+      "y": 765,
+      "width": 515,
+      "height": 10,
+      "style": "footer",
+      "align": "center"
+    },
+    {
+      "id": "footerTrace",
+      "type": "fieldGroup",
+      "template": "Generated by PayNest | Trace ID: {{traceId}} | Generated at: {{generatedAt}}",
+      "x": 40,
+      "y": 779,
+      "width": 515,
+      "height": 10,
+      "style": "footer",
+      "align": "center"
+    },
+    {
+      "id": "footerCopyright",
+      "type": "fieldGroup",
+      "template": "Copyright {{currentYear}} PayNest. All rights reserved.",
+      "x": 40,
+      "y": 793,
+      "width": 515,
+      "height": 10,
+      "style": "footer",
+      "align": "center"
+    }
+  ]
+}

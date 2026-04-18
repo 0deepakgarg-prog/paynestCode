@@ -1,5 +1,7 @@
 package com.paynest.users.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
@@ -65,7 +67,7 @@ public class AccountService {
         if (otpOpt.isEmpty() || !otpOpt.get().getMobileNumber().equals(request.getUser().getMobile()) ||
                 !otpOpt.get().getReferenceType().equals("REGISTRATION") ||
                 !otpOpt.get().getStatus().equals("CREATED") ||
-                otpOpt.get().getExpiresAt().isBefore(java.time.LocalDateTime.now())) {
+                otpOpt.get().getExpiresAt().isBefore(TenantTime.now())) {
             throw new ApplicationException(ErrorCodes.INVALID_OTP,"Invalid or expired OTP");
         }else{
             log.info("Otp validation done. registering user");
@@ -81,7 +83,7 @@ public class AccountService {
         account.setMobileNumber(request.getUser().getMobile());
         account.setAccountType("SUBSCRIBER");
         account.setStatus("ACTIVE");
-        account.setCreatedAt(java.time.LocalDateTime.now());
+        account.setCreatedAt(TenantTime.now());
         account.setCreatedBy(account.getAccountId());
         accountRepository.save(account);
 
@@ -114,7 +116,7 @@ public class AccountService {
         UserRole userRole = new UserRole();
         userRole.setUserId(account.getAccountId());
         userRole.setRoleId(roleRepository.findByRoleCode("CUSTOMER").get().getRoleId());
-        userRole.setAssignedAt(LocalDateTime.now());
+        userRole.setAssignedAt(TenantTime.now());
         userRole.setAssignedBy(account.getAccountId());
 
         userRoleRepository.save(userRole);
@@ -196,7 +198,7 @@ public class AccountService {
         account.setNationality(accountRequest.getUser().getNationality());
         account.setSsn(accountRequest.getUser().getSsn());
         account.setRemarks(accountRequest.getUser().getRemarks());
-        account.setCreatedAt(java.time.LocalDateTime.now());
+        account.setCreatedAt(TenantTime.now());
        // account.setCreatedBy(accountRequest.getCreatedBy()); TODO : check the logic for created BY
         accountRepository.save(account);
 
@@ -233,7 +235,7 @@ public class AccountService {
         UserRole userRole = new UserRole();
         userRole.setUserId(account.getAccountId());
         userRole.setRoleId(requestRole.get().getRoleId());
-        userRole.setAssignedAt(LocalDateTime.now());
+        userRole.setAssignedAt(TenantTime.now());
         userRole.setAssignedBy(account.getAccountId());
 
         AccountAuth accountAuth = new AccountAuth();
@@ -284,7 +286,7 @@ public class AccountService {
                 request.getUser().getMobile(),
                 "REGISTRATION",
                 "CREATED");
-        if (existingOtp.isPresent() && existingOtp.get().getExpiresAt().isBefore(java.time.LocalDateTime.now())) {
+        if (existingOtp.isPresent() && existingOtp.get().getExpiresAt().isBefore(TenantTime.now())) {
             existingOtp.get().setStatus("EXPIRED");
             otpRepository.save(existingOtp.get());
         }else if(existingOtp.isPresent()){
@@ -295,7 +297,7 @@ public class AccountService {
         otp.setMobileNumber(request.getUser().getMobile());
         otp.setOtpValue((int) (Math.random() * 900000) + 100000);
         otp.setStatus("CREATED");
-        otp.setExpiresAt(java.time.LocalDateTime.now().plusMinutes(10));
+        otp.setExpiresAt(TenantTime.now().plusMinutes(10));
         otpRepository.save(otp);
         log.info("Generated OTP {} for mobile number {}", otp.getOtpValue(), otp.getMobileNumber());
 
@@ -329,7 +331,7 @@ public class AccountService {
         account.setSsn(request.getUser().getSsn());
         account.setNationality(request.getUser().getNationality());
         account.setUpdatedBy(account.getAccountId());
-        account.setUpdatedAt(java.time.LocalDateTime.now());
+        account.setUpdatedAt(TenantTime.now());
         if(request.getUser().getEmail() !=null){
             account.setEmail(request.getUser().getEmail());
 
@@ -487,7 +489,7 @@ public class AccountService {
     }
 
     private void deactivateSubscriberArtifacts(Account subscriber, List<Wallet> subscriberWallets) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         String updatedBy = JWTUtils.getCurrentAccountId();
 
         subscriber.setStatus(Constants.ACCOUNT_STATUS_INACTIVE);

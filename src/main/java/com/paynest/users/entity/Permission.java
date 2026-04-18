@@ -1,5 +1,7 @@
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -30,7 +32,7 @@ public class Permission {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = TenantTime.now();
         }
     }
 }

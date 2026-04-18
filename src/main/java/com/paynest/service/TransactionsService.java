@@ -1,5 +1,7 @@
 package com.paynest.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
 import com.paynest.payments.entity.TransactionDetails;
@@ -47,7 +49,7 @@ public class TransactionsService {
             Wallet creditorWallet,
             InitiatedBy initiatedBy
     ){
-        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime currentDateTime = TenantTime.now();
         Transactions transaction = new Transactions();
         String currencyFactor = propertyReader.getPropertyValue("currency.factor");
         BigDecimal txnAmount = transactionValue
@@ -112,7 +114,7 @@ public class TransactionsService {
     public void updateFailedTransactionRecord(String transactionId,String errorCode, String accountId){
         Transactions transaction = transactionsRepository.findByTransactionId(transactionId);
         List<TransactionDetails> transactionDetails = transactionDetailsRepository.findByIdTransactionId(transactionId);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         transaction.setTransferStatus(Constants.TRANSACTION_FAILED);
         transaction.setModifiedOn(now);
         transaction.setErrorCode(errorCode);

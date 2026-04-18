@@ -1,5 +1,7 @@
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -68,8 +70,8 @@ public class KycDocument {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = TenantTime.now();
+        this.updatedAt = TenantTime.now();
         if (this.verificationStatus == null) {
             this.verificationStatus = "PENDING";
         }
@@ -77,6 +79,6 @@ public class KycDocument {
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = TenantTime.now();
     }
 }

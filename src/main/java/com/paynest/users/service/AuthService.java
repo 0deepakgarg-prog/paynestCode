@@ -1,5 +1,7 @@
 package com.paynest.users.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
@@ -79,13 +81,13 @@ public class AuthService {
 
         if (!valid) {
             auth.setFailedAttempts((auth.getFailedAttempts() == null ? 0 : auth.getFailedAttempts()) + 1);
-            auth.setLastFailedAt(LocalDateTime.now());
+            auth.setLastFailedAt(TenantTime.now());
             accountAuthRepository.save(auth);
             throw new ApplicationException(ErrorCodes.INVALID_CREDENTIALS, "Invalid credentials");
         }
 
         auth.setFailedAttempts(0);
-        auth.setLastLoginAt(LocalDateTime.now());
+        auth.setLastLoginAt(TenantTime.now());
         accountAuthRepository.save(auth);
 
         String token = jwtService.generateToken(
@@ -142,7 +144,7 @@ public class AuthService {
         newChallenge.setChallengeType(authType == null || authType.isBlank()
                 ? "PIN"
                 : authType.toUpperCase(Locale.ROOT));
-        newChallenge.setExpiresAt(LocalDateTime.now().plusSeconds(jwtService.getChallengeExpirationSeconds()));
+        newChallenge.setExpiresAt(TenantTime.now().plusSeconds(jwtService.getChallengeExpirationSeconds()));
         newChallenge.setUsed(false);
         newChallenge.setStatus("ACTIVE");
         authChallengeRepository.save(newChallenge);
@@ -163,7 +165,7 @@ public class AuthService {
             AuthType authType,
             AccountIdentifier debitorIdentifier
     ) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         AccountAuth debitorAuth = getAuthorizationRecord(debitorIdentifier);
         if (authType != null && !authType.name().equalsIgnoreCase(debitorAuth.getAuthType())) {
             throw new ApplicationException(PaymentErrorCode.INVALID_AUTH_TYPE);

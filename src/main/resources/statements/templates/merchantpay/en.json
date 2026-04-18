@@ -1,0 +1,431 @@
+{
+  "serviceCode": "MERCHANTPAY",
+  "language": "en",
+  "templateVersion": "1.0",
+  "page": {
+    "size": "A4",
+    "backgroundColor": "#FFFFFF"
+  },
+  "styles": {
+    "title": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 17,
+      "color": "#0F172A"
+    },
+    "subtitle": {
+      "font": "HELVETICA",
+      "fontSize": 8,
+      "color": "#475569"
+    },
+    "label": {
+      "font": "HELVETICA",
+      "fontSize": 8,
+      "color": "#64748B"
+    },
+    "value": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 9,
+      "color": "#0F172A"
+    },
+    "merchantTitle": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 12,
+      "color": "#006D77"
+    },
+    "amount": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 20,
+      "color": "#006D77"
+    },
+    "success": {
+      "font": "HELVETICA_BOLD",
+      "fontSize": 10,
+      "color": "#15803D"
+    },
+    "footer": {
+      "font": "HELVETICA",
+      "fontSize": 7,
+      "color": "#777777"
+    },
+    "line": {
+      "strokeColor": "#CBD5E1",
+      "lineWidth": 0.75
+    },
+    "headerBox": {
+      "fillColor": "#E6FFFA",
+      "strokeColor": "#99F6E4",
+      "lineWidth": 0.75
+    },
+    "merchantBox": {
+      "fillColor": "#F8FAFC",
+      "strokeColor": "#CBD5E1",
+      "lineWidth": 0.75
+    }
+  },
+  "elements": [
+    {
+      "id": "headerBox",
+      "type": "rect",
+      "x": 32,
+      "y": 30,
+      "width": 531,
+      "height": 118,
+      "style": "headerBox"
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "text": "Merchant Payment Receipt",
+      "x": 50,
+      "y": 55,
+      "width": 310,
+      "height": 22,
+      "style": "title"
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "text": "PayNest wallet merchant payment confirmation",
+      "x": 50,
+      "y": 82,
+      "width": 310,
+      "height": 12,
+      "style": "subtitle"
+    },
+    {
+      "id": "status",
+      "type": "field",
+      "field": "status",
+      "x": 420,
+      "y": 55,
+      "width": 120,
+      "height": 14,
+      "style": "success",
+      "align": "right"
+    },
+    {
+      "id": "amount",
+      "type": "fieldGroup",
+      "template": "{{transactionAmount}} {{currency}}",
+      "x": 350,
+      "y": 93,
+      "width": 190,
+      "height": 24,
+      "style": "amount",
+      "align": "right"
+    },
+    {
+      "id": "merchantNameLabel",
+      "type": "text",
+      "text": "Merchant",
+      "x": 50,
+      "y": 120,
+      "width": 90,
+      "height": 10,
+      "style": "label"
+    },
+    {
+      "id": "merchantNameValue",
+      "type": "fieldGroup",
+      "template": "{{creditor.accountName}}",
+      "x": 140,
+      "y": 120,
+      "width": 210,
+      "height": 10,
+      "style": "value"
+    },
+    {
+      "id": "merchantSectionBox",
+      "type": "rect",
+      "x": 40,
+      "y": 180,
+      "width": 515,
+      "height": 110,
+      "style": "merchantBox"
+    },
+    {
+      "id": "paymentDetailsTitle",
+      "type": "text",
+      "text": "Payment Details",
+      "x": 56,
+      "y": 205,
+      "width": 180,
+      "height": 14,
+      "style": "merchantTitle"
+    },
+    {
+      "id": "transactionIdLabel",
+      "type": "text",
+      "text": "Receipt ID",
+      "x": 56,
+      "y": 233,
+      "width": 130,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "transactionIdValue",
+      "type": "field",
+      "field": "transactionId",
+      "x": 190,
+      "y": 233,
+      "width": 320,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "transferOnLabel",
+      "type": "text",
+      "text": "Paid On",
+      "x": 56,
+      "y": 256,
+      "width": 130,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "transferOnValue",
+      "type": "field",
+      "field": "transferOn",
+      "x": 190,
+      "y": 256,
+      "width": 320,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "referenceLabel",
+      "type": "text",
+      "text": "Payment Reference",
+      "x": 56,
+      "y": 279,
+      "width": 130,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "referenceValue",
+      "type": "field",
+      "field": "paymentReference",
+      "x": 190,
+      "y": 279,
+      "width": 320,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "payerTitle",
+      "type": "text",
+      "text": "Customer",
+      "x": 40,
+      "y": 335,
+      "width": 180,
+      "height": 14,
+      "style": "merchantTitle"
+    },
+    {
+      "id": "payerLine",
+      "type": "line",
+      "x": 40,
+      "y": 354,
+      "width": 245,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "payerName",
+      "type": "fieldGroup",
+      "template": "{{debtor.accountName}}",
+      "x": 40,
+      "y": 378,
+      "width": 220,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "payerMobile",
+      "type": "fieldGroup",
+      "template": "Mobile: {{debtor.mobileNumber}}",
+      "x": 40,
+      "y": 401,
+      "width": 220,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "payerWallet",
+      "type": "fieldGroup",
+      "template": "Wallet: {{debtor.walletType}} / {{debtor.currency}}",
+      "x": 40,
+      "y": 424,
+      "width": 220,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "merchantTitle",
+      "type": "text",
+      "text": "Merchant",
+      "x": 310,
+      "y": 335,
+      "width": 180,
+      "height": 14,
+      "style": "merchantTitle"
+    },
+    {
+      "id": "merchantLine",
+      "type": "line",
+      "x": 310,
+      "y": 354,
+      "width": 245,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "merchantName",
+      "type": "fieldGroup",
+      "template": "{{creditor.accountName}}",
+      "x": 310,
+      "y": 378,
+      "width": 220,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "merchantMobile",
+      "type": "fieldGroup",
+      "template": "Mobile: {{creditor.mobileNumber}}",
+      "x": 310,
+      "y": 401,
+      "width": 220,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "merchantWallet",
+      "type": "fieldGroup",
+      "template": "Wallet: {{creditor.walletType}} / {{creditor.currency}}",
+      "x": 310,
+      "y": 424,
+      "width": 220,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "balanceTitle",
+      "type": "text",
+      "text": "Customer Wallet Balance",
+      "x": 40,
+      "y": 485,
+      "width": 220,
+      "height": 14,
+      "style": "merchantTitle"
+    },
+    {
+      "id": "previousBalanceLabel",
+      "type": "text",
+      "text": "Before Payment",
+      "x": 40,
+      "y": 515,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "previousBalanceValue",
+      "type": "field",
+      "field": "previousBalance",
+      "format": "amount",
+      "x": 210,
+      "y": 515,
+      "width": 120,
+      "height": 12,
+      "style": "value",
+      "align": "right"
+    },
+    {
+      "id": "postBalanceLabel",
+      "type": "text",
+      "text": "After Payment",
+      "x": 40,
+      "y": 538,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "postBalanceValue",
+      "type": "field",
+      "field": "postBalance",
+      "format": "amount",
+      "x": 210,
+      "y": 538,
+      "width": 120,
+      "height": 12,
+      "style": "value",
+      "align": "right"
+    },
+    {
+      "id": "remarksLabel",
+      "type": "text",
+      "text": "Merchant Note",
+      "x": 40,
+      "y": 590,
+      "width": 150,
+      "height": 12,
+      "style": "label"
+    },
+    {
+      "id": "remarksValue",
+      "type": "field",
+      "field": "remarks",
+      "x": 190,
+      "y": 590,
+      "width": 330,
+      "height": 12,
+      "style": "value"
+    },
+    {
+      "id": "footerLine",
+      "type": "line",
+      "x": 40,
+      "y": 748,
+      "width": 515,
+      "height": 0,
+      "style": "line"
+    },
+    {
+      "id": "footerDisclaimer",
+      "type": "text",
+      "text": "This is a system-generated merchant payment receipt and does not require a signature.",
+      "x": 40,
+      "y": 765,
+      "width": 515,
+      "height": 10,
+      "style": "footer",
+      "align": "center"
+    },
+    {
+      "id": "footerTrace",
+      "type": "fieldGroup",
+      "template": "Generated by PayNest | Trace ID: {{traceId}} | Generated at: {{generatedAt}}",
+      "x": 40,
+      "y": 779,
+      "width": 515,
+      "height": 10,
+      "style": "footer",
+      "align": "center"
+    },
+    {
+      "id": "footerCopyright",
+      "type": "fieldGroup",
+      "template": "Copyright {{currentYear}} PayNest. All rights reserved.",
+      "x": 40,
+      "y": 793,
+      "width": 515,
+      "height": 10,
+      "style": "footer",
+      "align": "center"
+    }
+  ]
+}

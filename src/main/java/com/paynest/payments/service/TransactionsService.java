@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
@@ -103,7 +105,7 @@ public class TransactionsService {
             String transferStatus,
             String errorCode
     ) {
-        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime currentDateTime = TenantTime.now();
         Transactions transaction = new Transactions();
         String currencyFactor = propertyReader.getPropertyValue("currency.factor");
         BigDecimal safeAmount = transactionValue == null ? BigDecimal.ZERO : transactionValue;
@@ -163,7 +165,7 @@ public class TransactionsService {
         if (transaction == null) {
             return;
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         transaction.setTransferStatus(Constants.TRANSACTION_FAILED);
         transaction.setModifiedOn(now);
         transaction.setErrorCode(errorCode);

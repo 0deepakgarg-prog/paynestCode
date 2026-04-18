@@ -1,5 +1,7 @@
 package com.paynest.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -57,12 +59,12 @@ public class ErrorCatalog {
 
     @PrePersist
     void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = TenantTime.now();
+        updatedAt = TenantTime.now();
     }
 
     @PreUpdate
     void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = TenantTime.now();
     }
 }

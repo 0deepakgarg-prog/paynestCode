@@ -1,6 +1,7 @@
 package com.paynest.users.service;
 
 import com.paynest.common.ErrorCodes;
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.users.dto.request.RegisterUserRequest;
 import com.paynest.users.dto.request.RegistrationRequest;
 import com.paynest.users.dto.response.AccountKycDetailsResponse;
@@ -124,7 +125,7 @@ class AccountServiceTest {
         expiredOtp.setMobileNumber("9999999999");
         expiredOtp.setReferenceType("REGISTRATION");
         expiredOtp.setStatus("CREATED");
-        expiredOtp.setExpiresAt(LocalDateTime.now().minusMinutes(1));
+        expiredOtp.setExpiresAt(TenantTime.now().minusMinutes(1));
 
         when(accountRepository.findByMobileNumber("9999999999")).thenReturn(Optional.empty());
         when(otpRepository.findTopByMobileNumberAndReferenceTypeAndStatusOrderByCreatedAtDesc(

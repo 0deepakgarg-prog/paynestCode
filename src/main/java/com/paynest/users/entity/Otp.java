@@ -1,5 +1,7 @@
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -52,7 +54,7 @@ public class Otp {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = TenantTime.now();
         this.status = this.status == null ? "CREATED" : this.status;
         this.attemptCount = this.attemptCount == null ? 0 : this.attemptCount;
         this.maxAttempt = this.maxAttempt == null ? 3 : this.maxAttempt;
@@ -60,7 +62,7 @@ public class Otp {
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = TenantTime.now();
     }
 
 }

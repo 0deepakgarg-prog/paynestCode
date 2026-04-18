@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.exception.ApplicationException;
 import com.paynest.exception.PaymentErrorCode;
 import com.paynest.payments.entity.BillPaymentStatusRecord;
@@ -24,7 +26,7 @@ public class BillPaymentStatusService {
             String customerAccountId,
             String billerAccountId
     ) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         BillPaymentStatusRecord record = new BillPaymentStatusRecord();
         record.setTransactionId(transactionId);
         record.setTraceId(traceId);
@@ -87,7 +89,7 @@ public class BillPaymentStatusService {
             Map<String, Object> additionalInfo,
             String rollbackTransactionId
     ) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         record.setStatus(status);
         record.setSettledBy(normalizeOptionalText(settledBy));
         record.setSettledOn(now);

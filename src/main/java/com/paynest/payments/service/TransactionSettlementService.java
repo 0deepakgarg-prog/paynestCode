@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.common.Constants;
 import com.paynest.payments.entity.BillPaymentStatusRecord;
 import com.paynest.payments.entity.TransactionDetails;
@@ -221,7 +223,7 @@ public class TransactionSettlementService {
         creditorBalance.setFicBalance(creditorFicAfter);
         walletBalanceRepository.save(creditorBalance);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         transaction.setPreviousStatus(transaction.getTransferStatus());
         transaction.setTransferStatus(Constants.TRANSACTION_SUCCESS);
         transaction.setTransferOn(now);
@@ -300,7 +302,7 @@ public class TransactionSettlementService {
         createRollbackLedger(transaction, creditorWallet, Constants.TXN_TYPE_DR, amount, creditorBalanceBefore, creditorBalanceAfter);
         createRollbackLedger(transaction, debitorWallet, Constants.TXN_TYPE_CR, amount, debitorBalanceBefore, debitorBalanceAfter);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         transaction.setPreviousStatus(transaction.getTransferStatus());
         transaction.setTransferStatus(Constants.TRANSACTION_FAILED);
         transaction.setTransferOn(now);
@@ -360,7 +362,7 @@ public class TransactionSettlementService {
                 .message(Boolean.TRUE.equals(settlementStatus)
                         ? "Transaction settled successfully"
                         : "Transaction rolled back successfully")
-                .timestamp(Instant.now())
+                .timestamp(TenantTime.instant())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transaction.getTransactionId())
                 .transactionTraceId(transaction.getTraceId())

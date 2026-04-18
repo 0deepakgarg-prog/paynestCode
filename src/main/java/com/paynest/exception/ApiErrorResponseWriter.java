@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.config.dto.response.ApiErrorResponse;
 import com.paynest.config.service.TenantRegistryService;
 import com.paynest.config.tenant.TenantContext;
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.config.tenant.TraceContext;
 import com.paynest.payments.dto.BasePaymentResponse;
 import com.paynest.payments.enums.TransactionStatus;
@@ -14,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Map;
@@ -84,6 +84,8 @@ public class ApiErrorResponseWriter {
             }
 
             TenantContext.setTenant(schema);
+            TenantContext.setTenantId(tenantId);
+            TenantContext.setTimeZone(tenantRegistryService.getTimeZone(tenantId));
             return true;
         } catch (Exception ignored) {
             return false;
@@ -102,7 +104,7 @@ public class ApiErrorResponseWriter {
                     .operationType(extractOperationType(request))
                     .code(code)
                     .message(message)
-                    .timestamp(Instant.now())
+                    .timestamp(TenantTime.instant())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transactionId)
                     .build();
@@ -113,7 +115,7 @@ public class ApiErrorResponseWriter {
                 code,
                 message,
                 TraceContext.getTraceId(),
-                LocalDateTime.now()
+                TenantTime.now()
         );
     }
 

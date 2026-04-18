@@ -1,5 +1,7 @@
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -45,19 +47,19 @@ public class AccountAuth {
     private LocalDateTime passwordChangedAt;
 
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = TenantTime.now();
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = TenantTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = TenantTime.now();
     }
 }
 

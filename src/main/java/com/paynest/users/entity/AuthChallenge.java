@@ -1,5 +1,7 @@
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -53,7 +55,7 @@ public class AuthChallenge {
             this.challengeId = UUID.randomUUID();
         }
         if (this.issuedAt == null) {
-            this.issuedAt = LocalDateTime.now();
+            this.issuedAt = TenantTime.now();
         }
         if (this.used == null) {
             this.used = false;
@@ -66,7 +68,7 @@ public class AuthChallenge {
     @PreUpdate
     protected void onUpdate() {
         if (Boolean.TRUE.equals(this.used) && this.usedAt == null) {
-            this.usedAt = LocalDateTime.now();
+            this.usedAt = TenantTime.now();
         }
     }
 }

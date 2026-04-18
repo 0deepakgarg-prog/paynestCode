@@ -22,6 +22,8 @@ import java.util.UUID;
 import static com.paynest.config.tenant.TenantContext.clear;
 import static com.paynest.config.tenant.TenantContext.getTenant;
 import static com.paynest.config.tenant.TenantContext.setTenant;
+import static com.paynest.config.tenant.TenantContext.setTenantId;
+import static com.paynest.config.tenant.TenantContext.setTimeZone;
 
 @Component
 @RequiredArgsConstructor
@@ -89,6 +91,8 @@ public class TenantFilter extends OncePerRequestFilter {
             }
 
             setTenant(schema);
+            setTenantId(tenant);
+            setTimeZone(tenantService.getTimeZone(tenant));
             log.info("Tenant before filter chain: {} and request TraceId {}", getTenant(), traceId);
             filterChain.doFilter(request, response);
         } catch (ApplicationException ex) {

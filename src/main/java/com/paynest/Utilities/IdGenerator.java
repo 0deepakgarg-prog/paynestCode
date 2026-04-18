@@ -1,5 +1,7 @@
 package com.paynest.Utilities;
 
+
+import com.paynest.config.tenant.TenantTime;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +37,7 @@ public class IdGenerator {
 
     public static String generateAccountId() {
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
 
         String datePart = now.format(DATE_FORMAT);
         String timePart = now.format(TIME_FORMAT);
@@ -54,7 +56,7 @@ public class IdGenerator {
 
     public static long generateAccountAuthId() {
 
-        long timestamp = System.currentTimeMillis();
+        long timestamp = TenantTime.epochMillis();
 
         int randomPart = secureRandom.nextInt(900) + 100; // 3 digit random
 
@@ -117,7 +119,7 @@ public class IdGenerator {
     }
 
     public static String generateTransactionId(String prefix, String serverInstance) {
-        LocalDateTime timeStamp=LocalDateTime.now();
+        LocalDateTime timeStamp=TenantTime.now();
         String datePart = timeStamp.format(SHORT_DATE_FORMAT);
         String timePart = timeStamp.format(TIME_FORMAT);
         int randomNumber = secureRandom.nextInt(10000);

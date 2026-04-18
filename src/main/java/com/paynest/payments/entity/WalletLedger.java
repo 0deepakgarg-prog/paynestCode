@@ -1,6 +1,8 @@
 
 package com.paynest.payments.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -73,7 +75,7 @@ public class WalletLedger {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = TenantTime.now();
     }
 
 }

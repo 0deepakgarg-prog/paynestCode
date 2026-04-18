@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
@@ -169,7 +171,7 @@ public class BillPayPaymentService {
                 .operationType(request.getOperationType())
                 .code("PAYMENT_SUCCESS")
                 .message("Bill payment successful and pending settlement")
-                .timestamp(Instant.now())
+                .timestamp(TenantTime.instant())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())

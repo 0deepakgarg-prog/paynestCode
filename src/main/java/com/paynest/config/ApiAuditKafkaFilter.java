@@ -1,5 +1,7 @@
 package com.paynest.config;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.config.dto.logging.ApiAuditLogEvent;
@@ -13,6 +15,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -29,6 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
+@Slf4j
 public class ApiAuditKafkaFilter extends OncePerRequestFilter {
 
     private static final int MAX_PAYLOAD_LENGTH = 4000;
@@ -42,7 +46,9 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path == null || !path.startsWith("/api/");
+        return path == null
+                || !path.startsWith("/api/")
+                || path.startsWith("/api/v1/download/receipt");
     }
 
     @Override
@@ -55,15 +61,15 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
 
         String correlationId = resolveCorrelationId(request);
         wrappedResponse.setHeader(CORRELATION_HEADER, correlationId);
-        LocalDateTime requestTime = LocalDateTime.now();
-        long start = System.currentTimeMillis();
+        LocalDateTime requestTime = TenantTime.now();
+        long start = TenantTime.epochMillis();
 
         try {
             filterChain.doFilter(wrappedRequest, wrappedResponse);
         } finally {
             String requestBody = redactSecrets(truncate(readBody(wrappedRequest.getContentAsByteArray(), wrappedRequest.getCharacterEncoding())));
-            String responseBody = redactSecrets(truncate(readBody(wrappedResponse.getContentAsByteArray(), wrappedResponse.getCharacterEncoding())));
-            long durationMs = System.currentTimeMillis() - start;
+            String responseBody = redactSecrets(truncate(readResponseBody(wrappedResponse)));
+            long durationMs = TenantTime.epochMillis() - start;
 
             ApiAuditLogEvent requestEvent = ApiAuditLogEvent.builder()
                     .eventType("REQUEST_RECEIVED")
@@ -82,7 +88,7 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
             ApiAuditLogEvent responseEvent = ApiAuditLogEvent.builder()
                     .eventType("RESPONSE_SENT")
                     .correlationId(correlationId)
-                    .eventTime(LocalDateTime.now())
+                    .eventTime(TenantTime.now())
                     .method(request.getMethod())
                     .path(request.getRequestURI())
                     .query(request.getQueryString())
@@ -94,11 +100,23 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
                     .responseBody(responseBody)
                     .build();
 
-           // asyncLogPublisher.publish(requestEvent);
-           // asyncLogPublisher.publish(responseEvent);
-            auditApiLogRepository.save(buildAuditApiLog(request, wrappedResponse, responseBody,
-                    requestBody,durationMs));
-            wrappedResponse.copyBodyToResponse();
+            // asyncLogPublisher.publish(requestEvent);
+            // asyncLogPublisher.publish(responseEvent);
+            try {
+                auditApiLogRepository.save(buildAuditApiLog(request, wrappedResponse, responseBody,
+                        requestBody, durationMs));
+            } catch (Exception ex) {
+                log.warn(
+                        "Unable to persist API audit log. method={}, path={}, status={}, traceId={}",
+                        request.getMethod(),
+                        request.getRequestURI(),
+                        wrappedResponse.getStatus(),
+                        TraceContext.getTraceId(),
+                        ex
+                );
+            } finally {
+                wrappedResponse.copyBodyToResponse();
+            }
         }
     }
 
@@ -194,6 +212,31 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
         }
         Charset charset = encoding == null ? StandardCharsets.UTF_8 : Charset.forName(encoding);
         return new String(body, charset);
+    }
+
+    private String readResponseBody(ContentCachingResponseWrapper response) {
+        byte[] body = response.getContentAsByteArray();
+        if (body == null || body.length == 0) {
+            return null;
+        }
+
+        String contentType = response.getContentType();
+        if (!isTextContentType(contentType)) {
+            return "[BINARY_RESPONSE contentType=%s length=%d]".formatted(contentType, body.length);
+        }
+
+        return readBody(body, response.getCharacterEncoding());
+    }
+
+    private boolean isTextContentType(String contentType) {
+        if (contentType == null || contentType.isBlank()) {
+            return false;
+        }
+        String normalizedContentType = contentType.toLowerCase();
+        return normalizedContentType.startsWith("text/")
+                || normalizedContentType.contains("json")
+                || normalizedContentType.contains("xml")
+                || normalizedContentType.contains("form-urlencoded");
     }
 
     private String truncate(String payload) {
