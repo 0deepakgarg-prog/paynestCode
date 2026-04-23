@@ -50,6 +50,9 @@ public final class ErrorCodes {
     public static final String STATUS_MISSING = "STATUS_MISSING";
     public static final String STOCK_REIMBURSEMENT_REJECTED = "STOCK_REIMBURSEMENT_REJECTED";
     public static final String STOCK_REJECTED = "STOCK_REJECTED";
+    public static final String STATEMENT_SERVICE_NOT_SUPPORTED = "STATEMENT_SERVICE_NOT_SUPPORTED";
+    public static final String STATEMENT_TEMPLATE_NOT_FOUND = "STATEMENT_TEMPLATE_NOT_FOUND";
+    public static final String STATEMENT_GENERATION_FAILED = "STATEMENT_GENERATION_FAILED";
     public static final String SYSTEM_ACCOUNT_INACTIVE = "SYSTEM_ACCOUNT_INACTIVE";
     public static final String SYSTEM_ACCOUNT_NOT_FOUND = "SYSTEM_ACCOUNT_NOT_FOUND";
     public static final String SYSTEM_ERROR = "SYSTEM_ERROR";

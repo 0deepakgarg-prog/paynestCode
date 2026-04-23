@@ -1,9 +1,10 @@
 package com.paynest.config.security;
 
+import com.paynest.config.FilterErrorResponseWriter;
 import com.paynest.config.service.TenantRegistryService;
 import com.paynest.config.tenant.TenantContext;
-import com.paynest.config.FilterErrorResponseWriter;
-import com.paynest.exception.ApplicationException;
+import com.paynest.exception.ApiErrorResponseWriter;
+import com.paynest.exception.CommonErrorCode;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final TenantRegistryService tenantRegistryService;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -36,8 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         log.info("Inside JwtAuthenticationFilter");
+
         boolean pricingCalculateRequest = isPricingCalculateRequest(request);
-        try {
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 filterChain.doFilter(request, response);
@@ -61,36 +63,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Claims claims = jwtService.getClaims(token);
             log.info("tenant is :" + tenantId);
 
-            if (accountId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                TenantContext.setTenant(tenantRegistryService.getSchema(tenantId));
-                UserDetails userDetails = userDetailsService.loadUserByUsername(accountId);
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities());
-                authenticationToken.setDetails(claims);
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            }
+        String tenantClaim = jwtService.extractTenant(token);
 
-            filterChain.doFilter(request, response);
-        } catch (ApplicationException ex) {
-            log.error("Filter error. code={}, message={}", ex.getErrorCode(), ex.getErrorMessage(), ex);
-            FilterErrorResponseWriter.write(
-                    response,
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    ex.getErrorCode(),
-                    ex.getErrorMessage()
-            );
-        } catch (Exception ex) {
-            log.error("Filter error. code=JWT_FILTER_ERROR, message={}", ex.getMessage(), ex);
-            FilterErrorResponseWriter.write(
-                    response,
-                    FilterErrorResponseWriter.resolveHttpStatus(ex),
-                    "JWT_FILTER_ERROR",
-                    ex.getMessage() == null ? "Unexpected JWT filter error" : ex.getMessage()
-            );
+        String requestTenantSchema = TenantContext.getTenant();
+        String resolvedTokenTenantSchema = resolveTokenTenantSchema(tenantClaim, requestTenantSchema);
+
+        if (tenantClaim == null || tenantClaim.isBlank()
+                || resolvedTokenTenantSchema == null || resolvedTokenTenantSchema.isBlank()
+                || requestTenantSchema == null || requestTenantSchema.isBlank()
+                || !requestTenantSchema.equals(resolvedTokenTenantSchema)) {
+            apiErrorResponseWriter.write(request, response, CommonErrorCode.INVALID_TOKEN);
+            return;
         }
+
+        log.info("tenant is :{}", tenantClaim);
+
+        if (accountId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            TenantContext.setTenant(resolvedTokenTenantSchema);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(accountId);
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+            authenticationToken.setDetails(claims);
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String resolveTokenTenantSchema(String tenantClaim, String requestTenantSchema) {
+        if (tenantClaim == null || tenantClaim.isBlank()) {
+            return null;
+        }
+
+        if (requestTenantSchema != null && requestTenantSchema.equals(tenantClaim)) {
+            return tenantClaim;
+        }
+
+        return tenantRegistryService.getSchema(tenantClaim);
     }
 
     private boolean isPricingCalculateRequest(HttpServletRequest request) {

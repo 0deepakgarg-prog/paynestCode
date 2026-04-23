@@ -1,5 +1,7 @@
 package com.paynest.config.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -52,7 +54,7 @@ public class AuditApiLog {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = TenantTime.now();
         }
     }
 }

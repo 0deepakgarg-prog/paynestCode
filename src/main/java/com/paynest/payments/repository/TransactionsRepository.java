@@ -1,20 +1,21 @@
 package com.paynest.payments.repository;
 
 import com.paynest.payments.entity.Transactions;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import jakarta.transaction.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+import java.util.Optional;
 
 @Repository
 public interface TransactionsRepository extends JpaRepository<Transactions, String> {
 
     Transactions findByTransactionId(String transactionId);
+
+    Optional<Transactions> findFirstByTraceId(String traceId);
 
     @Modifying
     @Transactional
@@ -25,8 +26,7 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
             t.modifiedOn = CURRENT_TIMESTAMP
         WHERE t.transactionId = :txnId
     """)
-    void updateStatus(String txnId,String status,String errorCode);
-
+    void updateStatus(String txnId, String status, String errorCode);
 
     @Modifying
     @Transactional
@@ -36,7 +36,6 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
         WHERE transaction_id = :txnId
     """, nativeQuery = true)
     void updateMetadata(String txnId, String metadata);
-
 
     @Modifying
     @Transactional
@@ -64,7 +63,6 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
     WHERE t.transactionId = :txnId
 """)
     int updateComments(String txnId, String comments);
-
 
     @Modifying
     @Transactional
@@ -118,6 +116,4 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
             String userId,
             LocalDateTime fromDateTime
     );
-
 }
-

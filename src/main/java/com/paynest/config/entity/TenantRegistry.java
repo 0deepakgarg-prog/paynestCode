@@ -1,6 +1,8 @@
 package com.paynest.config.entity;
 
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,6 +23,9 @@ public class TenantRegistry {
     @Column(name = "schema_name", length = 100)
     private String schemaName;
 
+    @Column(name = "iana_time_zone", length = 100)
+    private String ianaTimeZone;
+
     @Column(name = "status", length = 20)
     private String status;
 
@@ -32,13 +37,13 @@ public class TenantRegistry {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = TenantTime.now();
+        updatedAt = TenantTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = TenantTime.now();
     }
 
 }

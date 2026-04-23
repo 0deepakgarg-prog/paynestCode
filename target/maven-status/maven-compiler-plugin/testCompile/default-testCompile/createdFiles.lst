@@ -1,7 +1,0 @@
-com\paynest\tag\service\TagServiceTest.class
-com\paynest\users\e2e\CustomerLifecycleJourneyE2ETest.class
-com\paynest\config\service\TenantRegistryServiceTest.class
-com\paynest\tag\service\CategoryServiceTest.class
-com\paynest\tag\service\TagTypeServiceTest.class
-com\paynest\users\service\AccountServiceTest.class
-com\paynest\users\e2e\AccountRegistrationE2ETest.class

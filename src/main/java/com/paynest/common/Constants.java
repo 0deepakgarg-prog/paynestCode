@@ -30,5 +30,7 @@ package com.paynest.common;
         public static final String TRANSACTION_AMBIGUOUS = "TA";
         public static final String TRANSACTION_SUCCESS = "TS";
         public static final String TRANSACTION_FAILED = "TF";
+
+        public static final String ACCOUNT_STATUS_LOCKED = "LOCKED";
     }
 

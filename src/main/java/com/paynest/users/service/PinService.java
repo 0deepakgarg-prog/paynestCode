@@ -1,5 +1,7 @@
 package com.paynest.users.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.ErrorCodes;
 import com.paynest.users.dto.request.ChangePasswordRequest;
@@ -56,7 +58,7 @@ public class PinService {
 
         String newPinHash = IdGenerator.hashPin(request.getNewPin(), auth.getAuthHash());
         auth.setAuthValue(newPinHash);
-        auth.setUpdatedAt(LocalDateTime.now());
+        auth.setUpdatedAt(TenantTime.now());
         auth.setStatus("ACTIVE");
         auth.setIsFirstTimeLogin(false);
         accountAuthRepository.save(auth);
@@ -95,8 +97,8 @@ public class PinService {
 
         String newPasswordHash = IdGenerator.hashPin(request.getAuthFactorNew().getCredential(), auth.getAuthHash());
         auth.setAuthValue(newPasswordHash);
-        auth.setUpdatedAt(LocalDateTime.now());
-        auth.setPasswordChangedAt(LocalDateTime.now());
+        auth.setUpdatedAt(TenantTime.now());
+        auth.setPasswordChangedAt(TenantTime.now());
         auth.setStatus("ACTIVE");
         auth.setIsFirstTimeLogin(false);
         accountAuthRepository.save(auth);

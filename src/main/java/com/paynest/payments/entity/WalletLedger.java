@@ -1,6 +1,8 @@
 
 package com.paynest.payments.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -32,7 +34,7 @@ public class WalletLedger {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "currency", nullable = false, length = 3)
+    @Column(name = "currency", nullable = false, length = 10)
     private String currency;
 
     @Column(name = "balance_before")
@@ -73,7 +75,7 @@ public class WalletLedger {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = TenantTime.now();
     }
 
 }

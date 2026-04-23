@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.paynest.tag.service.TagServiceTest
--------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.956 s -- in com.paynest.tag.service.TagServiceTest

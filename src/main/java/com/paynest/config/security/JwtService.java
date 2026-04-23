@@ -1,5 +1,6 @@
 package com.paynest.config.security;
 
+import com.paynest.config.tenant.TenantTime;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -75,8 +76,24 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            Date expiry = extractAllClaims(token).getExpiration();
-            return expiry.after(new Date());
+            Claims claims = extractAllClaims(token);
+            Date now = TenantTime.date();
+            Date issuedAt = claims.getIssuedAt();
+            Date expiry = claims.getExpiration();
+
+            if (issuedAt == null || expiry == null) {
+                return false;
+            }
+
+            if (issuedAt.after(now)) {
+                return false;
+            }
+
+            if (!expiry.after(now)) {
+                return false;
+            }
+
+            return !expiry.before(issuedAt);
         } catch (Exception ex) {
             return false;
         }
@@ -91,8 +108,8 @@ public class JwtService {
     }
 
     private io.jsonwebtoken.JwtBuilder buildToken(String accountId, long tokenExpirationMs) {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + tokenExpirationMs);
+        Date now = TenantTime.date();
+        Date expiry = TenantTime.dateAfterMillis(tokenExpirationMs);
 
         return Jwts.builder()
                 .setSubject(accountId)

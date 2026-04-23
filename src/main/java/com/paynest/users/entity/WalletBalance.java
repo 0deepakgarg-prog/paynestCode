@@ -1,6 +1,8 @@
 
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -46,12 +48,12 @@ public class WalletBalance {
         if (ficBalance == null)
             ficBalance = BigDecimal.ZERO;
 
-        updatedAt = LocalDateTime.now();
+        updatedAt = TenantTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = TenantTime.now();
     }
 
 }

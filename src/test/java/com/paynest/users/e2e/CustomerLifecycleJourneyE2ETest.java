@@ -2,7 +2,8 @@ package com.paynest.users.e2e;
 
 import com.paynest.config.security.JwtService;
 import com.paynest.config.service.TenantRegistryService;
-import com.paynest.payments.dto.BasePaymentResponse;
+import com.paynest.payments.dto.U2UPaymentResponse;
+import com.paynest.payments.dto.U2UPaymentRequest;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.payments.service.StockService;
 import com.paynest.payments.service.U2UPaymentService;
@@ -135,10 +136,10 @@ class CustomerLifecycleJourneyE2ETest {
                     );
                 });
 
-        when(u2uPaymentService.processPayment(any())).thenReturn(
-                BasePaymentResponse.builder()
+        when(u2uPaymentService.processPayment(any(U2UPaymentRequest.class), eq(true))).thenReturn(
+                U2UPaymentResponse.builder()
                         .responseStatus(TransactionStatus.SUCCESS)
-                        .operationType("U2U_TRANSFER")
+                        .operationType("U2U")
                         .code("PAYMENT_SUCCESS")
                         .message("U2U Payment Successful")
                         .transactionId("UU202603200001")
@@ -244,7 +245,7 @@ class CustomerLifecycleJourneyE2ETest {
                           "paymentReference": "pay-ref-001",
                           "comments": "customer initiated transfer",
                           "debitor": {
-                            "accountType": "CUSTOMER",
+                            "accountType": "SUBSCRIBER",
                             "identifier": {
                               "type": "MOBILE",
                               "value": "%s"
@@ -255,7 +256,7 @@ class CustomerLifecycleJourneyE2ETest {
                             }
                           },
                           "creditor": {
-                            "accountType": "CUSTOMER",
+                            "accountType": "SUBSCRIBER",
                             "identifier": {
                               "type": "MOBILE",
                               "value": "9999999999"
@@ -324,7 +325,7 @@ class CustomerLifecycleJourneyE2ETest {
         inOrder.verify(accountService).registerUser(any(RegistrationRequestWithOtp.class));
         inOrder.verify(pinService).changePin(any(ChangePinRequest.class), eq(false));
         inOrder.verify(authService).login(any(AuthLoginRequest.class));
-        inOrder.verify(u2uPaymentService).processPayment(any());
+        inOrder.verify(u2uPaymentService).processPayment(any(U2UPaymentRequest.class), eq(true));
         inOrder.verify(authService).login(any(AuthLoginRequest.class));
         inOrder.verify(accountService).deleteSubscriber(CUSTOMER_ACCOUNT_ID);
     }

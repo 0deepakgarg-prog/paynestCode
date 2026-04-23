@@ -1,5 +1,7 @@
 package com.paynest.payments.service;
 
+
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
@@ -11,7 +13,7 @@ import com.paynest.payments.entity.Transactions;
 import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
 import com.paynest.payments.entity.WalletLedger;
-import com.paynest.users.enums.AccountType;
+import com.paynest.enums.AccountType;
 import com.paynest.users.enums.IdentifierType;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.enums.TransactionStatus;
@@ -110,7 +112,7 @@ public class StockService {
                 .operationType(request.getOperationType())
                 .code("STOCK_INITIATED")
                 .message("Stock transaction initiated")
-                .timestamp(Instant.now())
+                .timestamp(TenantTime.instant())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())
@@ -125,8 +127,8 @@ public class StockService {
             throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
         }
 
-        validateParty(request.getDebitor(), "DEBITOR", AccountType.CUSTOMER);
-        validateParty(request.getTransactor(), "TRANSACTOR", AccountType.ADMIN);
+        validateParty(request.getDebitor(), "DEBITOR", AccountType.SUBSCRIBER);
+        validateParty(request.getTransactor(), "TRANSACTOR", null);
 
         AccountIdentifier debtorIdentifier = validateIdentifierMapping(request.getDebitor());
         Account debtorAccount = getActiveAccount(debtorIdentifier.getAccountId());
@@ -164,7 +166,7 @@ public class StockService {
                 .operationType(STOCK_REIMBURSEMENT_OPERATION)
                 .code("STOCK_REIMBURSEMENT_INITIATED")
                 .message("Stock reimbursement initiated and pending approval")
-                .timestamp(Instant.now())
+                .timestamp(TenantTime.instant())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())
@@ -230,7 +232,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code("STOCK_APPROVED")
                     .message("Stock transaction approved successfully")
-                    .timestamp(Instant.now())
+                    .timestamp(TenantTime.instant())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(amount)
@@ -267,7 +269,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code(errorCode)
                     .message("Stock transaction marked as failed")
-                    .timestamp(Instant.now())
+                    .timestamp(TenantTime.instant())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(toDisplayAmount(transaction.getTransactionValue()))
@@ -338,7 +340,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code("STOCK_REIMBURSEMENT_APPROVED")
                     .message("Stock reimbursement transaction approved successfully")
-                    .timestamp(Instant.now())
+                    .timestamp(TenantTime.instant())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(toDisplayAmount(transaction.getTransactionValue()))
@@ -367,7 +369,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code(errorCode)
                     .message("Stock reimbursement transaction rejected")
-                    .timestamp(Instant.now())
+                    .timestamp(TenantTime.instant())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(toDisplayAmount(transaction.getTransactionValue()))
@@ -457,7 +459,7 @@ public class StockService {
             );
         }
 
-        if (party.getAccountType() != expectedAccountType) {
+        if (expectedAccountType != null && party.getAccountType() != expectedAccountType) {
             throw new ApplicationException(
                     ErrorCodes.INVALID_ROLE_ACCOUNT_TYPE_PREFIX + role + ErrorCodes.ACCOUNT_TYPE_SUFFIX,
                     role + " account type " + party.getAccountType() + " not allowed"

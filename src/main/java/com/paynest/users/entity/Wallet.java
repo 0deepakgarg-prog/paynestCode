@@ -1,5 +1,7 @@
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,7 +19,7 @@ public class Wallet {
     @Column(name = "account_id", nullable = false)
     private String accountId;
 
-    @Column(name = "currency", nullable = false, length = 3)
+    @Column(name = "currency", nullable = false, length = 10)
     private String currency;
 
     @Column(name = "wallet_type", nullable = false)
@@ -43,7 +45,7 @@ public class Wallet {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = TenantTime.now();
 
         if (status == null) {
             status = "ACTIVE";
@@ -55,7 +57,7 @@ public class Wallet {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = TenantTime.now();
     }
 
 }

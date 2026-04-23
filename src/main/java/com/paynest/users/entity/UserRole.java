@@ -1,5 +1,7 @@
 package com.paynest.users.entity;
 
+
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -32,7 +34,7 @@ public class UserRole {
     @PrePersist
     protected void onCreate() {
         if (assignedAt == null) {
-            assignedAt = LocalDateTime.now();
+            assignedAt = TenantTime.now();
         }
     }
 }
