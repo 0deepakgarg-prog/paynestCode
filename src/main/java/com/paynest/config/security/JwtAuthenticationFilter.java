@@ -36,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         log.info("Inside JwtAuthenticationFilter");
+        boolean pricingCalculateRequest = isPricingCalculateRequest(request);
         try {
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -90,6 +91,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     ex.getMessage() == null ? "Unexpected JWT filter error" : ex.getMessage()
             );
         }
+    }
+
+    private boolean isPricingCalculateRequest(HttpServletRequest request) {
+        return request != null
+                && "POST".equalsIgnoreCase(request.getMethod())
+                && "/api/v1/pricing/calculate".equals(request.getRequestURI());
     }
 }
 

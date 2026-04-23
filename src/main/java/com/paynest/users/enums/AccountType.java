@@ -4,6 +4,7 @@ public enum AccountType {
     CUSTOMER,
     MERCHANT,
     ADMIN,
-    AGENT
+    AGENT,
+    SUBSCRIBER
 }
 

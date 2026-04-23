@@ -5,6 +5,7 @@ import com.paynest.config.dto.response.ApiErrorResponse;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.payments.dto.BasePaymentResponse;
 import com.paynest.config.tenant.TraceContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -40,6 +42,8 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
 
+        log.error("Global Exception", ex); // full stacktrace
+
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -61,6 +65,7 @@ public class GlobalExceptionHandler {
                         TraceContext.getTraceId(),
                         LocalDateTime.now()
                 );
+        log.error("Global Exception", ex); // full stacktrace
 
         return ResponseEntity.badRequest().body(response);
     }
@@ -75,6 +80,8 @@ public class GlobalExceptionHandler {
                 .responseStatus(TransactionStatus.FAILURE)
                 .timestamp(Instant.now())
                 .traceId(TraceContext.getTraceId()).build();
+
+        log.error("Global Exception", ex); // full stacktrace
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

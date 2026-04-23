@@ -46,6 +46,7 @@ logging:
     com.paynest: DEBUG
     org.springframework.security.web.FilterChainProxy: TRACE
     org.springframework.security.web.access.intercept.AuthorizationFilter: TRACE
+    org.springframework.security.mvc.method.annotation.RequestMappingHandlerMapping: DEBUG
     org.hibernate.engine.jdbc.connections.internal: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE

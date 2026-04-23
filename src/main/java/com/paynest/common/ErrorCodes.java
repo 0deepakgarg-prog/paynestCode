@@ -55,6 +55,11 @@ public final class ErrorCodes {
     public static final String SYSTEM_ERROR = "SYSTEM_ERROR";
     public static final String SYSTEM_WALLET_INACTIVE = "SYSTEM_WALLET_INACTIVE";
     public static final String SYSTEM_WALLET_NOT_FOUND = "SYSTEM_WALLET_NOT_FOUND";
+    public static final String TAG_ALREADY_EXISTS = "TAG_ALREADY_EXISTS";
+    public static final String TAG_INACTIVE = "TAG_INACTIVE";
+    public static final String TAG_LINK_ALREADY_EXISTS = "TAG_LINK_ALREADY_EXISTS";
+    public static final String TAG_LINK_NOT_FOUND = "TAG_LINK_NOT_FOUND";
+    public static final String TAG_NOT_FOUND = "TAG_NOT_FOUND";
     public static final String TRANSACTOR_MISSING = "TRANSACTOR_MISSING";
     public static final String TRANSACTION_DETAIL_NOT_FOUND = "TRANSACTION_DETAIL_NOT_FOUND";
     public static final String TRANSACTION_MISSING = "TRANSACTION_MISSING";

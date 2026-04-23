@@ -34,6 +34,7 @@ public class TenantFilter extends OncePerRequestFilter {
         TraceContext.setTraceId(traceId);
         String tenant = TenantContext.getTenant();
 
+
         try {
             tenantService.ensureTenantsLoaded();
 

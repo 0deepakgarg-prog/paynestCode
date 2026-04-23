@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import jakarta.transaction.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 
 @Repository
 public interface TransactionsRepository extends JpaRepository<Transactions, String> {
@@ -71,6 +74,50 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
     WHERE t.transactionId = :txnId
 """)
     int updateApproveOrRejectComments(String txnId, String comments);
+
+    @Query("""
+        SELECT COALESCE(SUM(t.transactionValue), 0)
+        FROM Transactions t
+        WHERE t.serviceCode = :serviceCode
+          AND t.debtorAccountId = :userId
+          AND t.createdOn >= :fromDateTime
+    """)
+    BigDecimal sumTransactionValueByServiceCodeSince(String serviceCode, String userId, LocalDateTime fromDateTime);
+
+    @Query("""
+        SELECT COUNT(t)
+        FROM Transactions t
+        WHERE t.serviceCode = :serviceCode
+          AND t.debtorAccountId = :userId
+          AND t.createdOn >= :fromDateTime
+    """)
+    long countTransactionsByServiceCodeSince(String serviceCode, String userId, LocalDateTime fromDateTime);
+
+    @Query("""
+        SELECT COALESCE(SUM(t.transactionValue), 0)
+        FROM Transactions t
+        WHERE t.serviceCode = :serviceCode
+          AND t.creditorAccountId = :userId
+          AND t.createdOn >= :fromDateTime
+    """)
+    BigDecimal sumTransactionValueByServiceCodeSinceForCreditor(
+            String serviceCode,
+            String userId,
+            LocalDateTime fromDateTime
+    );
+
+    @Query("""
+        SELECT COUNT(t)
+        FROM Transactions t
+        WHERE t.serviceCode = :serviceCode
+          AND t.creditorAccountId = :userId
+          AND t.createdOn >= :fromDateTime
+    """)
+    long countTransactionsByServiceCodeSinceForCreditor(
+            String serviceCode,
+            String userId,
+            LocalDateTime fromDateTime
+    );
 
 }
 
