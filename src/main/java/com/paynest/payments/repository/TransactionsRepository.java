@@ -77,7 +77,7 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
         SELECT COALESCE(SUM(t.transactionValue), 0)
         FROM Transactions t
         WHERE t.serviceCode = :serviceCode
-          AND t.debtorAccountId = :userId
+          AND t.debitorAccountId = :userId
           AND t.createdOn >= :fromDateTime
     """)
     BigDecimal sumTransactionValueByServiceCodeSince(String serviceCode, String userId, LocalDateTime fromDateTime);
@@ -86,7 +86,7 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
         SELECT COUNT(t)
         FROM Transactions t
         WHERE t.serviceCode = :serviceCode
-          AND t.debtorAccountId = :userId
+          AND t.debitorAccountId = :userId
           AND t.createdOn >= :fromDateTime
     """)
     long countTransactionsByServiceCodeSince(String serviceCode, String userId, LocalDateTime fromDateTime);
