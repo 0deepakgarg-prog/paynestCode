@@ -50,7 +50,9 @@ public class PaymentTransactionRecorderService {
                 creditorAccountType,
                 debitorWallet,
                 creditorWallet,
-                initiatedBy
+                initiatedBy,
+                paymentReference,
+                comments
         );
 
         if (metadata != null && !metadata.isEmpty()) {

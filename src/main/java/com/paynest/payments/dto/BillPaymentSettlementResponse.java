@@ -6,7 +6,7 @@ import com.paynest.payments.enums.TransactionStatus;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
@@ -16,7 +16,7 @@ public class BillPaymentSettlementResponse {
     private String operationType;
     private String code;
     private String message;
-    private Instant timestamp;
+    private LocalDateTime timestamp;
     private String traceId;
     private String transactionId;
     private String rollbackTransactionId;

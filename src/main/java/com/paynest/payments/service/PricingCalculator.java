@@ -1,6 +1,7 @@
 package com.paynest.payments.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.payments.repository.TransactionsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -313,7 +314,7 @@ public class PricingCalculator {
             String payeeUserId,
             String ruleType
     ) {
-        return getPreviousTotalTxn(serviceCode, payerUserId, payeeUserId, ruleType, LocalDateTime.now().minusDays(1));
+        return getPreviousTotalTxn(serviceCode, payerUserId, payeeUserId, ruleType, TenantTime.now().minusDays(1));
     }
 
     @Transactional(readOnly = true)
@@ -328,7 +329,7 @@ public class PricingCalculator {
                 payerUserId,
                 payeeUserId,
                 ruleType,
-                LocalDateTime.now().minusMonths(1)
+                TenantTime.now().minusMonths(1)
         );
     }
 
@@ -357,7 +358,7 @@ public class PricingCalculator {
             String payeeUserId,
             String ruleType
     ) {
-        return getPreviousTxnCount(serviceCode, payerUserId, payeeUserId, ruleType, LocalDateTime.now().minusDays(1));
+        return getPreviousTxnCount(serviceCode, payerUserId, payeeUserId, ruleType, TenantTime.now().minusDays(1));
     }
 
     @Transactional(readOnly = true)
@@ -372,7 +373,7 @@ public class PricingCalculator {
                 payerUserId,
                 payeeUserId,
                 ruleType,
-                LocalDateTime.now().minusMonths(1)
+                TenantTime.now().minusMonths(1)
         );
     }
 

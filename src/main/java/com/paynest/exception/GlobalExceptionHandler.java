@@ -17,8 +17,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
@@ -166,7 +164,7 @@ public class GlobalExceptionHandler {
                 .message(message)
                 .code(code)
                 .responseStatus(TransactionStatus.FAILURE)
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .build();

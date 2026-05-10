@@ -20,6 +20,8 @@ import com.paynest.payments.dto.U2UPaymentResponse;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
+import com.paynest.pricing.dto.response.PricingComputationResponse;
+import com.paynest.pricing.service.PricingService;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.WalletRepository;
@@ -76,6 +78,9 @@ class U2UPaymentServiceTest {
     @Mock
     private AuthService authService;
 
+    @Mock
+    private PricingService pricingService;
+
     @InjectMocks
     private U2UPaymentService u2uPaymentService;
 
@@ -116,6 +121,7 @@ class U2UPaymentServiceTest {
             assertEquals("USD", response.getCurrency());
             assertEquals("U2U", response.getOperationType());
             assertNotNull(response.getTransactionId());
+            assertEquals(new BigDecimal("10.50"), response.getTotalAmount());
 
             verify(authService).validateAuthentication("1234", AuthType.PIN, debitorIdentifier);
             verify(transactionsService).generateTransactionRecord(
@@ -130,7 +136,9 @@ class U2UPaymentServiceTest {
                     eq("SUBSCRIBER"),
                     eq(debitorWallet),
                     eq(creditorWallet),
-                    eq(InitiatedBy.DEBITOR)
+                    eq(InitiatedBy.DEBITOR),
+                    eq(request.getPaymentReference()),
+                    eq(request.getComments())
             );
             verify(balanceService).transferWalletAmount(
                     debitorWallet,
@@ -140,6 +148,63 @@ class U2UPaymentServiceTest {
                     InitiatedBy.DEBITOR,
                     response.getTransactionId()
             );
+        } finally {
+            TraceContext.clear();
+        }
+    }
+
+    @Test
+    void processPayment_shouldDebitSenderServiceChargeWhenPricingReturnsCharge() {
+        U2UPaymentRequest request = validRequest();
+        AccountIdentifier debitorIdentifier = identifier("acc-1", "9999999999", "MOBILE", 10L);
+        AccountIdentifier creditorIdentifier = identifier("acc-2", "8888888888", "MOBILE", 20L);
+        Account debitorAccount = account("acc-1", "SUBSCRIBER");
+        Account creditorAccount = account("acc-2", "SUBSCRIBER");
+        Wallet debitorWallet = wallet(101L, "acc-1", "USD", "MAIN");
+        Wallet creditorWallet = wallet(202L, "acc-2", "USD", "MAIN");
+        PricingComputationResponse pricingComputation = new PricingComputationResponse();
+        pricingComputation.addServiceCharge(new BigDecimal("1.25"));
+        pricingComputation.markServiceChargeAffectedParty("SENDER");
+
+        doNothing().when(basePaymentRequestValidator).validate(request);
+        when(accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus("MOBILE", "9999999999", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(Optional.of(debitorIdentifier));
+        when(accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus("MOBILE", "8888888888", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(Optional.of(creditorIdentifier));
+        when(accountRepository.findByAccountIdAndStatus("acc-1", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(List.of(debitorAccount));
+        when(accountRepository.findByAccountIdAndStatus("acc-2", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(List.of(creditorAccount));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("acc-1", "USD", "MAIN"))
+                .thenReturn(Optional.of(debitorWallet));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("acc-2", "USD", "MAIN"))
+                .thenReturn(Optional.of(creditorWallet));
+        when(pricingService.calculatePricingAmounts(request)).thenReturn(pricingComputation);
+        when(propertyReader.getPropertyValue("server.instance")).thenReturn("A");
+
+        TraceContext.setTraceId("trace-1");
+        try (MockedStatic<JWTUtils> jwtUtils = org.mockito.Mockito.mockStatic(JWTUtils.class)) {
+            jwtUtils.when(JWTUtils::getCurrentAccountId).thenReturn("acc-1");
+            jwtUtils.when(JWTUtils::getCurrentAccountType).thenReturn("SUBSCRIBER");
+            jwtUtils.when(JWTUtils::getCurrentAuthType).thenReturn("PIN");
+
+            U2UPaymentResponse response = u2uPaymentService.processPayment(request, true);
+
+            assertEquals(TransactionStatus.SUCCESS, response.getResponseStatus());
+            assertEquals(new BigDecimal("11.75"), response.getTotalAmount());
+            assertNotNull(response.getServiceCharge());
+            assertEquals(new BigDecimal("1.25"), response.getServiceCharge().getAmount());
+            assertEquals("SENDER", response.getServiceCharge().getPayer());
+            verify(balanceService).transferWalletAmountWithPricing(
+                    debitorWallet,
+                    creditorWallet,
+                    new BigDecimal("10.50"),
+                    "U2U",
+                    InitiatedBy.DEBITOR,
+                    response.getTransactionId(),
+                    pricingComputation
+            );
+            verify(balanceService, never()).transferWalletAmount(any(), any(), any(), any(), any(), any());
         } finally {
             TraceContext.clear();
         }

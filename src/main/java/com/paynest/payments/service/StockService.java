@@ -42,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -112,7 +111,7 @@ public class StockService {
                 .operationType(request.getOperationType())
                 .code("STOCK_INITIATED")
                 .message("Stock transaction initiated")
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())
@@ -166,7 +165,7 @@ public class StockService {
                 .operationType(STOCK_REIMBURSEMENT_OPERATION)
                 .code("STOCK_REIMBURSEMENT_INITIATED")
                 .message("Stock reimbursement initiated and pending approval")
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())
@@ -232,7 +231,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code("STOCK_APPROVED")
                     .message("Stock transaction approved successfully")
-                    .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(amount)
@@ -269,7 +268,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code(errorCode)
                     .message("Stock transaction marked as failed")
-                    .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(toDisplayAmount(transaction.getTransactionValue()))
@@ -340,7 +339,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code("STOCK_REIMBURSEMENT_APPROVED")
                     .message("Stock reimbursement transaction approved successfully")
-                    .timestamp(TenantTime.instant())
+                    .timestamp(TenantTime.now())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(toDisplayAmount(transaction.getTransactionValue()))
@@ -369,7 +368,7 @@ public class StockService {
                     .operationType(transaction.getServiceCode())
                     .code(errorCode)
                     .message("Stock reimbursement transaction rejected")
-                    .timestamp(TenantTime.instant())
+                    .timestamp(TenantTime.now())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transaction.getTransactionId())
                     .amount(toDisplayAmount(transaction.getTransactionValue()))

@@ -1,5 +1,6 @@
 package com.paynest.tag.entity;
 
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,7 +44,7 @@ public class TagType {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = TenantTime.now();
         }
         if (updatedAt == null) {
             updatedAt = createdAt;
@@ -52,6 +53,6 @@ public class TagType {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = TenantTime.now();
     }
 }

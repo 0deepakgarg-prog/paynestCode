@@ -93,7 +93,7 @@ public class AuthService {
         String token = jwtService.generateToken(
                 account.getAccountId(),
                 auth.getAuthType(),
-                TenantContext.getTenant(),
+                TenantContext.getTenantId(),
                 account.getAccountType()
         );
         walletCacheService.refreshAccountWallets(account.getAccountId());

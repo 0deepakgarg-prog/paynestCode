@@ -20,6 +20,8 @@ import com.paynest.payments.dto.TransactionInfo;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
+import com.paynest.pricing.dto.response.PricingComputationResponse;
+import com.paynest.pricing.service.PricingService;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.WalletRepository;
@@ -75,6 +77,9 @@ class CashInPaymentServiceTest {
     @Mock
     private AuthService authService;
 
+    @Mock
+    private PricingService pricingService;
+
     @Test
     void processPayment_shouldTransferFromAgentToSubscriber() {
         CashInPaymentService cashInPaymentService = new CashInPaymentService(
@@ -85,7 +90,8 @@ class CashInPaymentServiceTest {
                 propertyReader,
                 transactionsService,
                 balanceService,
-                authService
+                authService,
+                pricingService
         );
 
         CashInPaymentRequest request = validRequest();
@@ -145,6 +151,70 @@ class CashInPaymentServiceTest {
     }
 
     @Test
+    void processPayment_shouldDebitServiceChargeWhenPricingReturnsCharge() {
+        CashInPaymentService cashInPaymentService = new CashInPaymentService(
+                basePaymentRequestValidator,
+                accountIdentifierRepository,
+                accountRepository,
+                walletRepository,
+                propertyReader,
+                transactionsService,
+                balanceService,
+                authService,
+                pricingService
+        );
+
+        CashInPaymentRequest request = validRequest();
+        AccountIdentifier debitorIdentifier = identifier("agent-1", "7777777777", "MOBILE", 10L);
+        AccountIdentifier creditorIdentifier = identifier("sub-1", "9999999999", "MOBILE", 20L);
+        Account debitorAccount = account("agent-1", "AGENT");
+        Account creditorAccount = account("sub-1", "SUBSCRIBER");
+        Wallet debitorWallet = wallet(101L, "agent-1", "USD", "MAIN");
+        Wallet creditorWallet = wallet(202L, "sub-1", "USD", "MAIN");
+        PricingComputationResponse pricingComputation = new PricingComputationResponse();
+        pricingComputation.addServiceCharge(new BigDecimal("0.75"));
+        pricingComputation.markServiceChargeAffectedParty("SENDER");
+
+        doNothing().when(basePaymentRequestValidator).validate(request);
+        when(accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus("MOBILE", "7777777777", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(Optional.of(debitorIdentifier));
+        when(accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus("MOBILE", "9999999999", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(Optional.of(creditorIdentifier));
+        when(accountRepository.findByAccountIdAndStatus("agent-1", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(List.of(debitorAccount));
+        when(accountRepository.findByAccountIdAndStatus("sub-1", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(List.of(creditorAccount));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("agent-1", "USD", "MAIN"))
+                .thenReturn(Optional.of(debitorWallet));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("sub-1", "USD", "MAIN"))
+                .thenReturn(Optional.of(creditorWallet));
+        when(pricingService.calculatePricingAmounts(request)).thenReturn(pricingComputation);
+        when(propertyReader.getPropertyValue("server.instance")).thenReturn("A");
+
+        TraceContext.setTraceId("trace-1");
+        try (MockedStatic<JWTUtils> jwtUtils = org.mockito.Mockito.mockStatic(JWTUtils.class)) {
+            jwtUtils.when(JWTUtils::getCurrentAccountId).thenReturn("agent-1");
+            jwtUtils.when(JWTUtils::getCurrentAccountType).thenReturn("AGENT");
+            jwtUtils.when(JWTUtils::getCurrentAuthType).thenReturn("PIN");
+
+            CashInPaymentResponse response = cashInPaymentService.processPayment(request, true);
+
+            verify(balanceService).transferWalletAmountWithPricing(
+                    debitorWallet,
+                    creditorWallet,
+                    new BigDecimal("10.50"),
+                    "CASHIN",
+                    InitiatedBy.DEBITOR,
+                    response.getTransactionId(),
+                    pricingComputation
+            );
+            verify(balanceService, never()).transferWalletAmount(any(), any(), any(), any(), any(), any());
+        } finally {
+            TraceContext.clear();
+        }
+    }
+
+    @Test
     void processPayment_shouldRejectWhenDebitorIsNotAgent() {
         CashInPaymentService cashInPaymentService = new CashInPaymentService(
                 basePaymentRequestValidator,
@@ -154,7 +224,8 @@ class CashInPaymentServiceTest {
                 propertyReader,
                 transactionsService,
                 balanceService,
-                authService
+                authService,
+                pricingService
         );
 
         CashInPaymentRequest request = validRequest();
@@ -181,7 +252,8 @@ class CashInPaymentServiceTest {
                 propertyReader,
                 transactionsService,
                 balanceService,
-                authService
+                authService,
+                pricingService
         );
 
         CashInPaymentRequest request = validRequest();
@@ -240,7 +312,8 @@ class CashInPaymentServiceTest {
                 propertyReader,
                 transactionsService,
                 balanceService,
-                authService
+                authService,
+                pricingService
         );
 
         CashInPaymentRequest request = validRequest();
@@ -297,7 +370,8 @@ class CashInPaymentServiceTest {
                 propertyReader,
                 transactionsService,
                 balanceService,
-                authService
+                authService,
+                pricingService
         );
 
         CashInPaymentRequest request = validRequest();
@@ -351,7 +425,8 @@ class CashInPaymentServiceTest {
                 propertyReader,
                 transactionsService,
                 balanceService,
-                authService
+                authService,
+                pricingService
         );
 
         CashInPaymentRequest request = validRequest();
@@ -389,7 +464,8 @@ class CashInPaymentServiceTest {
                 propertyReader,
                 transactionsService,
                 balanceService,
-                authService
+                authService,
+                pricingService
         );
 
         CashInPaymentRequest request = validRequest();

@@ -20,6 +20,8 @@ import com.paynest.payments.dto.Party;
 import com.paynest.payments.dto.U2UPaymentRequest;
 import com.paynest.payments.dto.U2UPaymentResponse;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
+import com.paynest.pricing.dto.response.PricingComputationResponse;
+import com.paynest.pricing.service.PricingService;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.WalletRepository;
@@ -34,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Map;
 
@@ -56,6 +58,7 @@ public class U2UPaymentService {
     private final TransactionsService transactionsService;
     private final BalanceService balanceService;
     private final AuthService authService;
+    private final PricingService pricingService;
 
     public U2UPaymentService(
             WalletRepository walletRepository,
@@ -65,7 +68,8 @@ public class U2UPaymentService {
             PropertyReader propertyReader,
             TransactionsService transactionsService,
             BalanceService balanceService,
-            AuthService authService
+            AuthService authService,
+            PricingService pricingService
     ) {
         this.walletRepository = walletRepository;
         this.accountRepository = accountRepository;
@@ -75,6 +79,7 @@ public class U2UPaymentService {
         this.transactionsService = transactionsService;
         this.balanceService = balanceService;
         this.authService = authService;
+        this.pricingService = pricingService;
     }
 
     public U2UPaymentResponse processPayment(U2UPaymentRequest request, boolean validateJWT) {
@@ -123,6 +128,10 @@ public class U2UPaymentService {
                 currency,
                 InitiatedBy.CREDITOR.name()
         );
+        PricingComputationResponse pricingComputation = pricingService.calculatePricingAmounts(request);
+        BigDecimal serviceChargeAmount = getServiceChargeAmount(pricingComputation);
+        BigDecimal discountAmount = getDiscountAmount(pricingComputation);
+        BigDecimal cashbackAmount = getCashbackAmount(pricingComputation);
 
         String transactionId = IdGenerator.generateTransactionId(
                 TRANSACTION_PREFIX,
@@ -137,35 +146,156 @@ public class U2UPaymentService {
                     creditorIdentifier,
                     debitorAccount.getAccountType(),
                     creditorAccount.getAccountType(),
-                    debitorWallet,
-                    creditorWallet
-            );
+                     debitorWallet,
+                     creditorWallet
+             );
 
-            balanceService.transferWalletAmount(
-                    debitorWallet,
-                    creditorWallet,
-                    request.getTransaction().getAmount(),
-                    request.getOperationType(),
-                    request.getInitiatedBy(),
-                    transactionId
-            );
+            if (hasPricingAdjustments(pricingComputation)) {
+                balanceService.transferWalletAmountWithPricing(
+                        debitorWallet,
+                        creditorWallet,
+                        request.getTransaction().getAmount(),
+                        request.getOperationType(),
+                        request.getInitiatedBy(),
+                        transactionId,
+                        pricingComputation
+                );
+            } else {
+                balanceService.transferWalletAmount(
+                        debitorWallet,
+                        creditorWallet,
+                        request.getTransaction().getAmount(),
+                        request.getOperationType(),
+                        request.getInitiatedBy(),
+                        transactionId
+                );
+            }
         } catch (ApplicationException ex) {
             throw ex.withTransactionId(transactionId);
         }
 
-        return buildSuccessResponse(request, transactionId);
+        return buildSuccessResponse(
+                request,
+                transactionId,
+                pricingComputation,
+                serviceChargeAmount,
+                discountAmount,
+                cashbackAmount
+        );
     }
 
-    private U2UPaymentResponse buildSuccessResponse(U2UPaymentRequest request, String transactionId) {
+    private BigDecimal getServiceChargeAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getServiceChargeAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getServiceChargeAmount();
+    }
+
+    private BigDecimal getDiscountAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getDiscountAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getDiscountAmount();
+    }
+
+    private BigDecimal getCashbackAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getCashbackAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getCashbackAmount();
+    }
+
+    private boolean hasPricingAdjustments(PricingComputationResponse pricingComputation) {
+        return getServiceChargeAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0
+                || getDiscountAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0
+                || getCashbackAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private U2UPaymentResponse buildSuccessResponse(
+            U2UPaymentRequest request,
+            String transactionId,
+            PricingComputationResponse pricingComputation,
+            BigDecimal serviceChargeAmount,
+            BigDecimal discountAmount,
+            BigDecimal cashbackAmount
+    ) {
+        BigDecimal totalAmount = request.getTransaction().getAmount()
+                .subtract(discountAmount)
+                .add(serviceChargeAmount);
         return U2UPaymentResponse.builder()
                 .responseStatus(TransactionStatus.SUCCESS)
                 .operationType(request.getOperationType())
                 .code("PAYMENT_SUCCESS")
                 .message("U2U Payment Successful")
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())
+                .totalAmount(totalAmount)
+                .currency(request.getTransaction().getCurrency())
+                .serviceCharge(buildServiceChargeResponse(
+                        request,
+                        pricingComputation,
+                        serviceChargeAmount
+                ))
+                .discount(buildDiscountResponse(
+                        request,
+                        pricingComputation,
+                        discountAmount
+                ))
+                .cashback(buildCashbackResponse(
+                        request,
+                        pricingComputation,
+                        cashbackAmount
+                ))
+                .build();
+    }
+
+    private U2UPaymentResponse.ServiceChargeDetails buildServiceChargeResponse(
+            U2UPaymentRequest request,
+            PricingComputationResponse pricingComputation,
+            BigDecimal serviceChargeAmount
+    ) {
+        if (serviceChargeAmount.compareTo(BigDecimal.ZERO) <= 0 || pricingComputation == null) {
+            return null;
+        }
+
+        return U2UPaymentResponse.ServiceChargeDetails.builder()
+                .amount(serviceChargeAmount)
+                .payer(pricingComputation.getServiceChargeAffectedParty())
+                .currency(request.getTransaction().getCurrency())
+                .build();
+    }
+
+    private U2UPaymentResponse.PricingAdjustmentDetails buildDiscountResponse(
+            U2UPaymentRequest request,
+            PricingComputationResponse pricingComputation,
+            BigDecimal discountAmount
+    ) {
+        if (discountAmount.compareTo(BigDecimal.ZERO) <= 0 || pricingComputation == null) {
+            return null;
+        }
+
+        return U2UPaymentResponse.PricingAdjustmentDetails.builder()
+                .amount(discountAmount)
+                .party(pricingComputation.getDiscountAffectedParty())
+                .currency(request.getTransaction().getCurrency())
+                .build();
+    }
+
+    private U2UPaymentResponse.PricingAdjustmentDetails buildCashbackResponse(
+            U2UPaymentRequest request,
+            PricingComputationResponse pricingComputation,
+            BigDecimal cashbackAmount
+    ) {
+        if (cashbackAmount.compareTo(BigDecimal.ZERO) <= 0 || pricingComputation == null) {
+            return null;
+        }
+
+        return U2UPaymentResponse.PricingAdjustmentDetails.builder()
+                .amount(cashbackAmount)
+                .party(pricingComputation.getCashbackAffectedParty())
+                .payBy(pricingComputation.getCashbackPayBy())
                 .currency(request.getTransaction().getCurrency())
                 .build();
     }
@@ -420,7 +550,9 @@ public class U2UPaymentService {
                 creditorAccountType,
                 debitorWallet,
                 creditorWallet,
-                request.getInitiatedBy()
+                request.getInitiatedBy(),
+                request.getPaymentReference(),
+                request.getComments()
         );
 
         if (request.getMetadata() != null && !request.getMetadata().isEmpty()) {

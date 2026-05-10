@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -337,7 +336,7 @@ public class BillPaymentSettlementService {
                 .message(success
                         ? "Bill payment settled successfully"
                         : "Bill payment marked failed and rollback completed")
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .rollbackTransactionId(rollbackTransactionId)

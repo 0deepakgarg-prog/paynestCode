@@ -49,6 +49,41 @@ public class TransactionsService {
             Wallet creditorWallet,
             InitiatedBy initiatedBy
     ){
+        generateTransactionRecord(
+                transactionId,
+                transactionValue,
+                requestGateway,
+                serviceCode,
+                language,
+                debitorAccountIdentifier,
+                creditorAccountIdentifier,
+                debitorAccountType,
+                creditorAccountType,
+                debitorWallet,
+                creditorWallet,
+                initiatedBy,
+                null,
+                null
+        );
+    }
+
+    @Transactional
+    public void generateTransactionRecord(
+            String transactionId,
+            BigDecimal transactionValue,
+            String requestGateway,
+            String serviceCode,
+            String language,
+            AccountIdentifier debitorAccountIdentifier,
+            AccountIdentifier creditorAccountIdentifier,
+            String debitorAccountType,
+            String creditorAccountType,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            InitiatedBy initiatedBy,
+            String paymentReference,
+            String comments
+    ){
         LocalDateTime currentDateTime = TenantTime.now();
         Transactions transaction = new Transactions();
         String currencyFactor = propertyReader.getPropertyValue("currency.factor");
@@ -78,6 +113,8 @@ public class TransactionsService {
         transaction.setDebitorIdentifierType(debitorAccountIdentifier.getIdentifierType());
         transaction.setCreditorIdentifierType(creditorAccountIdentifier.getIdentifierType());
         transaction.setCreditorIdentifierValue(creditorAccountIdentifier.getIdentifierValue());
+        transaction.setPaymentReference(normalizeOptionalText(paymentReference));
+        transaction.setComments(normalizeOptionalText(comments));
         transactionsRepository.save(transaction);
 
         TransactionDetails debitDetail = new TransactionDetails();
@@ -188,6 +225,15 @@ public class TransactionsService {
         }
 
         transactionsRepository.updateComments(txnId, comments);
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
 }

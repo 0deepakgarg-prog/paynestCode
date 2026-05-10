@@ -2,8 +2,9 @@ package com.paynest.pricing.service;
 
 import com.paynest.common.ErrorCodes;
 import com.paynest.config.security.JWTUtils;
+import com.paynest.config.tenant.TenantTime;
 import com.paynest.exception.ApplicationException;
-import com.paynest.payments.dto.U2UPaymentRequest;
+import com.paynest.payments.dto.BasePaymentRequest;
 import com.paynest.payments.service.PricingCalculator;
 import com.paynest.pricing.dto.request.CreatePricingRuleRequest;
 import com.paynest.pricing.dto.response.PricingComputationResponse;
@@ -40,7 +41,7 @@ public class PricingService {
     private static final List<String> ALLOWED_PRICING_TYPES = List.of(
             "STATIC", "CAMPAIGN"
     );
-    private static final List<String> SERVICE_CHARGE_RULE_TYPES = List.of("SERVICE_CHARGE", "CASHBACK");
+    private static final List<String> SERVICE_CHARGE_RULE_TYPES = List.of("SERVICE_CHARGE");
     private static final List<String> COMMISSION_RULE_TYPES = List.of("COMMISSION");
     private static final List<String> DISCOUNT_RULE_TYPES = List.of("DISCOUNT");
     private static final List<String> CASHBACK_RULE_TYPES = List.of("CASHBACK");
@@ -182,7 +183,7 @@ public class PricingService {
     }
 
     @Transactional(readOnly = true)
-    public PricingComputationResponse calculatePricingAmounts(U2UPaymentRequest request) {
+    public PricingComputationResponse calculatePricingAmounts(BasePaymentRequest request) {
         if (request == null || request.getDebitor() == null || request.getCreditor() == null
                 || request.getTransaction() == null) {
             throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Invalid financial request");
@@ -214,7 +215,7 @@ public class PricingService {
         List<PricingRule> campaignRules = pricingRuleRepository.findApplicableCampaignRules(
                 request.getOperationType(),
                 request.getTransaction().getCurrency(),
-                LocalDateTime.now()
+                TenantTime.now()
         );
 
         if (!campaignRules.isEmpty()) {
@@ -321,6 +322,7 @@ public class PricingService {
                 if (discountResponse != null) {
                     selectedResponse.setDiscountAmount(discountResponse.getDiscountAmount());
                     selectedResponse.setDiscountAffectedParty(discountResponse.getDiscountAffectedParty());
+                    selectedResponse.setDiscountRules(discountResponse.getDiscountRules());
                 }
 
                 PricingComputationResponse cashbackResponse = calculatePricingAmountsForRuleTypes(
@@ -337,6 +339,8 @@ public class PricingService {
                 if (cashbackResponse != null) {
                     selectedResponse.setCashbackAmount(cashbackResponse.getCashbackAmount());
                     selectedResponse.setCashbackAffectedParty(cashbackResponse.getCashbackAffectedParty());
+                    selectedResponse.setCashbackPayBy(cashbackResponse.getCashbackPayBy());
+                    selectedResponse.setCashbackRules(cashbackResponse.getCashbackRules());
                 }
             }
 
@@ -406,6 +410,7 @@ public class PricingService {
         if (maxDiscountResponse != null) {
             fallbackResponse.setDiscountAmount(maxDiscountResponse.getDiscountAmount());
             fallbackResponse.setDiscountAffectedParty(maxDiscountResponse.getDiscountAffectedParty());
+            fallbackResponse.setDiscountRules(maxDiscountResponse.getDiscountRules());
         }
         if (maxCommissionResponse != null) {
             fallbackResponse.setCommissionAmount(maxCommissionResponse.getCommissionAmount());
@@ -414,6 +419,8 @@ public class PricingService {
         if (maxCashbackResponse != null) {
             fallbackResponse.setCashbackAmount(maxCashbackResponse.getCashbackAmount());
             fallbackResponse.setCashbackAffectedParty(maxCashbackResponse.getCashbackAffectedParty());
+            fallbackResponse.setCashbackPayBy(maxCashbackResponse.getCashbackPayBy());
+            fallbackResponse.setCashbackRules(maxCashbackResponse.getCashbackRules());
         }
 
         log.info(
@@ -473,7 +480,14 @@ public class PricingService {
             return null;
         }
 
-        return normalizeOptionalValue(payBy);
+        String normalizedPayBy = normalizeOptionalValue(payBy);
+        if (normalizedPayBy == null) {
+            return "SYSTEM";
+        }
+        if (!List.of("SYSTEM", "SENDER", "RECEIVER").contains(normalizedPayBy)) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Invalid payBy");
+        }
+        return normalizedPayBy;
     }
 
     private String normalizeAndValidateTagKey(String tagKey, String fieldName) {
@@ -528,6 +542,7 @@ public class PricingService {
                 response.addServiceCharge(amount);
                 response.markServiceChargeAffectedParty(affectedParty);
                 markServiceChargeTagSelection(response, pricingRule);
+                response.addServiceChargeRule(toPricingRuleDetails(pricingRule, amount));
             }
             case "COMMISSION" -> {
                 response.addCommission(amount);
@@ -536,10 +551,13 @@ public class PricingService {
             case "DISCOUNT" -> {
                 response.addDiscount(amount);
                 response.markDiscountAffectedParty(affectedParty);
+                response.addDiscountRule(toPricingRuleDetails(pricingRule, amount));
             }
             case "CASHBACK" -> {
                 response.addCashback(amount);
                 response.markCashbackAffectedParty(affectedParty);
+                response.markCashbackPayBy(defaultIfBlank(pricingRule.getPayBy(), "SYSTEM"));
+                response.addCashbackRule(toPricingRuleDetails(pricingRule, amount));
             }
             default -> throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Invalid rule type");
         }
@@ -721,7 +739,7 @@ public class PricingService {
                 senderTagKey,
                 receiverTagKey,
                 currency,
-                LocalDateTime.now()
+                TenantTime.now()
         );
 
 
@@ -846,6 +864,7 @@ public class PricingService {
         if (maxDiscountResponse != null) {
             targetResponse.setDiscountAmount(maxDiscountResponse.getDiscountAmount());
             targetResponse.setDiscountAffectedParty(maxDiscountResponse.getDiscountAffectedParty());
+            targetResponse.setDiscountRules(maxDiscountResponse.getDiscountRules());
         }
         if (maxCommissionResponse != null) {
             targetResponse.setCommissionAmount(maxCommissionResponse.getCommissionAmount());
@@ -854,6 +873,8 @@ public class PricingService {
         if (maxCashbackResponse != null) {
             targetResponse.setCashbackAmount(maxCashbackResponse.getCashbackAmount());
             targetResponse.setCashbackAffectedParty(maxCashbackResponse.getCashbackAffectedParty());
+            targetResponse.setCashbackPayBy(maxCashbackResponse.getCashbackPayBy());
+            targetResponse.setCashbackRules(maxCashbackResponse.getCashbackRules());
         }
     }
 
@@ -872,11 +893,39 @@ public class PricingService {
         }
     }
 
+    private PricingComputationResponse.PricingRuleDetails toPricingRuleDetails(
+            PricingRule pricingRule,
+            BigDecimal calculatedAmount
+    ) {
+        PricingComputationResponse.PricingRuleDetails details =
+                new PricingComputationResponse.PricingRuleDetails();
+        details.setId(pricingRule.getId());
+        details.setPricingName(pricingRule.getPricingName());
+        details.setServiceCode(pricingRule.getServiceCode());
+        details.setRuleType(pricingRule.getRuleType());
+        details.setPricingType(pricingRule.getPricingType());
+        details.setPayer(pricingRule.getPayer());
+        details.setPayBy(pricingRule.getPayBy());
+        details.setSenderTagKey(pricingRule.getSenderTagKey());
+        details.setReceiverTagKey(pricingRule.getReceiverTagKey());
+        details.setCurrency(pricingRule.getCurrency());
+        details.setPricingConfig(pricingRule.getPricingConfig());
+        details.setCalculatedAmount(calculatedAmount);
+        return details;
+    }
+
     private String resolveAffectedParty(String payer) {
         if (payer == null || payer.isBlank()) {
             return null;
         }
         return payer.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value.trim().toUpperCase(Locale.ROOT);
     }
 
     private PricingComputationResponse firstNonNullResponse(PricingComputationResponse... responses) {
