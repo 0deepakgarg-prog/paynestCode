@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EnumerationRepository extends JpaRepository<Enumeration, Long> {
@@ -14,6 +15,11 @@ public interface EnumerationRepository extends JpaRepository<Enumeration, Long> 
     String getSearchPath();
 
     List<Enumeration> findByEnumTypeAndIsActive(String type, boolean isActive);
+
+    Optional<Enumeration> findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
+            String enumType,
+            String enumCode
+    );
 
     boolean existsByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
             String enumType,

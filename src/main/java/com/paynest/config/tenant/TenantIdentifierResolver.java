@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
+
 @Component
 @Slf4j
 public class TenantIdentifierResolver
@@ -19,7 +20,7 @@ public class TenantIdentifierResolver
         if (tenantId == null)
             return DEFAULT_TENANT;
 
-        log.info("Hibernate resolving tenant: {}", tenantId);
+        log.debug("Hibernate resolving tenant: {}", tenantId);
 
         return tenantId;
     }

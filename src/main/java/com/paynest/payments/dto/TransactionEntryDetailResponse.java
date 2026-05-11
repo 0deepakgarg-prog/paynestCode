@@ -18,6 +18,8 @@ public class TransactionEntryDetailResponse {
     private String identifierId;
     private String secondIdentifierId;
     private Long walletId;
+    private String walletType;
+    private String currency;
     private String transferOn;
     private String serviceCode;
     private String transferStatus;

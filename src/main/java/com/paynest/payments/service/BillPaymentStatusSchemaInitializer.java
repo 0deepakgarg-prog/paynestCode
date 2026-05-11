@@ -72,7 +72,7 @@ public class BillPaymentStatusSchemaInitializer {
                 CREATE TABLE IF NOT EXISTS %s.bill_payment_status (
                     transaction_id VARCHAR(50) PRIMARY KEY,
                     status VARCHAR(20) NOT NULL,
-                    customer_account_id VARCHAR(50) NOT NULL,
+                    subscriber_account_id VARCHAR(50) NOT NULL,
                     biller_account_id VARCHAR(50) NOT NULL,
                     trace_id VARCHAR(100) NOT NULL,
                     comments VARCHAR(300),

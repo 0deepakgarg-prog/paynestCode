@@ -2,7 +2,6 @@
 package com.paynest.payments.repository;
 
 
-
 import com.paynest.payments.entity.WalletLedger;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

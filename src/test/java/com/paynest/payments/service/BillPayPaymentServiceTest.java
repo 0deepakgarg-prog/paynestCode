@@ -6,7 +6,7 @@ import com.paynest.config.security.JWTUtils;
 import com.paynest.config.tenant.TraceContext;
 import com.paynest.enums.AccountType;
 import com.paynest.enums.RequestGateway;
-import com.paynest.enums.WalletType;
+import com.paynest.users.enums.WalletType;
 import com.paynest.exception.ApplicationException;
 import com.paynest.payments.dto.Authentication;
 import com.paynest.payments.dto.BillPayPaymentRequest;
@@ -207,7 +207,7 @@ class BillPayPaymentServiceTest {
         request.setComments("April electricity bill");
 
         Map<String, Object> additionalInfo = new LinkedHashMap<>();
-        additionalInfo.put("note", "customer initiated");
+        additionalInfo.put("note", "subscriber initiated");
         additionalInfo.put("meterNumber", "MTR-001");
         additionalInfo.put("region", "NORTH");
         request.setAdditionalInfo(additionalInfo);

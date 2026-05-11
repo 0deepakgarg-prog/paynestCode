@@ -77,6 +77,18 @@ public class Transactions {
     @Column(name = "creditor_account_id", length = 30)
     private String creditorAccountId;
 
+    @Column(name = "debitor_wallet_type", length = 50)
+    private String debitorWalletType;
+
+    @Column(name = "debitor_currency", length = 10)
+    private String debitorCurrency;
+
+    @Column(name = "creditor_wallet_type", length = 50)
+    private String creditorWalletType;
+
+    @Column(name = "creditor_currency", length = 10)
+    private String creditorCurrency;
+
     @Column(name = "fees_details", length = 4000)
     private String feesDetails;
 

@@ -96,7 +96,7 @@ public class BillPaymentSettlementService {
         TransactionDetails debitDetail = getRequiredDetail(transactionDetails, Constants.TXN_TYPE_DR);
         TransactionDetails creditDetail = getRequiredDetail(transactionDetails, Constants.TXN_TYPE_CR);
 
-        Wallet customerWallet = getRequiredWallet(debitDetail);
+        Wallet subscriberWallet = getRequiredWallet(debitDetail);
         Wallet billerWallet = getRequiredWallet(creditDetail);
 
         String rollbackTransactionId = IdGenerator.generateTransactionId(
@@ -125,7 +125,7 @@ public class BillPaymentSettlementService {
                 creditDetail.getUserType(),
                 debitDetail.getUserType(),
                 billerWallet,
-                customerWallet,
+                subscriberWallet,
                 InitiatedBy.DEBITOR,
                 null,
                 copyAdditionalInfo(request.getAdditionalInfo()),
@@ -136,7 +136,7 @@ public class BillPaymentSettlementService {
         try {
             balanceService.transferWalletAmount(
                     billerWallet,
-                    customerWallet,
+                    subscriberWallet,
                     rollbackAmount,
                     ROLLBACK_SERVICE_CODE,
                     InitiatedBy.DEBITOR,

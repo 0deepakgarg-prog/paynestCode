@@ -1,8 +1,7 @@
 package com.paynest.users.entity;
 
 
-
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -15,12 +14,15 @@ import java.time.LocalDateTime;
 public class AccountIdentifier {
 
     @Id
+    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String accountId;
 
+    @JsonIgnore
     @Column(nullable = false)
     private Long authId;
 
@@ -33,19 +35,15 @@ public class AccountIdentifier {
     @Column(nullable = false, length = 20)
     private String status;
 
+    @JsonIgnore
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @JsonIgnore
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = TenantTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = TenantTime.now();
     }
 }

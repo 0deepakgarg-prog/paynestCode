@@ -8,7 +8,7 @@ public class RequestValidation {
         }
     }
 
-     public static void validateOtp(String otp) {
+    public static void validateOtp(String otp) {
         if (otp == null || !otp.matches("\\d{6}")) {
             throw new IllegalArgumentException("Invalid OTP. It must be a 6-digit number.");
         }

@@ -9,7 +9,7 @@ public class PropertyReader {
 
     private final Environment environment;
 
-    public PropertyReader(Environment environment){
+    public PropertyReader(Environment environment) {
         this.environment = environment;
     }
 

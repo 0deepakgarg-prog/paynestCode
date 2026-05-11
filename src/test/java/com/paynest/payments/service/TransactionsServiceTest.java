@@ -1,7 +1,9 @@
-package com.paynest.service;
+package com.paynest.payments.service;
 
 import com.paynest.config.PropertyReader;
+import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.payments.entity.TransactionDetails;
+import com.paynest.payments.entity.Transactions;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.repository.TransactionDetailsRepository;
 import com.paynest.payments.repository.TransactionsRepository;
@@ -33,12 +35,16 @@ class TransactionsServiceTest {
     @Mock
     private TransactionDetailsRepository transactionDetailsRepository;
 
+    @Mock
+    private TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+
     @Test
     void generateTransactionRecord_shouldPersistUserTypeFromAccountType() {
         TransactionsService transactionsService = new TransactionsService(
                 propertyReader,
                 transactionsRepository,
-                transactionDetailsRepository
+                transactionDetailsRepository,
+                transactionNotificationEventPublisher
         );
 
         AccountIdentifier debitorIdentifier = identifier("agent-1", "MOBILE", "7777777777");
@@ -77,6 +83,18 @@ class TransactionsServiceTest {
         assertEquals("SUBSCRIBER", transactionDetails.get(1).getUserType());
         assertEquals("7777777777", transactionDetails.get(0).getIdentifierId());
         assertEquals("subscriber-login", transactionDetails.get(1).getIdentifierId());
+        assertEquals("MAIN", transactionDetails.get(0).getWalletType());
+        assertEquals("USD", transactionDetails.get(0).getCurrency());
+        assertEquals("MAIN", transactionDetails.get(1).getWalletType());
+        assertEquals("USD", transactionDetails.get(1).getCurrency());
+
+        ArgumentCaptor<Transactions> transactionCaptor = ArgumentCaptor.forClass(Transactions.class);
+        verify(transactionsRepository).save(transactionCaptor.capture());
+        Transactions transaction = transactionCaptor.getValue();
+        assertEquals("MAIN", transaction.getDebitorWalletType());
+        assertEquals("USD", transaction.getDebitorCurrency());
+        assertEquals("MAIN", transaction.getCreditorWalletType());
+        assertEquals("USD", transaction.getCreditorCurrency());
     }
 
     private AccountIdentifier identifier(String accountId, String identifierType, String identifierValue) {
@@ -91,6 +109,8 @@ class TransactionsServiceTest {
         Wallet wallet = new Wallet();
         wallet.setWalletId(walletId);
         wallet.setAccountId(accountId);
+        wallet.setWalletType("MAIN");
+        wallet.setCurrency("USD");
         return wallet;
     }
 }

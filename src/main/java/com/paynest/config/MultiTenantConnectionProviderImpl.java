@@ -75,9 +75,21 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
     public void init() {
         log.info("MultiTenantConnectionProvider loaded - MultiTenantConnectionProviderImpl");
     }
-    @Override public boolean supportsAggressiveRelease() { return false; }
-    @Override public boolean isUnwrappableAs(Class unwrapType) { return false; }
-    @Override public <T> T unwrap(Class<T> unwrapType) { return null; }
+
+    @Override
+    public boolean supportsAggressiveRelease() {
+        return false;
+    }
+
+    @Override
+    public boolean isUnwrappableAs(Class unwrapType) {
+        return false;
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> unwrapType) {
+        return null;
+    }
 }
 
 

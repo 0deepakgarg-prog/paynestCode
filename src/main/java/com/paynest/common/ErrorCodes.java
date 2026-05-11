@@ -28,6 +28,7 @@ public final class ErrorCodes {
     public static final String INVALID_DEBITOR_ACCOUNT_TYPE = "INVALID_DEBITOR_ACCOUNT_TYPE";
     public static final String INVALID_DEBTOR_ACCOUNT_TYPE = "INVALID_DEBTOR_ACCOUNT_TYPE";
     public static final String INVALID_INITIATOR = "INVALID_INITIATOR";
+    public static final String INVALID_LANGUAGE = "INVALID_LANGUAGE";
     public static final String INVALID_MOBILE = "INVALID_MOBILE";
     public static final String INVALID_OLD_PASSWORD = "INVALID_OLD_PASSWORD";
     public static final String INVALID_OLD_PIN = "INVALID_OLD_PIN";
@@ -72,6 +73,8 @@ public final class ErrorCodes {
     public static final String VALID_ACCOUNT_AUTH_NOT_FOUND = "VALID_ACCOUNT_AUTH_NOT_FOUND";
     public static final String VALID_ACCOUNT_NOT_FOUND = "VALID_ACCOUNT_NOT_FOUND";
     public static final String WALLET_NOT_FOUND = "WALLET_NOT_FOUND";
+    public static final String WALLET_RESTRICTION_ALREADY_EXISTS = "WALLET_RESTRICTION_ALREADY_EXISTS";
+    public static final String WALLET_RESTRICTION_NOT_FOUND = "WALLET_RESTRICTION_NOT_FOUND";
 
     public static final String INVALID_ROLE_ACCOUNT_TYPE_PREFIX = "INVALID_";
     public static final String ACCOUNT_TYPE_SUFFIX = "_ACCOUNT_TYPE";

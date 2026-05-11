@@ -90,7 +90,7 @@ public class ReceiptDocumentBuilder {
         Account account = resolveAccount(accountsById, accountId, accountDetail);
         Wallet accountWallet = resolveWallet(accountDetail, walletsById);
         LocalDateTime now = TenantTime.now();
-        BigDecimal transactionAmount = toCustomerAmount(accountDetail.getTransactionValue());
+        BigDecimal transactionAmount = toSubscriberAmount(accountDetail.getTransactionValue());
         BigDecimal serviceChargePaid = resolveServiceChargePaid(transaction, accountDetail.getEntryType());
 
         ReceiptDocument document = new ReceiptDocument();
@@ -106,10 +106,10 @@ public class ReceiptDocumentBuilder {
         document.setServiceChargePaid(serviceChargePaid);
         document.setTotalAmountPaid(addAmounts(transactionAmount, serviceChargePaid));
         document.setTotalAmountLabel(totalAmountLabel(accountDetail.getEntryType()));
-        document.setApprovedAmount(toCustomerAmount(accountDetail.getApprovedValue()));
-        document.setRequestedAmount(toCustomerAmount(transaction.getTransactionValue()));
-        document.setPreviousBalance(toCustomerAmount(accountDetail.getPreviousBalance()));
-        document.setPostBalance(toCustomerAmount(accountDetail.getPostBalance()));
+        document.setApprovedAmount(toSubscriberAmount(accountDetail.getApprovedValue()));
+        document.setRequestedAmount(toSubscriberAmount(transaction.getTransactionValue()));
+        document.setPreviousBalance(toSubscriberAmount(accountDetail.getPreviousBalance()));
+        document.setPostBalance(toSubscriberAmount(accountDetail.getPostBalance()));
         document.setCurrency(accountWallet == null ? null : accountWallet.getCurrency());
         document.setAccountId(accountId);
         document.setAccountMobileNumber(account == null ? null : account.getMobileNumber());
@@ -274,7 +274,7 @@ public class ReceiptDocumentBuilder {
             return zeroAmount();
         }
         return resolveRawServiceCharge(transaction)
-                .map(this::toCustomerAmount)
+                .map(this::toSubscriberAmount)
                 .orElseGet(this::zeroAmount);
     }
 
@@ -341,9 +341,9 @@ public class ReceiptDocumentBuilder {
 
     private String normalizeKey(String value) {
         return value == null ? "" : value.replace("_", "")
-                .replace("-", "")
-                .replace(" ", "")
-                .toLowerCase(Locale.ROOT);
+                                    .replace("-", "")
+                                    .replace(" ", "")
+                                    .toLowerCase(Locale.ROOT);
     }
 
     private Optional<BigDecimal> parseAmountValue(Object value) {
@@ -360,7 +360,7 @@ public class ReceiptDocumentBuilder {
         return Optional.empty();
     }
 
-    private BigDecimal toCustomerAmount(BigDecimal dbAmount) {
+    private BigDecimal toSubscriberAmount(BigDecimal dbAmount) {
         if (dbAmount == null) {
             return null;
         }

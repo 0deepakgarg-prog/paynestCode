@@ -34,20 +34,20 @@ public class PinService {
                 findByIdentifierTypeAndIdentifierValueAndStatus(request.getIdentifierType(),
                         request.getIdentifierValue(), "ACTIVE");
 
-        if(accountIdentifier.isEmpty()){
-          throw new ApplicationException(ErrorCodes.IDENTIFIER_NOT_FOUND,"Account identifier not found");
+        if (accountIdentifier.isEmpty()) {
+            throw new ApplicationException(ErrorCodes.IDENTIFIER_NOT_FOUND, "Account identifier not found");
         }
 
-        if(validateJWT && !JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountIdentifier.get().getAccountId())){
+        if (validateJWT && !JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountIdentifier.get().getAccountId())) {
             throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
         }
 
         AccountAuth auth = accountAuthRepository
                 .findById(accountIdentifier.get().getAuthId())
-                .orElseThrow(() -> new ApplicationException(ErrorCodes.AUTH_NOT_FOUND,"Account Auth not found"));
+                .orElseThrow(() -> new ApplicationException(ErrorCodes.AUTH_NOT_FOUND, "Account Auth not found"));
 
         if (!IdGenerator.verifyPin(request.getOldPin(), auth.getAuthValue(), auth.getAuthHash())) {
-            throw new ApplicationException(ErrorCodes.INVALID_OLD_PIN,"Invalid old PIN");
+            throw new ApplicationException(ErrorCodes.INVALID_OLD_PIN, "Invalid old PIN");
         }
 
         /* TODO : Need to check if this condition can be feasible.
@@ -68,19 +68,19 @@ public class PinService {
     @Transactional
     public void changePassword(ChangePasswordRequest request, boolean validateJwt) {
 
-        if(!request.getAuthFactorNew().getAuthType().equalsIgnoreCase(request.getAuthFactorOld().getAuthType())){
+        if (!request.getAuthFactorNew().getAuthType().equalsIgnoreCase(request.getAuthFactorOld().getAuthType())) {
             throw new ApplicationException(ErrorCodes.AUTH_TYPE_NOT_SAME, "Auth Type should be same.");
         }
 
         Optional<AccountIdentifier> accountIdentifier = accountIdentifierRepository
                 .findByIdentifierTypeAndIdentifierValueAndStatus(request.getUser().getIdentifierType(),
-                        request.getUser().getIdentifierValue(),"ACTIVE");
+                        request.getUser().getIdentifierValue(), "ACTIVE");
 
-        if(accountIdentifier.isEmpty()){
+        if (accountIdentifier.isEmpty()) {
             throw new ApplicationException(ErrorCodes.IDENTIFIER_NOT_FOUND, "Account identifier not found");
         }
 
-        if(validateJwt && !JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountIdentifier.get().getAccountId())){
+        if (validateJwt && !JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountIdentifier.get().getAccountId())) {
             throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
         }
 

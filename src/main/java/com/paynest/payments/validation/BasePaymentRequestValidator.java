@@ -86,7 +86,7 @@ public class BasePaymentRequestValidator {
         SupportedLanguage resolvedLanguage = normalizedLanguage == null || normalizedLanguage.isBlank()
                 ? getDefaultActiveLanguage()
                 : supportedLanguageRepository.findByLanguageCodeIgnoreCaseAndIsActiveTrue(normalizedLanguage)
-                .orElseGet(this::getDefaultActiveLanguage);
+                  .orElseGet(this::getDefaultActiveLanguage);
 
         String resolvedLanguageCode = resolvedLanguage.getLanguageCode().trim().toLowerCase(Locale.ROOT);
         request.setPreferredLang(resolvedLanguageCode);

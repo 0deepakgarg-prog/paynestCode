@@ -1,10 +1,9 @@
 package com.paynest.users.enums;
 
 public enum AccountType {
-    CUSTOMER,
+    SUBSCRIBER,
     MERCHANT,
     ADMIN,
-    AGENT,
-    SUBSCRIBER
+    AGENT
 }
 

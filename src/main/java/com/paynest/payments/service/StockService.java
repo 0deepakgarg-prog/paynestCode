@@ -18,6 +18,7 @@ import com.paynest.users.enums.IdentifierType;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.exception.ApplicationException;
+import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.dto.StockApprovalRequest;
@@ -36,7 +37,7 @@ import com.paynest.payments.service.TransactionsService;
 import com.paynest.users.service.WalletCacheService;
 import com.paynest.config.tenant.TraceContext;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static com.paynest.config.security.JWTUtils.getCurrentAccountId;
@@ -53,6 +53,7 @@ import static com.paynest.config.security.JWTUtils.getCurrentAccountType;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class StockService {
 
     private static final String BANK_WALLET_TYPE = "BANK";
@@ -74,313 +75,350 @@ public class StockService {
     private final BalanceService balanceService;
     private final WalletCacheService walletCacheService;
     private final PropertyReader propertyReader;
+    private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
 
     public BasePaymentResponse initiateStock(StockInitiateRequest request) {
 
-        validateRequest(request);
-        if(!getCurrentAccountType().equalsIgnoreCase("ADMIN")){
-            throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
+        log.info("Entering StockService.initiateStock. traceId={}", TraceContext.getTraceId());
+        try {
+            validateRequest(request);
+            if (!getCurrentAccountType().equalsIgnoreCase("ADMIN")) {
+                throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
+            }
+
+            Account systemAccount = getActiveAccount(DEFAULT_ACCOUNT_ID);
+
+            String currency = request.getTransaction().getCurrency();
+            Wallet bankWallet = getWallet(systemAccount.getAccountId(), currency, BANK_WALLET_TYPE, "BANK");
+            Wallet mainWallet = getWallet(systemAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "MAIN");
+
+            String transactionId = IdGenerator.generateTransactionId("ST");
+
+            AccountIdentifier debtorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
+            AccountIdentifier creditorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
+
+            transactionsService.generateTransactionRecord(
+                    transactionId,
+                    request.getTransaction().getAmount(),
+                    "MOBILE",
+                    request.getOperationType(),
+                    debtorIdentifier,
+                    creditorIdentifier,
+                    bankWallet,
+                    mainWallet,
+                    InitiatedBy.DEBITOR
+            );
+
+            //updateOptionalTransactionFields(transactionId, request);
+            recordTransactionInitiator(transactionId, getCurrentAccountId());
+
+            return BasePaymentResponse.builder()
+                    .responseStatus(TransactionStatus.PENDING)
+                    .operationType(request.getOperationType())
+                    .code("STOCK_INITIATED")
+                    .message("Stock transaction initiated")
+                    .timestamp(TenantTime.instant())
+                    .traceId(TraceContext.getTraceId())
+                    .transactionId(transactionId)
+                    .amount(request.getTransaction().getAmount())
+                    .currency(currency)
+                    .build();
+        } finally {
+            log.info("Exiting StockService.initiateStock. traceId={}", TraceContext.getTraceId());
         }
-
-        Account systemAccount = getActiveAccount(DEFAULT_ACCOUNT_ID);
-
-        String currency = request.getTransaction().getCurrency();
-        Wallet bankWallet = getWallet(systemAccount.getAccountId(), currency, BANK_WALLET_TYPE, "BANK");
-        Wallet mainWallet = getWallet(systemAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "MAIN");
-
-        String transactionId = IdGenerator.generateTransactionId("ST");
-
-        AccountIdentifier debtorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
-        AccountIdentifier creditorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
-
-        transactionsService.generateTransactionRecord(
-                transactionId,
-                request.getTransaction().getAmount(),
-                "MOBILE",
-                request.getOperationType(),
-                debtorIdentifier,
-                creditorIdentifier,
-                bankWallet,
-                mainWallet,
-                InitiatedBy.DEBITOR
-        );
-
-        updateOptionalTransactionFields(transactionId, request);
-
-        return BasePaymentResponse.builder()
-                .responseStatus(TransactionStatus.PENDING)
-                .operationType(request.getOperationType())
-                .code("STOCK_INITIATED")
-                .message("Stock transaction initiated")
-                .timestamp(TenantTime.instant())
-                .traceId(TraceContext.getTraceId())
-                .transactionId(transactionId)
-                .amount(request.getTransaction().getAmount())
-                .currency(currency)
-                .build();
     }
 
     public BasePaymentResponse initiateStockReimbursement(StockReimbursementInitiateRequest request) {
 
-        validateReimbursementRequest(request);
-        if (!getCurrentAccountType().equalsIgnoreCase("ADMIN")) {
-            throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
+        log.info("Entering StockService.initiateStockReimbursement. traceId={}", TraceContext.getTraceId());
+        try {
+            validateReimbursementRequest(request);
+            if (!getCurrentAccountType().equalsIgnoreCase("ADMIN")) {
+                throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
+            }
+
+            validateParty(request.getDebitor(), "DEBITOR", AccountType.SUBSCRIBER);
+            validateParty(request.getTransactor(), "TRANSACTOR", null);
+
+            AccountIdentifier debtorIdentifier = validateIdentifierMapping(request.getDebitor());
+            Account debtorAccount = getActiveAccount(debtorIdentifier.getAccountId());
+
+            if (!debtorAccount.getAccountType().equalsIgnoreCase(request.getDebitor().getAccountType().name())) {
+                throw new ApplicationException(ErrorCodes.INVALID_DEBITOR_ACCOUNT_TYPE, "Debitor account type mismatch");
+            }
+
+            Account systemAccount = getActiveAccount(DEFAULT_ACCOUNT_ID);
+            String currency = request.getTransaction().getCurrency();
+
+            Wallet debtorWallet = getWallet(debtorAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "DEBTOR");
+            Wallet creditorWallet = getWallet(systemAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "CREDITOR");
+
+            String transactionId = IdGenerator.generateTransactionId("SR");
+            AccountIdentifier creditorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
+
+            transactionsService.generateTransactionRecord(
+                    transactionId,
+                    request.getTransaction().getAmount(),
+                    "WEB",
+                    STOCK_REIMBURSEMENT_OPERATION,
+                    debtorIdentifier,
+                    creditorIdentifier,
+                    debtorWallet,
+                    creditorWallet,
+                    InitiatedBy.CREDITOR
+            );
+
+            updateOptionalTransactionFields(transactionId, request);
+            freezeDebtorBalance(transactionId, debtorWallet, creditorWallet, request.getTransaction().getAmount());
+
+            return BasePaymentResponse.builder()
+                    .responseStatus(TransactionStatus.PENDING)
+                    .operationType(STOCK_REIMBURSEMENT_OPERATION)
+                    .code("STOCK_REIMBURSEMENT_INITIATED")
+                    .message("Stock reimbursement initiated and pending approval")
+                    .timestamp(TenantTime.instant())
+                    .traceId(TraceContext.getTraceId())
+                    .transactionId(transactionId)
+                    .amount(request.getTransaction().getAmount())
+                    .currency(currency)
+                    .build();
+        } finally {
+            log.info("Exiting StockService.initiateStockReimbursement. traceId={}", TraceContext.getTraceId());
         }
-
-        validateParty(request.getDebitor(), "DEBITOR", AccountType.SUBSCRIBER);
-        validateParty(request.getTransactor(), "TRANSACTOR", null);
-
-        AccountIdentifier debtorIdentifier = validateIdentifierMapping(request.getDebitor());
-        Account debtorAccount = getActiveAccount(debtorIdentifier.getAccountId());
-
-        if (!debtorAccount.getAccountType().equalsIgnoreCase(request.getDebitor().getAccountType().name())) {
-            throw new ApplicationException(ErrorCodes.INVALID_DEBITOR_ACCOUNT_TYPE, "Debitor account type mismatch");
-        }
-
-        Account systemAccount = getActiveAccount(DEFAULT_ACCOUNT_ID);
-        String currency = request.getTransaction().getCurrency();
-
-        Wallet debtorWallet = getWallet(debtorAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "DEBTOR");
-        Wallet creditorWallet = getWallet(systemAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "CREDITOR");
-
-        String transactionId = IdGenerator.generateTransactionId("SR");
-        AccountIdentifier creditorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
-
-        transactionsService.generateTransactionRecord(
-                transactionId,
-                request.getTransaction().getAmount(),
-                "WEB",
-                STOCK_REIMBURSEMENT_OPERATION,
-                debtorIdentifier,
-                creditorIdentifier,
-                debtorWallet,
-                creditorWallet,
-                InitiatedBy.CREDITOR
-        );
-
-        updateOptionalTransactionFields(transactionId, request);
-        freezeDebtorBalance(transactionId, debtorWallet, creditorWallet, request.getTransaction().getAmount());
-
-        return BasePaymentResponse.builder()
-                .responseStatus(TransactionStatus.PENDING)
-                .operationType(STOCK_REIMBURSEMENT_OPERATION)
-                .code("STOCK_REIMBURSEMENT_INITIATED")
-                .message("Stock reimbursement initiated and pending approval")
-                .timestamp(TenantTime.instant())
-                .traceId(TraceContext.getTraceId())
-                .transactionId(transactionId)
-                .amount(request.getTransaction().getAmount())
-                .currency(currency)
-                .build();
     }
 
     public BasePaymentResponse updateStockTransactionStatus(StockApprovalRequest request) {
 
-        if(!getCurrentAccountType().equalsIgnoreCase("ADMIN")){
-            throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
-        }
+        log.info("Entering StockService.updateStockTransactionStatus. traceId={}", TraceContext.getTraceId());
+        try {
+            if (!getCurrentAccountType().equalsIgnoreCase("ADMIN")) {
+                throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
+            }
 
-        validateApprovalRequest(request);
+            validateApprovalRequest(request);
 
-        Transactions transaction = transactionsRepository.findById(request.getTransactionId())
-                .orElseThrow(() -> new ApplicationException(ErrorCodes.TXN_NOT_FOUND, "Transaction not found"));
+            Transactions transaction = transactionsRepository.findById(request.getTransactionId())
+                    .orElseThrow(() -> new ApplicationException(ErrorCodes.TXN_NOT_FOUND, "Transaction not found"));
 
-        if (!Constants.TRANSACTION_INITIATED.equalsIgnoreCase(transaction.getTransferStatus())
-                && !Constants.TRANSACTION_PENDING.equalsIgnoreCase(transaction.getTransferStatus())) {
-            throw new ApplicationException(
-                    ErrorCodes.INVALID_TRANSACTION_STATUS,
-                    "Only initiated or pending stock transactions can be updated"
-            );
-        }
-
-        List<TransactionDetails> transactionDetails = transactionDetailsRepository
-                .findByIdTransactionId(request.getTransactionId());
-
-        if (transactionDetails.size() != 2) {
-            throw new ApplicationException(
-                    ErrorCodes.INVALID_TRANSACTION_DETAILS,
-                    "Expected exactly two transaction details for stock transaction"
-            );
-        }
-
-        TransactionDetails debitDetail = getTransactionDetail(transactionDetails, 1L);
-        TransactionDetails creditDetail = getTransactionDetail(transactionDetails, 2L);
-
-        Wallet debtorWallet = getWalletById(debitDetail.getWalletNumber(), "DEBITOR");
-        Wallet creditorWallet = getWalletById(creditDetail.getWalletNumber(), "CREDITOR");
-        boolean reimbursementTransaction = STOCK_REIMBURSEMENT_OPERATION.equalsIgnoreCase(transaction.getServiceCode());
-
-        if ("APPROVED".equalsIgnoreCase(request.getStatus())
-                || "SUCCESS".equalsIgnoreCase(request.getStatus())) {
-
-            BigDecimal amount = toDisplayAmount(transaction.getTransactionValue());
-            if (reimbursementTransaction) {
-                settleFrozenReimbursement(transaction.getTransactionId(), debtorWallet, creditorWallet, transaction.getTransactionValue());
-            } else {
-                balanceService.transferWalletAmount(
-                        debtorWallet,
-                        creditorWallet,
-                        amount,
-                        transaction.getServiceCode(),
-                        transaction.getTransactionId()
+            String currentAccountId = getCurrentAccountId();
+            if (currentAccountId.equalsIgnoreCase(transaction.getCreatedBy())) {
+                throw new ApplicationException(
+                        ErrorCodes.INVALID_INITIATOR,
+                        "The user who initiated the stock transaction cannot approve or reject it"
                 );
             }
-            transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
 
-            return BasePaymentResponse.builder()
-                    .responseStatus(TransactionStatus.SUCCESS)
-                    .operationType(transaction.getServiceCode())
-                    .code("STOCK_APPROVED")
-                    .message("Stock transaction approved successfully")
-                    .timestamp(TenantTime.instant())
-                    .traceId(TraceContext.getTraceId())
-                    .transactionId(transaction.getTransactionId())
-                    .amount(amount)
-                    .currency(creditorWallet.getCurrency())
-                    .build();
+            if (!Constants.TRANSACTION_INITIATED.equalsIgnoreCase(transaction.getTransferStatus())
+                    && !Constants.TRANSACTION_PENDING.equalsIgnoreCase(transaction.getTransferStatus())) {
+                throw new ApplicationException(
+                        ErrorCodes.INVALID_TRANSACTION_STATUS,
+                        "Only initiated or pending stock transactions can be updated"
+                );
+            }
+
+            List<TransactionDetails> transactionDetails = transactionDetailsRepository
+                    .findByIdTransactionId(request.getTransactionId());
+
+            if (transactionDetails.size() != 2) {
+                throw new ApplicationException(
+                        ErrorCodes.INVALID_TRANSACTION_DETAILS,
+                        "Expected exactly two transaction details for stock transaction"
+                );
+            }
+
+            TransactionDetails debitDetail = getTransactionDetail(transactionDetails, 1L);
+            TransactionDetails creditDetail = getTransactionDetail(transactionDetails, 2L);
+
+            Wallet debtorWallet = getWalletById(debitDetail.getWalletNumber(), "DEBITOR");
+            Wallet creditorWallet = getWalletById(creditDetail.getWalletNumber(), "CREDITOR");
+            boolean reimbursementTransaction = STOCK_REIMBURSEMENT_OPERATION.equalsIgnoreCase(transaction.getServiceCode());
+
+            if ("APPROVED".equalsIgnoreCase(request.getStatus())
+                    || "SUCCESS".equalsIgnoreCase(request.getStatus())) {
+
+                BigDecimal amount = toDisplayAmount(transaction.getTransactionValue());
+                if (reimbursementTransaction) {
+                    settleFrozenReimbursement(transaction.getTransactionId(), debtorWallet, creditorWallet, transaction.getTransactionValue());
+                } else {
+                    balanceService.transferWalletAmount(
+                            debtorWallet,
+                            creditorWallet,
+                            amount,
+                            transaction.getServiceCode(),
+                            transaction.getTransactionId()
+                    );
+                    validateApprovedStockBalanceMovement(
+                            transaction.getTransactionId(),
+                            debtorWallet,
+                            creditorWallet,
+                            transaction.getTransactionValue()
+                    );
+                }
+                transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
+                recordTransactionModifier(transaction.getTransactionId(), currentAccountId);
+
+                return BasePaymentResponse.builder()
+                        .responseStatus(TransactionStatus.SUCCESS)
+                        .operationType(transaction.getServiceCode())
+                        .code("STOCK_APPROVED")
+                        .message("Stock transaction approved successfully")
+                        .timestamp(TenantTime.instant())
+                        .traceId(TraceContext.getTraceId())
+                        .transactionId(transaction.getTransactionId())
+                        .amount(amount)
+                        .currency(creditorWallet.getCurrency())
+                        .build();
+            }
+
+            if ("FAILED".equalsIgnoreCase(request.getStatus())
+                    || "REJECTED".equalsIgnoreCase(request.getStatus())) {
+
+                String errorCode = request.getErrorCode() == null || request.getErrorCode().isBlank()
+                        ? ErrorCodes.STOCK_REJECTED
+                        : request.getErrorCode();
+
+                transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
+                if (reimbursementTransaction) {
+                    releaseFrozenReimbursement(
+                            transaction.getTransactionId(),
+                            debtorWallet,
+                            creditorWallet,
+                            transaction.getTransactionValue(),
+                            errorCode
+                    );
+                } else {
+                    transactionsService.updateFailedTransactionRecord(
+                            transaction.getTransactionId(),
+                            errorCode,
+                            currentAccountId
+                    );
+                }
+
+                return BasePaymentResponse.builder()
+                        .responseStatus(TransactionStatus.FAILURE)
+                        .operationType(transaction.getServiceCode())
+                        .code(errorCode)
+                        .message("Stock transaction marked as failed")
+                        .timestamp(TenantTime.instant())
+                        .traceId(TraceContext.getTraceId())
+                        .transactionId(transaction.getTransactionId())
+                        .amount(toDisplayAmount(transaction.getTransactionValue()))
+                        .currency(creditorWallet.getCurrency())
+                        .build();
+            }
+
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_STATUS,
+                    "Supported status values are APPROVED, SUCCESS, FAILED, or REJECTED"
+            );
+        } finally {
+            log.info("Exiting StockService.updateStockTransactionStatus. traceId={}", TraceContext.getTraceId());
         }
+    }
 
-        if ("FAILED".equalsIgnoreCase(request.getStatus())
-                || "REJECTED".equalsIgnoreCase(request.getStatus())) {
+    public BasePaymentResponse updateStockReimbursementTransactionStatus(StockApprovalRequest request) {
 
-            String errorCode = request.getErrorCode() == null || request.getErrorCode().isBlank()
-                    ? ErrorCodes.STOCK_REJECTED
-                    : request.getErrorCode();
+        log.info("Entering StockService.updateStockReimbursementTransactionStatus. traceId={}", TraceContext.getTraceId());
+        try {
+            if (!getCurrentAccountType().equalsIgnoreCase("ADMIN")) {
+                throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
+            }
 
-            transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
-            if (reimbursementTransaction) {
-                releaseFrozenReimbursement(
+            validateApprovalRequest(request);
+
+            Transactions transaction = transactionsRepository.findById(request.getTransactionId())
+                    .orElseThrow(() -> new ApplicationException(ErrorCodes.TXN_NOT_FOUND, "Transaction not found"));
+
+            if (!STOCK_REIMBURSEMENT_OPERATION.equalsIgnoreCase(transaction.getServiceCode())) {
+                throw new ApplicationException(
+                        ErrorCodes.INVALID_TRANSACTION_TYPE,
+                        "Transaction is not a stock reimbursement transaction"
+                );
+            }
+
+            if (!Constants.TRANSACTION_PENDING.equalsIgnoreCase(transaction.getTransferStatus())) {
+                throw new ApplicationException(
+                        ErrorCodes.INVALID_TRANSACTION_STATUS,
+                        "Only pending stock reimbursement transactions can be updated"
+                );
+            }
+
+            List<TransactionDetails> transactionDetails = transactionDetailsRepository
+                    .findByIdTransactionId(request.getTransactionId());
+
+            if (transactionDetails.size() != 2) {
+                throw new ApplicationException(
+                        ErrorCodes.INVALID_TRANSACTION_DETAILS,
+                        "Expected exactly two transaction details for stock reimbursement transaction"
+                );
+            }
+
+            TransactionDetails debitDetail = getTransactionDetail(transactionDetails, 1L);
+            TransactionDetails creditDetail = getTransactionDetail(transactionDetails, 2L);
+
+            Wallet debtorWallet = getWalletById(debitDetail.getWalletNumber(), "DEBITOR");
+            Wallet creditorWallet = getWalletById(creditDetail.getWalletNumber(), "CREDITOR");
+
+            if ("APPROVED".equalsIgnoreCase(request.getStatus())
+                    || "SUCCESS".equalsIgnoreCase(request.getStatus())) {
+
+                approveStockReimbursement(
+                        transaction.getTransactionId(),
+                        debtorWallet,
+                        creditorWallet,
+                        transaction.getTransactionValue()
+                );
+                transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
+
+                return BasePaymentResponse.builder()
+                        .responseStatus(TransactionStatus.SUCCESS)
+                        .operationType(transaction.getServiceCode())
+                        .code("STOCK_REIMBURSEMENT_APPROVED")
+                        .message("Stock reimbursement transaction approved successfully")
+                        .timestamp(TenantTime.instant())
+                        .traceId(TraceContext.getTraceId())
+                        .transactionId(transaction.getTransactionId())
+                        .amount(toDisplayAmount(transaction.getTransactionValue()))
+                        .currency(creditorWallet.getCurrency())
+                        .build();
+            }
+
+            if ("FAILED".equalsIgnoreCase(request.getStatus())
+                    || "REJECTED".equalsIgnoreCase(request.getStatus())) {
+
+                String errorCode = request.getErrorCode() == null || request.getErrorCode().isBlank()
+                        ? ErrorCodes.STOCK_REIMBURSEMENT_REJECTED
+                        : request.getErrorCode();
+
+                rejectStockReimbursement(
                         transaction.getTransactionId(),
                         debtorWallet,
                         creditorWallet,
                         transaction.getTransactionValue(),
                         errorCode
                 );
-            } else {
-                transactionsService.updateFailedTransactionRecord(
-                        transaction.getTransactionId(),
-                        errorCode,
-                        getCurrentAccountId()
-                );
+                transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
+
+                return BasePaymentResponse.builder()
+                        .responseStatus(TransactionStatus.FAILURE)
+                        .operationType(transaction.getServiceCode())
+                        .code(errorCode)
+                        .message("Stock reimbursement transaction rejected")
+                        .timestamp(TenantTime.instant())
+                        .traceId(TraceContext.getTraceId())
+                        .transactionId(transaction.getTransactionId())
+                        .amount(toDisplayAmount(transaction.getTransactionValue()))
+                        .currency(creditorWallet.getCurrency())
+                        .build();
             }
 
-            return BasePaymentResponse.builder()
-                    .responseStatus(TransactionStatus.FAILURE)
-                    .operationType(transaction.getServiceCode())
-                    .code(errorCode)
-                    .message("Stock transaction marked as failed")
-                    .timestamp(TenantTime.instant())
-                    .traceId(TraceContext.getTraceId())
-                    .transactionId(transaction.getTransactionId())
-                    .amount(toDisplayAmount(transaction.getTransactionValue()))
-                    .currency(creditorWallet.getCurrency())
-                    .build();
-        }
-
-        throw new ApplicationException(
-                ErrorCodes.INVALID_STATUS,
-                "Supported status values are APPROVED, SUCCESS, FAILED, or REJECTED"
-        );
-    }
-
-    public BasePaymentResponse updateStockReimbursementTransactionStatus(StockApprovalRequest request) {
-
-        if (!getCurrentAccountType().equalsIgnoreCase("ADMIN")) {
-            throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
-        }
-
-        validateApprovalRequest(request);
-
-        Transactions transaction = transactionsRepository.findById(request.getTransactionId())
-                .orElseThrow(() -> new ApplicationException(ErrorCodes.TXN_NOT_FOUND, "Transaction not found"));
-
-        if (!STOCK_REIMBURSEMENT_OPERATION.equalsIgnoreCase(transaction.getServiceCode())) {
             throw new ApplicationException(
-                    ErrorCodes.INVALID_TRANSACTION_TYPE,
-                    "Transaction is not a stock reimbursement transaction"
+                    ErrorCodes.INVALID_STATUS,
+                    "Supported status values are APPROVED, SUCCESS, FAILED, or REJECTED"
             );
+        } finally {
+            log.info("Exiting StockService.updateStockReimbursementTransactionStatus. traceId={}", TraceContext.getTraceId());
         }
-
-        if (!Constants.TRANSACTION_PENDING.equalsIgnoreCase(transaction.getTransferStatus())) {
-            throw new ApplicationException(
-                    ErrorCodes.INVALID_TRANSACTION_STATUS,
-                    "Only pending stock reimbursement transactions can be updated"
-            );
-        }
-
-        List<TransactionDetails> transactionDetails = transactionDetailsRepository
-                .findByIdTransactionId(request.getTransactionId());
-
-        if (transactionDetails.size() != 2) {
-            throw new ApplicationException(
-                    ErrorCodes.INVALID_TRANSACTION_DETAILS,
-                    "Expected exactly two transaction details for stock reimbursement transaction"
-            );
-        }
-
-        TransactionDetails debitDetail = getTransactionDetail(transactionDetails, 1L);
-        TransactionDetails creditDetail = getTransactionDetail(transactionDetails, 2L);
-
-        Wallet debtorWallet = getWalletById(debitDetail.getWalletNumber(), "DEBITOR");
-        Wallet creditorWallet = getWalletById(creditDetail.getWalletNumber(), "CREDITOR");
-
-        if ("APPROVED".equalsIgnoreCase(request.getStatus())
-                || "SUCCESS".equalsIgnoreCase(request.getStatus())) {
-
-            approveStockReimbursement(
-                    transaction.getTransactionId(),
-                    debtorWallet,
-                    creditorWallet,
-                    transaction.getTransactionValue()
-            );
-            transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
-
-            return BasePaymentResponse.builder()
-                    .responseStatus(TransactionStatus.SUCCESS)
-                    .operationType(transaction.getServiceCode())
-                    .code("STOCK_REIMBURSEMENT_APPROVED")
-                    .message("Stock reimbursement transaction approved successfully")
-                    .timestamp(TenantTime.instant())
-                    .traceId(TraceContext.getTraceId())
-                    .transactionId(transaction.getTransactionId())
-                    .amount(toDisplayAmount(transaction.getTransactionValue()))
-                    .currency(creditorWallet.getCurrency())
-                    .build();
-        }
-
-        if ("FAILED".equalsIgnoreCase(request.getStatus())
-                || "REJECTED".equalsIgnoreCase(request.getStatus())) {
-
-            String errorCode = request.getErrorCode() == null || request.getErrorCode().isBlank()
-                    ? ErrorCodes.STOCK_REIMBURSEMENT_REJECTED
-                    : request.getErrorCode();
-
-            rejectStockReimbursement(
-                    transaction.getTransactionId(),
-                    debtorWallet,
-                    creditorWallet,
-                    transaction.getTransactionValue(),
-                    errorCode
-            );
-            transactionsService.updateApproveOrRejectComments(transaction.getTransactionId(), request.getComments());
-
-            return BasePaymentResponse.builder()
-                    .responseStatus(TransactionStatus.FAILURE)
-                    .operationType(transaction.getServiceCode())
-                    .code(errorCode)
-                    .message("Stock reimbursement transaction rejected")
-                    .timestamp(TenantTime.instant())
-                    .traceId(TraceContext.getTraceId())
-                    .transactionId(transaction.getTransactionId())
-                    .amount(toDisplayAmount(transaction.getTransactionValue()))
-                    .currency(creditorWallet.getCurrency())
-                    .build();
-        }
-
-        throw new ApplicationException(
-                ErrorCodes.INVALID_STATUS,
-                "Supported status values are APPROVED, SUCCESS, FAILED, or REJECTED"
-        );
     }
 
     private void validateRequest(StockInitiateRequest request) {
@@ -442,10 +480,10 @@ public class StockService {
 
     private Account getActiveAccount(String accountId) {
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ApplicationException(ErrorCodes.ACCOUNT_NOT_FOUND," account not found"));
+                .orElseThrow(() -> new ApplicationException(ErrorCodes.ACCOUNT_NOT_FOUND, " account not found"));
 
         if (!Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(account.getStatus())) {
-            throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT," account is not active");
+            throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT, " account is not active");
         }
 
         return account;
@@ -555,17 +593,42 @@ public class StockService {
     }
 
     private void updateOptionalTransactionFields(String transactionId, StockInitiateRequest request) {
-        transactionsService.updateMetadata(transactionId, toJson(request.getMetadata()));
-        transactionsService.updateAdditionalInfo(transactionId, toJson(request.getAdditionalInfo()));
-        transactionsService.updatePaymentReference(transactionId, request.getPaymentReference());
-        transactionsService.updateComments(transactionId, request.getComments());
+        transactionsService.updateOptionalTransactionFields(
+                transactionId,
+                request.getMetadata(),
+                request.getAdditionalInfo(),
+                request.getPaymentReference(),
+                request.getComments()
+        );
     }
 
     private void updateOptionalTransactionFields(String transactionId, StockReimbursementInitiateRequest request) {
-        transactionsService.updateMetadata(transactionId, toJson(request.getMetadata()));
-        transactionsService.updateAdditionalInfo(transactionId, toJson(request.getAdditionalInfo()));
-        transactionsService.updatePaymentReference(transactionId, request.getPaymentReference());
-        transactionsService.updateComments(transactionId, request.getComments());
+        transactionsService.updateOptionalTransactionFields(
+                transactionId,
+                request.getMetadata(),
+                request.getAdditionalInfo(),
+                request.getPaymentReference(),
+                request.getComments()
+        );
+    }
+
+    private void recordTransactionInitiator(String transactionId, String initiatorAccountId) {
+        Transactions transaction = transactionsRepository.findByTransactionId(transactionId);
+        if (transaction == null || initiatorAccountId == null || initiatorAccountId.isBlank()) {
+            return;
+        }
+        transaction.setCreatedBy(initiatorAccountId);
+        transaction.setModifiedBy(initiatorAccountId);
+        transactionsRepository.save(transaction);
+    }
+
+    private void recordTransactionModifier(String transactionId, String modifierAccountId) {
+        Transactions transaction = transactionsRepository.findByTransactionId(transactionId);
+        if (transaction == null || modifierAccountId == null || modifierAccountId.isBlank()) {
+            return;
+        }
+        transaction.setModifiedBy(modifierAccountId);
+        transactionsRepository.save(transaction);
     }
 
     private void freezeDebtorBalance(
@@ -614,6 +677,7 @@ public class StockService {
         walletBalanceRepository.save(debtorBalance);
 
         transactionsRepository.updateStatus(transactionId, Constants.TRANSACTION_PENDING, null);
+        publishTransactionUpdate(transactionId, Constants.TRANSACTION_PENDING, null);
 
         transactionDetailsRepository.updateBalances(
                 transactionId,
@@ -694,6 +758,7 @@ public class StockService {
         walletBalanceRepository.save(creditorBalance);
 
         transactionsRepository.updateStatus(transactionId, Constants.TRANSACTION_SUCCESS, null);
+        publishTransactionUpdate(transactionId, Constants.TRANSACTION_SUCCESS, null);
 
         transactionDetailsRepository.updateBalances(
                 transactionId,
@@ -762,6 +827,7 @@ public class StockService {
         walletBalanceRepository.save(debtorBalance);
 
         transactionsRepository.updateStatus(transactionId, Constants.TRANSACTION_FAILED, errorCode);
+        publishTransactionUpdate(transactionId, Constants.TRANSACTION_FAILED, errorCode);
 
         transactionDetailsRepository.updateBalances(
                 transactionId,
@@ -857,6 +923,7 @@ public class StockService {
         walletBalanceRepository.save(creditorBalance);
 
         transactionsRepository.updateStatus(transactionId, Constants.TRANSACTION_SUCCESS, null);
+        publishTransactionUpdate(transactionId, Constants.TRANSACTION_SUCCESS, null);
 
         transactionDetailsRepository.updateBalances(
                 transactionId,
@@ -924,6 +991,7 @@ public class StockService {
 
         walletBalanceRepository.save(debtorBalance);
         transactionsRepository.updateStatus(transactionId, Constants.TRANSACTION_FAILED, errorCode);
+        publishTransactionUpdate(transactionId, Constants.TRANSACTION_FAILED, errorCode);
 
         transactionDetailsRepository.updateBalances(
                 transactionId,
@@ -953,8 +1021,122 @@ public class StockService {
         walletCacheService.refreshAccountWallets(creditorWallet.getAccountId());
     }
 
-    private JSONObject toJson(Map<String, Object> value) {
-        return value == null ? new JSONObject() : new JSONObject(value);
+    private void validateApprovedStockBalanceMovement(
+            String transactionId,
+            Wallet debtorWallet,
+            Wallet creditorWallet,
+            BigDecimal storedAmount) {
+
+        Transactions persistedTransaction = transactionsRepository.findByTransactionId(transactionId);
+        if (persistedTransaction == null) {
+            throw new ApplicationException(ErrorCodes.TXN_NOT_FOUND, "Transaction not found after stock approval");
+        }
+        if (!Constants.TRANSACTION_SUCCESS.equalsIgnoreCase(persistedTransaction.getTransferStatus())) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_TRANSACTION_STATUS,
+                    "Stock approval transaction status was not updated to success"
+            );
+        }
+
+        List<TransactionDetails> persistedDetails = transactionDetailsRepository.findByIdTransactionId(transactionId);
+        if (persistedDetails.size() != 2) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_TRANSACTION_DETAILS,
+                    "Expected exactly two transaction details after stock approval"
+            );
+        }
+
+        TransactionDetails debitDetail = getTransactionDetail(persistedDetails, 1L);
+        TransactionDetails creditDetail = getTransactionDetail(persistedDetails, 2L);
+
+        validateApprovedStockDetail(
+                debitDetail,
+                debtorWallet,
+                Constants.TXN_TYPE_DR,
+                storedAmount.negate()
+        );
+        validateApprovedStockDetail(
+                creditDetail,
+                creditorWallet,
+                Constants.TXN_TYPE_CR,
+                storedAmount
+        );
+    }
+
+    private void validateApprovedStockDetail(
+            TransactionDetails detail,
+            Wallet wallet,
+            String expectedEntryType,
+            BigDecimal expectedAvailableDelta) {
+
+        if (!expectedEntryType.equalsIgnoreCase(detail.getEntryType())
+                || !Constants.TRANSACTION_SUCCESS.equalsIgnoreCase(detail.getTransferStatus())) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_TRANSACTION_DETAILS,
+                    "Stock approval transaction detail status or entry type is invalid"
+            );
+        }
+        if (!String.valueOf(wallet.getWalletId()).equals(detail.getWalletNumber())) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_TRANSACTION_DETAILS,
+                    "Stock approval transaction detail wallet mismatch"
+            );
+        }
+
+        validateBalanceMovement(
+                detail.getPreviousBalance(),
+                detail.getPostBalance(),
+                expectedAvailableDelta,
+                "Stock approval transaction detail available balance movement is invalid"
+        );
+        validateBalanceValue(
+                detail.getPreviousFicBalance(),
+                detail.getPostFicBalance(),
+                "Stock approval transaction detail FIC balance movement is invalid"
+        );
+        validateBalanceValue(
+                detail.getPreviousFrozenBalance(),
+                detail.getPostFrozenBalance(),
+                "Stock approval transaction detail frozen balance movement is invalid"
+        );
+
+        WalletBalance currentBalance = walletBalanceRepository.findByWalletId(wallet.getWalletId())
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCodes.INVALID_WALLET_NO,
+                        "Wallet balance not found after stock approval"
+                ));
+        validateBalanceValue(
+                detail.getPostBalance(),
+                currentBalance.getAvailableBalance(),
+                "Stock approval wallet available balance does not match transaction detail"
+        );
+        validateBalanceValue(
+                detail.getPostFicBalance(),
+                currentBalance.getFicBalance(),
+                "Stock approval wallet FIC balance does not match transaction detail"
+        );
+        validateBalanceValue(
+                detail.getPostFrozenBalance(),
+                currentBalance.getFrozenBalance(),
+                "Stock approval wallet frozen balance does not match transaction detail"
+        );
+    }
+
+    private void validateBalanceValue(BigDecimal expected, BigDecimal actual, String message) {
+        if (expected == null || actual == null || expected.compareTo(actual) != 0) {
+            throw new ApplicationException(ErrorCodes.SYSTEM_ERROR, message);
+        }
+    }
+
+    private void validateBalanceMovement(
+            BigDecimal previous,
+            BigDecimal post,
+            BigDecimal expectedDelta,
+            String message) {
+        if (previous == null || post == null || expectedDelta == null
+                || previous.add(expectedDelta).compareTo(post) != 0) {
+            throw new ApplicationException(ErrorCodes.SYSTEM_ERROR, message);
+        }
     }
 
     private void saveWalletLedger(
@@ -984,6 +1166,16 @@ public class StockService {
         ledger.setAttr1(balanceType);
 
         walletLedgerRepository.save(ledger);
+    }
+
+    private void publishTransactionUpdate(String transactionId, String transferStatus, String errorCode) {
+        Transactions transaction = transactionsRepository.findByTransactionId(transactionId);
+        if (transaction == null) {
+            return;
+        }
+        transaction.setTransferStatus(transferStatus);
+        transaction.setErrorCode(errorCode);
+        transactionNotificationEventPublisher.publish(transaction);
     }
 }
 

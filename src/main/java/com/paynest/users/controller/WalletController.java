@@ -17,7 +17,7 @@ public class WalletController {
     private final BalanceService balanceService;
     private final WalletService walletService;
 
-    @GetMapping(value="/getAccountWallets/{accountId}", produces = "application/json")
+    @GetMapping(value = "/getAccountWallets/{accountId}", produces = "application/json")
     public ResponseEntity<ApiResponse> getAccountWallet(
             @PathVariable String accountId) {
 

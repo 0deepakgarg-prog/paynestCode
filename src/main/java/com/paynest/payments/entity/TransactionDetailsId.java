@@ -15,7 +15,8 @@ public class TransactionDetailsId implements Serializable {
     @Column(name = "txn_sequence_number", nullable = false, precision = 10)
     private Long txnSequenceNumber;
 
-    public TransactionDetailsId() {}
+    public TransactionDetailsId() {
+    }
 
     public TransactionDetailsId(String transactionId, long l) {
         this.transactionId = transactionId;

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -43,6 +44,11 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/v1/fx-rates").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/wallet/restrictions").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/internal/settletxn").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -54,13 +60,12 @@ public class SecurityConfig {
                                 "/api/v1/account/pin/changeDefault",
                                 "/api/v1/account/password/changeDefault",
                                 "/api/v1/account/register/**",
-                                "/api/v1/account/registerUser",
-                                "/api/v1/pay/settleTxn"
+                                "/api/v1/account/registerUser"
 
-                )
-                .permitAll()
-                .anyRequest()
-                .authenticated()
+                        )
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((request, response, authException) ->

@@ -57,6 +57,36 @@ public class UpdateAccountRequest {
         @JsonProperty("preferredLang")
         private String preferredLanguage;
 
+        @JsonProperty("attr1")
+        private String attr1;
+
+        @JsonProperty("attr2")
+        private String attr2;
+
+        @JsonProperty("attr3")
+        private String attr3;
+
+        @JsonProperty("attr4")
+        private String attr4;
+
+        @JsonProperty("attr5")
+        private String attr5;
+
+        @JsonProperty("attr6")
+        private String attr6;
+
+        @JsonProperty("attr7")
+        private String attr7;
+
+        @JsonProperty("attr8")
+        private String attr8;
+
+        @JsonProperty("attr9")
+        private String attr9;
+
+        @JsonProperty("attr10")
+        private String attr10;
+
     }
 }
 

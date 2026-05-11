@@ -6,6 +6,7 @@ import com.paynest.common.Constants;
 import com.paynest.payments.entity.BillPaymentStatusRecord;
 import com.paynest.payments.entity.TransactionDetails;
 import com.paynest.payments.entity.Transactions;
+import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
 import com.paynest.payments.entity.WalletLedger;
@@ -19,10 +20,10 @@ import com.paynest.payments.repository.TransactionsRepository;
 import com.paynest.users.repository.WalletBalanceRepository;
 import com.paynest.payments.repository.WalletLedgerRepository;
 import com.paynest.users.repository.WalletRepository;
+import com.paynest.users.service.WalletCacheService;
 import com.paynest.config.security.JWTUtils;
-import com.paynest.service.TransactionsService;
+import com.paynest.payments.service.TransactionsService;
 import com.paynest.config.tenant.TraceContext;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,8 @@ public class TransactionSettlementService {
     private final WalletLedgerRepository walletLedgerRepository;
     private final TransactionsService transactionsService;
     private final BillPaymentStatusService billPaymentStatusService;
+    private final WalletCacheService walletCacheService;
+    private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
 
     public TransactionSettlementService(
             TransactionsRepository transactionsRepository,
@@ -53,7 +56,9 @@ public class TransactionSettlementService {
             WalletBalanceRepository walletBalanceRepository,
             WalletLedgerRepository walletLedgerRepository,
             TransactionsService transactionsService,
-            BillPaymentStatusService billPaymentStatusService
+            BillPaymentStatusService billPaymentStatusService,
+            WalletCacheService walletCacheService,
+            TransactionNotificationEventPublisher transactionNotificationEventPublisher
     ) {
         this.transactionsRepository = transactionsRepository;
         this.transactionDetailsRepository = transactionDetailsRepository;
@@ -62,6 +67,8 @@ public class TransactionSettlementService {
         this.walletLedgerRepository = walletLedgerRepository;
         this.transactionsService = transactionsService;
         this.billPaymentStatusService = billPaymentStatusService;
+        this.walletCacheService = walletCacheService;
+        this.transactionNotificationEventPublisher = transactionNotificationEventPublisher;
     }
 
     public SettleTransactionResponse settleTransaction(SettleTransactionRequest request) {
@@ -230,6 +237,7 @@ public class TransactionSettlementService {
         transaction.setModifiedOn(now);
         transaction.setModifiedBy(modifiedBy);
         transactionsRepository.save(transaction);
+        transactionNotificationEventPublisher.publish(transaction);
 
         for (TransactionDetails detail : transactionDetails) {
             detail.setTransferStatus(Constants.TRANSACTION_SUCCESS);
@@ -237,6 +245,8 @@ public class TransactionSettlementService {
         }
         creditDetail.setPostFicBalance(creditorFicAfter);
         transactionDetailsRepository.saveAll(transactionDetails);
+
+        walletCacheService.refreshAccountWallets(creditorWallet.getAccountId());
     }
 
     private void rollbackSettlement(
@@ -309,6 +319,7 @@ public class TransactionSettlementService {
         transaction.setModifiedOn(now);
         transaction.setModifiedBy(modifiedBy);
         transactionsRepository.save(transaction);
+        transactionNotificationEventPublisher.publish(transaction);
 
         for (TransactionDetails detail : transactionDetails) {
             detail.setTransferStatus(Constants.TRANSACTION_FAILED);
@@ -318,6 +329,9 @@ public class TransactionSettlementService {
         creditDetail.setPostBalance(creditorBalanceAfter);
         creditDetail.setPostFicBalance(creditorFicAfter);
         transactionDetailsRepository.saveAll(transactionDetails);
+
+        walletCacheService.refreshAccountWallets(debitorWallet.getAccountId());
+        walletCacheService.refreshAccountWallets(creditorWallet.getAccountId());
     }
 
     private void createRollbackLedger(
@@ -345,13 +359,13 @@ public class TransactionSettlementService {
     }
 
     private void applyOptionalUpdates(String transactionId, SettleTransactionRequest request) {
-        if (request.getComments() != null && !request.getComments().isBlank()) {
-            transactionsService.updateComments(transactionId, request.getComments());
-        }
-
-        if (request.getAdditionalInfo() != null && !request.getAdditionalInfo().isEmpty()) {
-            transactionsService.updateAdditionalInfo(transactionId, new JSONObject(request.getAdditionalInfo()));
-        }
+        transactionsService.updateOptionalTransactionFields(
+                transactionId,
+                null,
+                request.getAdditionalInfo(),
+                null,
+                request.getComments()
+        );
     }
 
     private SettleTransactionResponse buildResponse(Transactions transaction, Boolean settlementStatus) {

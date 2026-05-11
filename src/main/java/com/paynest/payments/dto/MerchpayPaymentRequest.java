@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.Map;
 
 @Data
-public class MerchpayPaymentRequest implements BasePaymentRequest{
+public class MerchpayPaymentRequest implements BasePaymentRequest {
 
     private String operationType;
 

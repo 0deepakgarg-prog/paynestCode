@@ -39,29 +39,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         log.info("Inside JwtAuthenticationFilter");
 
-        boolean pricingCalculateRequest = isPricingCalculateRequest(request);
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            String token = authHeader.substring(7);
-            if (!jwtService.isTokenValid(token)) {
-                log.error("Filter error. code=INVALID_TOKEN, message=Invalid Token");
-                FilterErrorResponseWriter.write(
-                        response,
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "INVALID_TOKEN",
-                        "Invalid Token"
-                );
-                return;
-            }
+        String token = authHeader.substring(7);
+        if (!jwtService.isTokenValid(token)) {
+            log.error("Filter error. code=INVALID_TOKEN, message=Invalid Token");
+            FilterErrorResponseWriter.write(
+                    response,
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "INVALID_TOKEN",
+                    "Invalid Token"
+            );
+            return;
+        }
 
-            String accountId = jwtService.extractAccountId(token);
-            String tenantId = jwtService.extractTenant(token);
-            Claims claims = jwtService.getClaims(token);
-            log.info("tenant is :" + tenantId);
+        String accountId = jwtService.extractAccountId(token);
+        String tenantId = jwtService.extractTenant(token);
+        Claims claims = jwtService.getClaims(token);
+        log.info("tenant is :" + tenantId);
 
         String tenantClaim = jwtService.extractTenant(token);
 
@@ -70,8 +69,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (tenantClaim == null || tenantClaim.isBlank()
                 || resolvedTokenTenantSchema == null || resolvedTokenTenantSchema.isBlank()
-                || requestTenantSchema == null || requestTenantSchema.isBlank()
-                || !requestTenantSchema.equals(resolvedTokenTenantSchema)) {
+                || (requestTenantSchema != null
+                && !requestTenantSchema.isBlank()
+                && !requestTenantSchema.equals(resolvedTokenTenantSchema))) {
             apiErrorResponseWriter.write(request, response, CommonErrorCode.INVALID_TOKEN);
             return;
         }
@@ -80,6 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (accountId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             TenantContext.setTenant(resolvedTokenTenantSchema);
+            TenantContext.setTenantId(tenantClaim);
+            TenantContext.setTimeZone(tenantRegistryService.getTimeZone(tenantClaim));
             UserDetails userDetails = userDetailsService.loadUserByUsername(accountId);
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
@@ -104,12 +106,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return tenantRegistryService.getSchema(tenantClaim);
-    }
-
-    private boolean isPricingCalculateRequest(HttpServletRequest request) {
-        return request != null
-                && "POST".equalsIgnoreCase(request.getMethod())
-                && "/api/v1/pricing/calculate".equals(request.getRequestURI());
     }
 }
 

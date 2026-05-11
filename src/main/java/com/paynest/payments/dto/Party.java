@@ -1,7 +1,7 @@
 package com.paynest.payments.dto;
 
 import com.paynest.enums.AccountType;
-import com.paynest.enums.WalletType;
+import com.paynest.users.enums.WalletType;
 import lombok.Data;
 
 @Data

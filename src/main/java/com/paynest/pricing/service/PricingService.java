@@ -6,6 +6,7 @@ import com.paynest.exception.ApplicationException;
 import com.paynest.payments.dto.U2UPaymentRequest;
 import com.paynest.payments.service.PricingCalculator;
 import com.paynest.pricing.dto.request.CreatePricingRuleRequest;
+import com.paynest.pricing.dto.request.UpdatePricingRuleRequest;
 import com.paynest.pricing.dto.response.PricingComputationResponse;
 import com.paynest.pricing.dto.request.UpdatePricingStatusRequest;
 import com.paynest.pricing.dto.response.PricingRuleResponse;
@@ -103,6 +104,41 @@ public class PricingService {
     @Transactional(readOnly = true)
     public PricingRuleResponse getPricingRule(Long id) {
         return new PricingRuleResponse(getPricingRuleEntity(id));
+    }
+
+    @Transactional
+    public PricingRuleResponse updatePricingRule(Long id, UpdatePricingRuleRequest request) {
+        PricingRule pricingRule = getPricingRuleEntity(id);
+
+        if (request.getPricingName() != null && !request.getPricingName().isBlank()) {
+            pricingRule.setPricingName(request.getPricingName().trim());
+        }
+        if (request.getPayer() != null) {
+            pricingRule.setPayer(normalizeAndValidatePayer(request.getPayer()));
+        }
+        if (request.getPayBy() != null) {
+            pricingRule.setPayBy(normalizeAndValidatePayBy(request.getPayBy(), pricingRule.getRuleType()));
+        }
+        if (request.getPayerSplit() != null) {
+            pricingRule.setPayerSplit(request.getPayerSplit());
+        }
+        if (request.getPricingConfig() != null) {
+            pricingRule.setPricingConfig(request.getPricingConfig());
+        }
+        if (request.getStatus() != null) {
+            pricingRule.setStatus(normalizeAndValidateStatus(request.getStatus()));
+        }
+        if (request.getValidFrom() != null) {
+            pricingRule.setValidFrom(request.getValidFrom());
+        }
+        if (request.getValidTo() != null) {
+            pricingRule.setValidTo(request.getValidTo());
+        }
+        pricingRule.setUpdatedBy(resolveCurrentAccountId());
+
+        validatePayerSplit(pricingRule);
+
+        return new PricingRuleResponse(pricingRuleRepository.save(pricingRule));
     }
 
     @Transactional
@@ -524,11 +560,7 @@ public class PricingService {
     private void applyRuleAmount(PricingComputationResponse response, PricingRule pricingRule, BigDecimal amount) {
         String affectedParty = resolveAffectedParty(pricingRule.getPayer());
         switch (pricingRule.getRuleType()) {
-            case "SERVICE_CHARGE" -> {
-                response.addServiceCharge(amount);
-                response.markServiceChargeAffectedParty(affectedParty);
-                markServiceChargeTagSelection(response, pricingRule);
-            }
+            case "SERVICE_CHARGE" -> applyLowestServiceChargeAmount(response, pricingRule, amount, affectedParty);
             case "COMMISSION" -> {
                 response.addCommission(amount);
                 response.markCommissionAffectedParty(affectedParty);
@@ -542,6 +574,21 @@ public class PricingService {
                 response.markCashbackAffectedParty(affectedParty);
             }
             default -> throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Invalid rule type");
+        }
+    }
+
+    private void applyLowestServiceChargeAmount(
+            PricingComputationResponse response,
+            PricingRule pricingRule,
+            BigDecimal amount,
+            String affectedParty
+    ) {
+        BigDecimal serviceChargeAmount = amount == null ? BigDecimal.ZERO : amount;
+        if (response.getServiceChargeAffectedParty() == null
+                || serviceChargeAmount.compareTo(response.getServiceChargeAmount()) < 0) {
+            response.setServiceChargeAmount(serviceChargeAmount);
+            response.setServiceChargeAffectedParty(affectedParty);
+            markServiceChargeTagSelection(response, pricingRule);
         }
     }
 
@@ -726,7 +773,7 @@ public class PricingService {
 
 
         pricingRules.addAll(staticRules);
-     //   pricingRules.addAll(campaignRules);
+        //   pricingRules.addAll(campaignRules);
 
         log.debug(
                 "Resolved pricing rules for serviceCode={}, senderTagKey={}, receiverTagKey={}, currency={}: staticRules={}",

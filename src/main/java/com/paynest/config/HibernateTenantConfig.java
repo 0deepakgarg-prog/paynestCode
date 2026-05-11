@@ -12,11 +12,11 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class HibernateTenantConfig {
 
-    private final MultiTenantConnectionProviderImpl  connectionProvider;
+    private final MultiTenantConnectionProviderImpl connectionProvider;
     private final TenantIdentifierResolver tenantResolver;
+
     @Bean
     public HibernatePropertiesCustomizer hibernatePropertiesCustomizer() {
-
 
 
         return properties -> {

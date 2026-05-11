@@ -41,8 +41,8 @@ public class WalletService {
                 balanceRepo.lockBalance(wallet.getWalletId());
 
         //DO not check the wallet balance in case of system wallets and bank and commdis
-        if(!(wallet.getWalletType().equalsIgnoreCase("BANK") ||
-                wallet.getWalletType().equalsIgnoreCase("COMMDIS")) ) {
+        if (!(wallet.getWalletType().equalsIgnoreCase("BANK") ||
+                wallet.getWalletType().equalsIgnoreCase("COMMDIS"))) {
             if (balance.getAvailableBalance()
                     .compareTo(amount) < 0) {
                 throw new ApplicationException(ErrorCodes.INSUFFICIENT_BALANCE, "Insufficient balance");
@@ -73,8 +73,8 @@ public class WalletService {
 
     @Transactional
     public void creditWallet(Wallet wallet,
-                            BigDecimal amount,
-                            String txnId) {
+                             BigDecimal amount,
+                             String txnId) {
 
         WalletBalance balance =
                 balanceRepo.lockBalance(wallet.getWalletId());
@@ -113,8 +113,8 @@ public class WalletService {
     @Transactional
     public AccountWalletBalancesResponse getAccountWallets(String accountId) {
 
-        if(!accountId.equalsIgnoreCase(getCurrentAccountId()) &&
-                !getCurrentAccountType().equalsIgnoreCase("ADMIN")){
+        if (!accountId.equalsIgnoreCase(getCurrentAccountId()) &&
+                !getCurrentAccountType().equalsIgnoreCase("ADMIN")) {
             throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
         }
 

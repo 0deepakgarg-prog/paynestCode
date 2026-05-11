@@ -1,6 +1,6 @@
-package com.paynest.repository;
+package com.paynest.users.repository;
 
-import com.paynest.entity.ErrorCatalog;
+import com.paynest.users.entity.ErrorCatalog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

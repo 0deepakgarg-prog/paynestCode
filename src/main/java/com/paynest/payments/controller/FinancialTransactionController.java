@@ -9,10 +9,12 @@ import com.paynest.payments.dto.CashInPaymentRequest;
 import com.paynest.payments.dto.CashInPaymentResponse;
 import com.paynest.payments.dto.CashOutPaymentRequest;
 import com.paynest.payments.dto.CashOutPaymentResponse;
+import com.paynest.payments.dto.IntraWalletTransferRequest;
+import com.paynest.payments.dto.IntraWalletTransferResponse;
 import com.paynest.payments.dto.MerchpayPaymentRequest;
 import com.paynest.payments.dto.MerchpayPaymentResponse;
-import com.paynest.payments.dto.SettleTransactionRequest;
-import com.paynest.payments.dto.SettleTransactionResponse;
+import com.paynest.payments.dto.O2CApprovalRequest;
+import com.paynest.payments.dto.O2CPaymentRequest;
 import com.paynest.payments.dto.StockApprovalRequest;
 import com.paynest.payments.dto.StockInitiateRequest;
 import com.paynest.payments.dto.StockReimbursementInitiateRequest;
@@ -24,9 +26,10 @@ import com.paynest.payments.dto.U2UPaymentResponse;
 import com.paynest.payments.service.BillPayPaymentService;
 import com.paynest.payments.service.CashInPaymentService;
 import com.paynest.payments.service.CashOutPaymentService;
+import com.paynest.payments.service.IntraWalletTransferService;
 import com.paynest.payments.service.MerchPayPaymentService;
+import com.paynest.payments.service.O2CPaymentService;
 import com.paynest.payments.service.StockService;
-import com.paynest.payments.service.TransactionSettlementService;
 import com.paynest.payments.service.U2UPaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,9 +50,10 @@ public class FinancialTransactionController {
     private final CashInPaymentService cashInPaymentService;
     private final CashOutPaymentService cashOutPaymentService;
     private final BillPayPaymentService billPayPaymentService;
-    private final TransactionSettlementService transactionSettlementService;
     private final StockService stockService;
+    private final O2CPaymentService o2cPaymentService;
     private final PricingService pricingService;
+    private final IntraWalletTransferService intraWalletTransferService;
 
     @PostMapping("/U2U")
     public ResponseEntity<U2UPaymentResponse> transferU2UMoney(
@@ -93,31 +97,37 @@ public class FinancialTransactionController {
         }
     }
 
-@PostMapping("/calculatePricing")
-public ResponseEntity<ApiResponse> calculatePricing(
-        @Valid @RequestBody U2UPaymentRequest request) {
+    @PostMapping("/calculatePricing")
+    public ResponseEntity<ApiResponse> calculatePricing(@Valid @RequestBody U2UPaymentRequest request) {
 
-    try {
-        PricingComputationResponse response = pricingService.calculatePricingAmounts(request);
+        try {
+            PricingComputationResponse response = pricingService.calculatePricingAmounts(request);
 
-        return ResponseEntity.ok(
-                new ApiResponse("SUCCESS", "Pricing calculated successfully", "pricingAmounts", response)
-        );
-    } catch (Exception ex) {
-        log.error(
-                "Transaction pricing calculation failed. endpoint=/api/v1/pay/calculatePricing, traceId={}, operationType={}, currency={}, amount={}, debitorIdentifier={}, creditorIdentifier={}, error={}",
-                TraceContext.getTraceId(),
-                request != null ? request.getOperationType() : null,
-                request != null && request.getTransaction() != null ? request.getTransaction().getCurrency() : null,
-                request != null && request.getTransaction() != null ? request.getTransaction().getAmount() : null,
-                extractPartyIdentifier(request != null ? request.getDebitor() : null),
-                extractPartyIdentifier(request != null ? request.getCreditor() : null),
-                ex.getMessage(),
-                ex
-        );
-        throw ex;
+            return ResponseEntity.ok(
+                    new ApiResponse("SUCCESS", "Pricing calculated successfully", "pricingAmounts", response)
+            );
+        } catch (Exception ex) {
+            log.error(
+                    "Transaction pricing calculation failed. endpoint=/api/v1/pay/calculatePricing, traceId={}, operationType={}, currency={}, amount={}, debitorIdentifier={}, creditorIdentifier={}, error={}",
+                    TraceContext.getTraceId(),
+                    request != null ? request.getOperationType() : null,
+                    request != null && request.getTransaction() != null ? request.getTransaction().getCurrency() : null,
+                    request != null && request.getTransaction() != null ? request.getTransaction().getAmount() : null,
+                    extractPartyIdentifier(request != null ? request.getDebitor() : null),
+                    extractPartyIdentifier(request != null ? request.getCreditor() : null),
+                    ex.getMessage(),
+                    ex
+            );
+            throw ex;
+        }
     }
-}
+
+    @PostMapping("/INTRAWALLET")
+    public ResponseEntity<IntraWalletTransferResponse> transferIntraWallet(
+            @Valid @RequestBody IntraWalletTransferRequest request) {
+        IntraWalletTransferResponse response = intraWalletTransferService.processTransfer(request);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/MERCHANTPAY")
     public ResponseEntity<MerchpayPaymentResponse> transferMERCHPAYMoney(
@@ -151,10 +161,18 @@ public ResponseEntity<ApiResponse> calculatePricing(
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/settleTxn")
-    public ResponseEntity<SettleTransactionResponse> settleTransaction(
-            @RequestBody SettleTransactionRequest request) {
-        SettleTransactionResponse response = transactionSettlementService.settleTransaction(request);
+    @PostMapping("/o2c/initiate")
+    public ResponseEntity<BasePaymentResponse> transferOperatorToChannel(
+            @Valid @RequestBody O2CPaymentRequest request) {
+        request.setOperationType("O2C");
+        BasePaymentResponse response = o2cPaymentService.processPayment(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/o2c/status")
+    public ResponseEntity<BasePaymentResponse> updateOperatorToChannelStatus(
+            @Valid @RequestBody O2CApprovalRequest request) {
+        BasePaymentResponse response = o2cPaymentService.updateO2CTransactionStatus(request);
         return ResponseEntity.ok(response);
     }
 

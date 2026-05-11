@@ -35,9 +35,9 @@ class CategoryServiceTest {
     void getAllCategories_shouldReturnMappedCategories() {
         Category category = new Category();
         category.setCategoryId(1L);
-        category.setCategoryCode("CUSTOMER");
-        category.setCategoryName("Customer");
-        category.setDescription("Customer category");
+        category.setCategoryCode("SUBSCRIBER");
+        category.setCategoryName("Subscriber");
+        category.setDescription("Subscriber category");
         category.setStatus("ACTIVE");
 
         when(categoryRepository.findAll()).thenReturn(List.of(category));
@@ -46,9 +46,9 @@ class CategoryServiceTest {
 
         assertEquals(1, response.size());
         assertEquals(1L, response.get(0).getCategoryId());
-        assertEquals("CUSTOMER", response.get(0).getCategoryCode());
-        assertEquals("Customer", response.get(0).getCategoryName());
-        assertEquals("Customer category", response.get(0).getDescription());
+        assertEquals("SUBSCRIBER", response.get(0).getCategoryCode());
+        assertEquals("Subscriber", response.get(0).getCategoryName());
+        assertEquals("Subscriber category", response.get(0).getDescription());
         assertEquals("ACTIVE", response.get(0).getStatus());
     }
 }

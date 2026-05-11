@@ -71,6 +71,31 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    void shouldResolveTenantFromValidTokenWhenRequestTenantHeaderWasNotUsed() throws Exception {
+        Claims claims = mock(Claims.class);
+        FilterChain filterChain = mock(FilterChain.class);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/v1/pay/U2U");
+        request.addHeader("Authorization", "Bearer token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        when(jwtService.isTokenValid("token")).thenReturn(true);
+        when(jwtService.extractAccountId("token")).thenReturn("acc-1");
+        when(jwtService.extractTenant("token")).thenReturn("tenant-1");
+        when(jwtService.getClaims("token")).thenReturn(claims);
+        when(tenantRegistryService.getSchema("tenant-1")).thenReturn("tenant_1_schema");
+        when(tenantRegistryService.getTimeZone("tenant-1")).thenReturn("UTC");
+        when(userDetailsService.loadUserByUsername("acc-1"))
+                .thenReturn(new User("acc-1", "", List.of()));
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(any(), any());
+        verify(apiErrorResponseWriter, never()).write(any(), any(), any(CommonErrorCode.class));
+    }
+
+    @Test
     void shouldRejectWhenTokenTenantDoesNotMatchRequestTenantSchema() throws Exception {
         TenantContext.setTenant("tenant_movii");
         FilterChain filterChain = mock(FilterChain.class);

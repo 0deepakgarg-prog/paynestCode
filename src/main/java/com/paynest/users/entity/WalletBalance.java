@@ -5,6 +5,7 @@ package com.paynest.users.entity;
 import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

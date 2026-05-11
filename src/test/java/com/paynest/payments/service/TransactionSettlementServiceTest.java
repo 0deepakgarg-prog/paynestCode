@@ -5,6 +5,7 @@ import com.paynest.payments.entity.BillPaymentStatusRecord;
 import com.paynest.payments.entity.TransactionDetails;
 import com.paynest.payments.entity.TransactionDetailsId;
 import com.paynest.payments.entity.Transactions;
+import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
 import com.paynest.exception.ApplicationException;
@@ -17,8 +18,9 @@ import com.paynest.payments.repository.TransactionsRepository;
 import com.paynest.users.repository.WalletBalanceRepository;
 import com.paynest.payments.repository.WalletLedgerRepository;
 import com.paynest.users.repository.WalletRepository;
+import com.paynest.users.service.WalletCacheService;
 import com.paynest.config.security.JWTUtils;
-import com.paynest.service.TransactionsService;
+import com.paynest.payments.service.TransactionsService;
 import com.paynest.config.tenant.TraceContext;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -65,6 +67,12 @@ class TransactionSettlementServiceTest {
     @Mock
     private BillPaymentStatusService billPaymentStatusService;
 
+    @Mock
+    private WalletCacheService walletCacheService;
+
+    @Mock
+    private TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+
     @Test
     void settleTransaction_shouldClearFicAndMarkTransactionSuccessful() {
         TransactionSettlementService service = service();
@@ -101,6 +109,7 @@ class TransactionSettlementServiceTest {
             assertEquals(Constants.TRANSACTION_SUCCESS, transaction.getTransferStatus());
 
             verify(walletBalanceRepository).save(creditorBalance);
+            verify(walletCacheService).refreshAccountWallets("biller-1");
             verify(transactionsService).updateComments("txn-1", "settled");
             verify(billPaymentStatusService).markSuccess(
                     billPaymentStatusRecord,
@@ -153,6 +162,8 @@ class TransactionSettlementServiceTest {
             assertEquals(Constants.TRANSACTION_FAILED, transaction.getTransferStatus());
 
             verify(walletLedgerRepository, times(2)).save(any());
+            verify(walletCacheService).refreshAccountWallets("sub-1");
+            verify(walletCacheService).refreshAccountWallets("biller-1");
             verify(billPaymentStatusService).markFailed(
                     billPaymentStatusRecord,
                     "ops-1",
@@ -222,7 +233,9 @@ class TransactionSettlementServiceTest {
                 walletBalanceRepository,
                 walletLedgerRepository,
                 transactionsService,
-                billPaymentStatusService
+                billPaymentStatusService,
+                walletCacheService,
+                transactionNotificationEventPublisher
         );
     }
 

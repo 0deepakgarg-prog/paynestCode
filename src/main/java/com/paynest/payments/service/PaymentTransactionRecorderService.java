@@ -1,11 +1,10 @@
 package com.paynest.payments.service;
 
 import com.paynest.payments.enums.InitiatedBy;
-import com.paynest.service.TransactionsService;
+import com.paynest.payments.service.TransactionsService;
 import com.paynest.users.entity.AccountIdentifier;
 import com.paynest.users.entity.Wallet;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,22 +52,13 @@ public class PaymentTransactionRecorderService {
                 initiatedBy
         );
 
-        if (metadata != null && !metadata.isEmpty()) {
-            transactionsService.updateMetadata(
-                    transactionId,
-                    new JSONObject(metadata)
-            );
-        }
-
-        if (additionalInfo != null && !additionalInfo.isEmpty()) {
-            transactionsService.updateAdditionalInfo(
-                    transactionId,
-                    new JSONObject(additionalInfo)
-            );
-        }
-
-        transactionsService.updatePaymentReference(transactionId, paymentReference);
-        transactionsService.updateComments(transactionId, comments);
+        transactionsService.updateOptionalTransactionFields(
+                transactionId,
+                metadata,
+                additionalInfo,
+                paymentReference,
+                comments
+        );
     }
 
     public void updateTransactionAdditionalInfo(
@@ -79,9 +69,12 @@ public class PaymentTransactionRecorderService {
             return;
         }
 
-        transactionsService.updateAdditionalInfo(
+        transactionsService.updateOptionalTransactionFields(
                 transactionId,
-                new JSONObject(additionalInfo)
+                null,
+                additionalInfo,
+                null,
+                null
         );
     }
 }

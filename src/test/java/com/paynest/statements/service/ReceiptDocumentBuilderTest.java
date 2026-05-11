@@ -63,7 +63,7 @@ class ReceiptDocumentBuilderTest {
     }
 
     @Test
-    void build_shouldMapTransactionToCustomerFacingReceiptDocument() {
+    void build_shouldMapTransactionToSubscriberFacingReceiptDocument() {
         Transactions transaction = transaction("U2U");
         TransactionDetails debitDetail = detail("TXN1", 1L, "acc-1", Constants.TXN_TYPE_DR, "101");
         TransactionDetails creditDetail = detail("TXN1", 2L, "acc-2", Constants.TXN_TYPE_CR, "202");
@@ -135,11 +135,11 @@ class ReceiptDocumentBuilderTest {
         TransactionDetails debitDetail = detail("CI1", 1L, "agent-1", Constants.TXN_TYPE_DR, "101");
         TransactionDetails creditDetail = detail("CI1", 2L, "sub-1", Constants.TXN_TYPE_CR, "202");
         Account agent = account("agent-1", "Alex", "Agent", "90000001", "AGENT", "en");
-        Account customer = account("sub-1", "Chris", "Customer", "76000001", "SUBSCRIBER", "en");
+        Account subscriber = account("sub-1", "Chris", "Subscriber", "76000001", "SUBSCRIBER", "en");
 
         when(transactionDetailsRepository.findByIdTransactionId("CI1"))
                 .thenReturn(List.of(creditDetail, debitDetail));
-        when(accountRepository.findAllById(any())).thenReturn(List.of(agent, customer));
+        when(accountRepository.findAllById(any())).thenReturn(List.of(agent, subscriber));
         when(walletRepository.findAllById(any()))
                 .thenReturn(List.of(wallet(101L, "agent-1", "USD", "MAIN"), wallet(202L, "sub-1", "USD", "MAIN")));
         when(serviceCatalogService.resolveServiceName("CASHIN")).thenReturn("Cash In");

@@ -1,7 +1,6 @@
 package com.paynest.config.entity;
 
 
-
 import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.*;
 import lombok.Data;

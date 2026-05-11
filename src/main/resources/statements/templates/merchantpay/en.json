@@ -216,7 +216,7 @@
     {
       "id": "payerTitle",
       "type": "text",
-      "text": "Customer",
+      "text": "Subscriber",
       "x": 40,
       "y": 335,
       "width": 180,
@@ -314,7 +314,7 @@
     {
       "id": "balanceTitle",
       "type": "text",
-      "text": "Customer Wallet Balance",
+      "text": "Subscriber Wallet Balance",
       "x": 40,
       "y": 485,
       "width": 220,

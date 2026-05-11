@@ -24,8 +24,8 @@ public class BillPaymentStatusRecord {
     @Column(name = "status", nullable = false)
     private BillPaymentStatus status;
 
-    @Column(name = "customer_account_id", nullable = false)
-    private String customerAccountId;
+    @Column(name = "subscriber_account_id", nullable = false)
+    private String subscriberAccountId;
 
     @Column(name = "biller_account_id", nullable = false)
     private String billerAccountId;

@@ -23,14 +23,14 @@ public class BillPaymentStatusService {
     public void createPendingStatus(
             String transactionId,
             String traceId,
-            String customerAccountId,
+            String subscriberAccountId,
             String billerAccountId
     ) {
         LocalDateTime now = TenantTime.now();
         BillPaymentStatusRecord record = new BillPaymentStatusRecord();
         record.setTransactionId(transactionId);
         record.setTraceId(traceId);
-        record.setCustomerAccountId(customerAccountId);
+        record.setSubscriberAccountId(subscriberAccountId);
         record.setBillerAccountId(billerAccountId);
         record.setStatus(BillPaymentStatus.PENDING);
         record.setCreatedOn(now);

@@ -25,7 +25,7 @@ public class TransactionDetails {
     @Column(name = "identifier_id", nullable = false, length = 80)
     private String identifierId;
 
-    @Column(name = "second_identifier_id", nullable = false, length = 20)
+    @Column(name = "second_identifier_id", nullable = false, length = 80)
     private String secondIdentifierId;
 
     @Column(name = "transaction_value")
@@ -52,6 +52,12 @@ public class TransactionDetails {
     @Column(name = "wallet_number", length = 25)
     private String walletNumber;
 
+    @Column(name = "wallet_type", length = 50)
+    private String walletType;
+
+    @Column(name = "currency", length = 10)
+    private String currency;
+
     @Column(name = "previous_fic_balance")
     private BigDecimal previousFicBalance;
 
@@ -63,6 +69,42 @@ public class TransactionDetails {
 
     @Column(name = "post_frozen_balance")
     private BigDecimal postFrozenBalance;
+
+    @Column(name = "attr_1_name", length = 255)
+    private String attr1Name;
+
+    @Column(name = "attr_1_value", length = 255)
+    private String attr1Value;
+
+    @Column(name = "attr_2_name", length = 255)
+    private String attr2Name;
+
+    @Column(name = "attr_2_value", length = 255)
+    private String attr2Value;
+
+    @Column(name = "attr_3_name", length = 255)
+    private String attr3Name;
+
+    @Column(name = "attr_3_value", length = 255)
+    private String attr3Value;
+
+    @Column(name = "attr_4_name", length = 255)
+    private String attr4Name;
+
+    @Column(name = "attr_4_value", length = 255)
+    private String attr4Value;
+
+    @Column(name = "attr_5_name", length = 255)
+    private String attr5Name;
+
+    @Column(name = "attr_5_value", length = 255)
+    private String attr5Value;
+
+    @Column(name = "attr_6_name", length = 255)
+    private String attr6Name;
+
+    @Column(name = "attr_6_value", length = 255)
+    private String attr6Value;
 
 }
 

@@ -70,6 +70,11 @@ public class TenantFilter extends OncePerRequestFilter {
         try {
             tenantService.ensureTenantsLoaded();
 
+            if (hasBearerToken(request) || isFinancialApiRequest(request)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if (tenant == null || tenant.isBlank()) {
                 tenant = request.getHeader("X-Tenant-Id");
             }
@@ -121,5 +126,18 @@ public class TenantFilter extends OncePerRequestFilter {
             clear();
             TraceContext.clear();
         }
+    }
+
+    private boolean hasBearerToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        return authHeader != null && authHeader.startsWith("Bearer ");
+    }
+
+    private boolean isFinancialApiRequest(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path != null
+                && (path.startsWith("/api/v1/pay/")
+                || path.startsWith("/api/v1/payment/")
+                || path.startsWith("/api/v1/transaction/"));
     }
 }

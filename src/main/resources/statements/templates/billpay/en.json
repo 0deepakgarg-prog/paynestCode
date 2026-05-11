@@ -234,7 +234,7 @@
     {
       "id": "senderSection",
       "type": "text",
-      "text": "Customer",
+      "text": "Subscriber",
       "x": 40,
       "y": 315,
       "width": 200,
@@ -253,7 +253,7 @@
     {
       "id": "senderName",
       "type": "fieldGroup",
-      "template": "Customer Name: {{debtor.accountName}}",
+      "template": "Subscriber Name: {{debtor.accountName}}",
       "x": 40,
       "y": 357,
       "width": 220,

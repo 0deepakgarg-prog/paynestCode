@@ -26,9 +26,8 @@ import com.paynest.users.repository.WalletRepository;
 import com.paynest.config.security.JWTUtils;
 import com.paynest.users.service.AuthService;
 import com.paynest.payments.service.BalanceService;
-import com.paynest.service.TransactionsService;
+import com.paynest.payments.service.TransactionsService;
 import com.paynest.config.tenant.TraceContext;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -439,27 +438,11 @@ public class MerchPayPaymentService {
                 request.getInitiatedBy()
         );
 
-        if (request.getMetadata() != null && !request.getMetadata().isEmpty()) {
-            transactionsService.updateMetadata(
-                    transactionId,
-                    new JSONObject(request.getMetadata())
-            );
-        }
-
-        if (request.getAdditionalInfo() != null && !request.getAdditionalInfo().isEmpty()) {
-            transactionsService.updateAdditionalInfo(
-                    transactionId,
-                    new JSONObject(request.getAdditionalInfo())
-            );
-        }
-
-        transactionsService.updatePaymentReference(
+        transactionsService.updateOptionalTransactionFields(
                 transactionId,
-                request.getPaymentReference()
-        );
-
-        transactionsService.updateComments(
-                transactionId,
+                request.getMetadata(),
+                request.getAdditionalInfo(),
+                request.getPaymentReference(),
                 request.getComments()
         );
     }

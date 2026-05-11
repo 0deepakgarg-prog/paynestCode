@@ -2,6 +2,8 @@ package com.paynest.config.service;
 
 import com.paynest.payments.service.BillPaymentStatusSchemaInitializer;
 import com.paynest.payments.service.ServiceCatalogSchemaInitializer;
+import com.paynest.users.service.AccountNotificationEndpointSchemaInitializer;
+import com.paynest.users.service.NotificationTemplateSchemaInitializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +34,12 @@ class TenantRegistryServiceTest {
 
     @Mock
     private ServiceCatalogSchemaInitializer serviceCatalogSchemaInitializer;
+
+    @Mock
+    private AccountNotificationEndpointSchemaInitializer accountNotificationEndpointSchemaInitializer;
+
+    @Mock
+    private NotificationTemplateSchemaInitializer notificationTemplateSchemaInitializer;
 
     @InjectMocks
     private TenantRegistryService tenantRegistryService;
@@ -66,6 +74,12 @@ class TenantRegistryServiceTest {
         verify(serviceCatalogSchemaInitializer)
                 .ensureTableExistsForSchemas(argThat(schemas ->
                         schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
+        verify(accountNotificationEndpointSchemaInitializer)
+                .ensureTableExistsForSchemas(argThat(schemas ->
+                        schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
+        verify(notificationTemplateSchemaInitializer)
+                .ensureTableExistsForSchemas(argThat(schemas ->
+                        schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
     }
 
     @Test
@@ -80,6 +94,12 @@ class TenantRegistryServiceTest {
                 .ensureTableExistsForSchemas(argThat(schemas ->
                         schemas != null && schemas.isEmpty()));
         verify(serviceCatalogSchemaInitializer)
+                .ensureTableExistsForSchemas(argThat(schemas ->
+                        schemas != null && schemas.isEmpty()));
+        verify(accountNotificationEndpointSchemaInitializer)
+                .ensureTableExistsForSchemas(argThat(schemas ->
+                        schemas != null && schemas.isEmpty()));
+        verify(notificationTemplateSchemaInitializer)
                 .ensureTableExistsForSchemas(argThat(schemas ->
                         schemas != null && schemas.isEmpty()));
     }

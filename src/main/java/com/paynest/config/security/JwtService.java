@@ -46,14 +46,14 @@ public class JwtService {
     }
 
     public String generateChallengeToken() {
-            SecureRandom secureRandom = new SecureRandom();
+        SecureRandom secureRandom = new SecureRandom();
 
-            byte[] challengeBytes = new byte[32]; // 256 bit challenge
-            secureRandom.nextBytes(challengeBytes);
+        byte[] challengeBytes = new byte[32]; // 256 bit challenge
+        secureRandom.nextBytes(challengeBytes);
 
-            return Base64.getUrlEncoder()
-                    .withoutPadding()
-                    .encodeToString(challengeBytes);
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(challengeBytes);
 
     }
 

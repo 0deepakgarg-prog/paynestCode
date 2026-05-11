@@ -13,31 +13,31 @@ public class AddAccountKycRequest {
     @NotBlank(message = "requestId is required")
     private String requestId;
 
-        @JsonProperty("kycData")
-        private KYCData kycData;
+    @JsonProperty("kycData")
+    private KYCData kycData;
 
-        @Data
-        public static class KYCData {
+    @Data
+    public static class KYCData {
 
-            @NotBlank(message = "KYC Type is required")
-            @JsonProperty("kycType")
-            private String kycType;
+        @NotBlank(message = "KYC Type is required")
+        @JsonProperty("kycType")
+        private String kycType;
 
-            @NotBlank(message = "KYC Value is required")
-            @JsonProperty("kycValue")
-            private String kycValue;
+        @NotBlank(message = "KYC Value is required")
+        @JsonProperty("kycValue")
+        private String kycValue;
 
-            @JsonProperty("issueDate")
-            private LocalDate issueDate;
+        @JsonProperty("issueDate")
+        private LocalDate issueDate;
 
-            @JsonProperty("expiryDate")
-            private LocalDate expiryDate;
+        @JsonProperty("expiryDate")
+        private LocalDate expiryDate;
 
-            @JsonProperty("isPrimary")
-            private boolean isPrimary;
+        @JsonProperty("isPrimary")
+        private boolean isPrimary;
 
-            @JsonProperty("kycImageUrl")
-            private String kycImageUrl;
+        @JsonProperty("kycImageUrl")
+        private String kycImageUrl;
     }
 }
 

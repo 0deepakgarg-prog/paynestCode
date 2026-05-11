@@ -1,6 +1,7 @@
 package com.paynest.config.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,10 +14,10 @@ public class ApiResponse {
     private Map<String, Object> body = new HashMap<>();
 
     public ApiResponse(String status,
-                              String code,
-                              String message,
-                              String fieldName,
-                              Object data) {
+                       String code,
+                       String message,
+                       String fieldName,
+                       Object data) {
 
         this.status = status;
         this.code = code;

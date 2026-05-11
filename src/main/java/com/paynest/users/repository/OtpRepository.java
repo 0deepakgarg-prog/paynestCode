@@ -20,8 +20,9 @@ public interface OtpRepository extends JpaRepository<Otp, Long> {
             String status
     );
 
-    Optional<Otp> findByOtpValue(
-            int otpValue
+    Optional<Otp> findByOtpValueAndStatusOrderByCreatedAtDesc(
+            int otpValue,
+            String status
     );
 
     long countByMobileNumberAndCreatedAtAfter(

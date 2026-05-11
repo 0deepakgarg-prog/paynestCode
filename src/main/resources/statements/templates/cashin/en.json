@@ -284,7 +284,7 @@
     {
       "id": "receiverSection",
       "type": "text",
-      "text": "Customer",
+      "text": "Subscriber",
       "x": 310,
       "y": 315,
       "width": 200,
@@ -303,7 +303,7 @@
     {
       "id": "receiverName",
       "type": "fieldGroup",
-      "template": "Customer Name: {{creditor.accountName}}",
+      "template": "Subscriber Name: {{creditor.accountName}}",
       "x": 310,
       "y": 357,
       "width": 220,

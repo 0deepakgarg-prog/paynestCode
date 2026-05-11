@@ -4,7 +4,7 @@ import com.paynest.config.PropertyReader;
 import com.paynest.config.entity.SupportedLanguage;
 import com.paynest.enums.AccountType;
 import com.paynest.enums.RequestGateway;
-import com.paynest.enums.WalletType;
+import com.paynest.users.enums.WalletType;
 import com.paynest.users.enums.AuthType;
 import com.paynest.users.enums.IdentifierType;
 import com.paynest.exception.ApplicationException;

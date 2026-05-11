@@ -59,11 +59,11 @@ class TagServiceTest {
         AddTagRequest request = new AddTagRequest();
         request.setTagCode("vip");
         request.setTagName("VIP");
-        request.setCategory("customer");
+        request.setCategory("subscriber");
         request.setTagType("base");
 
         when(tagRepository.findByTagCode("VIP")).thenReturn(Optional.empty());
-        when(categoryRepository.findByCategoryCode("CUSTOMER")).thenReturn(Optional.of(new Category()));
+        when(categoryRepository.findByCategoryCode("SUBSCRIBER")).thenReturn(Optional.of(new Category()));
         when(tagTypeRepository.findByTypeCode("BASE")).thenReturn(Optional.of(new TagType()));
         when(tagRepository.save(any(Tag.class))).thenAnswer(invocation -> {
             Tag tag = invocation.getArgument(0);
@@ -79,7 +79,7 @@ class TagServiceTest {
         assertEquals(1L, response.getTagId());
         assertEquals("VIP", response.getTagCode());
         assertEquals("VIP", response.getTagName());
-        assertEquals("CUSTOMER", response.getCategory());
+        assertEquals("SUBSCRIBER", response.getCategory());
         assertEquals(Boolean.FALSE, response.getIsDefault());
         assertEquals("BASE", response.getTagType());
         assertEquals("ACTIVE", response.getStatus());
@@ -90,7 +90,7 @@ class TagServiceTest {
         AddTagRequest request = new AddTagRequest();
         request.setTagCode("premium");
         request.setTagName("Premium");
-        request.setCategory("customer");
+        request.setCategory("subscriber");
 
         Tag existingTag = new Tag();
         existingTag.setTagId(10L);
@@ -149,11 +149,11 @@ class TagServiceTest {
         AddTagRequest request = new AddTagRequest();
         request.setTagCode("vip");
         request.setTagName("VIP");
-        request.setCategory("customer");
+        request.setCategory("subscriber");
         request.setTagType("unknown");
 
         when(tagRepository.findByTagCode("VIP")).thenReturn(Optional.empty());
-        when(categoryRepository.findByCategoryCode("CUSTOMER")).thenReturn(Optional.of(new Category()));
+        when(categoryRepository.findByCategoryCode("SUBSCRIBER")).thenReturn(Optional.of(new Category()));
         when(tagTypeRepository.findByTypeCode("UNKNOWN")).thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class, () -> tagService.addTag(request));
@@ -215,7 +215,7 @@ class TagServiceTest {
         tag.setTagId(1L);
         tag.setTagCode("VIP");
         tag.setTagName("VIP");
-        tag.setCategory("CUSTOMER");
+        tag.setCategory("SUBSCRIBER");
         tag.setIsDefault(Boolean.FALSE);
         tag.setTagType("BASE");
         tag.setStatus("ACTIVE");
@@ -227,7 +227,7 @@ class TagServiceTest {
         assertEquals(1, response.size());
         assertEquals(1L, response.get(0).getTagId());
         assertEquals("VIP", response.get(0).getTagCode());
-        assertEquals("CUSTOMER", response.get(0).getCategory());
+        assertEquals("SUBSCRIBER", response.get(0).getCategory());
         assertEquals("ACTIVE", response.get(0).getStatus());
     }
 
@@ -245,7 +245,7 @@ class TagServiceTest {
         tag.setTagId(1L);
         tag.setTagCode("VIP");
         tag.setTagName("VIP");
-        tag.setCategory("CUSTOMER");
+        tag.setCategory("SUBSCRIBER");
         tag.setIsDefault(Boolean.FALSE);
         tag.setTagType("BASE");
         tag.setStatus("ACTIVE");

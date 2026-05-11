@@ -10,6 +10,8 @@ import java.util.Optional;
 @Repository
 public interface KycDocumentRepository extends JpaRepository<KycDocument, Long> {
 
+    List<KycDocument> findByAccountId(String accountId);
+
     List<KycDocument> findByAccountIdAndIsActiveTrue(String accountId);
 
     Optional<KycDocument> findByAccountIdAndDocumentType(String accountId, String documentType);

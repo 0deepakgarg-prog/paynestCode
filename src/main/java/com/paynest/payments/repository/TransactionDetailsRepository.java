@@ -24,18 +24,18 @@ public interface TransactionDetailsRepository extends JpaRepository<TransactionD
     @Modifying
     @Transactional
     @Query("""
-        UPDATE TransactionDetails td
-        SET td.previousBalance = :previousBalance,
-            td.postBalance = :postBalance,
-            td.previousFicBalance = :previousFicBalance,
-            td.postFicBalance = :postFicBalance,
-            td.previousFrozenBalance = :previousFrozenBalance,
-            td.postFrozenBalance = :postFrozenBalance,
-            td.transferStatus = :transferStatus,
-            td.transferOn = CURRENT_TIMESTAMP
-        WHERE td.id.transactionId = :transactionId
-          AND td.id.txnSequenceNumber = :txnSequenceNumber
-    """)
+                UPDATE TransactionDetails td
+                SET td.previousBalance = :previousBalance,
+                    td.postBalance = :postBalance,
+                    td.previousFicBalance = :previousFicBalance,
+                    td.postFicBalance = :postFicBalance,
+                    td.previousFrozenBalance = :previousFrozenBalance,
+                    td.postFrozenBalance = :postFrozenBalance,
+                    td.transferStatus = :transferStatus,
+                    td.transferOn = CURRENT_TIMESTAMP
+                WHERE td.id.transactionId = :transactionId
+                  AND td.id.txnSequenceNumber = :txnSequenceNumber
+            """)
     int updateBalances(
             String transactionId,
             Long txnSequenceNumber,
@@ -51,10 +51,10 @@ public interface TransactionDetailsRepository extends JpaRepository<TransactionD
     @Modifying
     @Transactional
     @Query("""
-        UPDATE TransactionDetails td
-        SET td.transferStatus = :transferStatus,
-            td.transferOn = CURRENT_TIMESTAMP
-        WHERE td.id.transactionId = :transactionId
-    """)
+                UPDATE TransactionDetails td
+                SET td.transferStatus = :transferStatus,
+                    td.transferOn = CURRENT_TIMESTAMP
+                WHERE td.id.transactionId = :transactionId
+            """)
     int updateTransferStatusByTransactionId(String transactionId, String transferStatus);
 }

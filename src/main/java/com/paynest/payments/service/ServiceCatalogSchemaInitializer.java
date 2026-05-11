@@ -95,7 +95,8 @@ public class ServiceCatalogSchemaInitializer {
                     ('CASHIN', 'Cash In', 'Cash deposit into wallet', 'CASH', 'CREDIT', 30),
                     ('CASHOUT', 'Cash Out', 'Cash withdrawal from wallet', 'CASH', 'DEBIT', 40),
                     ('BILLPAY', 'Bill Payment', 'Bill payment transaction', 'PAYMENT', 'BILL', 50),
-                    ('ACCOUNT_DELETION', 'Account Deletion', 'Balance movement during account deletion', 'SYSTEM', 'TRANSFER', 60)
+                    ('O2C', 'Operator to Channel Transfer', 'Operator wallet transfer to channel account', 'PAYMENT', 'TRANSFER', 60),
+                    ('ACCOUNT_DELETION', 'Account Deletion', 'Balance movement during account deletion', 'SYSTEM', 'TRANSFER', 70)
                 ON CONFLICT (service_code) DO NOTHING
                 """.formatted(schemaName);
     }

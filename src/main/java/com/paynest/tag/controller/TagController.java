@@ -98,7 +98,7 @@ public class TagController {
 
     private void validateAdminScope() {
         if (!"ADMIN".equalsIgnoreCase(JWTUtils.getCurrentAccountType())) {
-           // throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
+            // throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
         }
     }
 }

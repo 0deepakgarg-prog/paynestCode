@@ -1,4 +1,4 @@
-package com.paynest.entity;
+package com.paynest.users.entity;
 
 
 import com.paynest.config.tenant.TenantTime;

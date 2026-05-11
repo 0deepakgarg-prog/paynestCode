@@ -6,9 +6,16 @@ import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
 import com.paynest.config.entity.Enumeration;
+import com.paynest.config.entity.SupportedLanguage;
 import com.paynest.config.repository.EnumerationRepository;
+import com.paynest.config.repository.SupportedLanguageRepository;
+import com.paynest.config.tenant.TenantContext;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.service.TransactionsService;
+import com.paynest.tag.entity.Tag;
+import com.paynest.tag.entity.UserTag;
+import com.paynest.tag.repository.TagRepository;
+import com.paynest.tag.repository.UserTagRepository;
 import com.paynest.users.dto.request.*;
 import com.paynest.users.dto.response.AccountKycDetailsResponse;
 import com.paynest.users.entity.*;
@@ -39,9 +46,19 @@ public class AccountService {
     private static final BigDecimal SUBSCRIBER_DELETE_THRESHOLD = BigDecimal.TEN;
     private static final String ACCOUNT_DELETE_TXN_PREFIX = "AD";
     private static final String ACCOUNT_DELETE_SERVICE_CODE = "ACCOUNT_DELETION";
+    private static final String SYSTEM_CONFIG_ENUM_TYPE = "SYSTEM_CONFIG";
+    private static final String TESTING_MODE_ENUM_CODE = "TESTING_MODE";
+    private static final String TESTING_MODE_OTP = "0000";
+    private static final String TESTING_MODE_PIN = "0000";
+    private static final String TESTING_MODE_PASSWORD = "PayNest@123";
+    private static final String BASE_TAG_TYPE = "BASE";
+    private static final String ENDPOINT_TYPE_MOBILE = "MOBILE";
+    private static final String ENDPOINT_TYPE_EMAIL = "EMAIL";
+    private static final String SUBSCRIBER_ROLE_CODE = "SUBSCRIBER";
 
     private final AccountRepository accountRepository;
     private final EnumerationRepository enumerationRepository;
+    private final SupportedLanguageRepository supportedLanguageRepository;
     private final WalletRepository walletRepository;
     private final WalletBalanceRepository walletBalanceRepository;
     private final OtpRepository otpRepository;
@@ -53,39 +70,72 @@ public class AccountService {
     private final AuthChallengeRepository authChallengeRepository;
     private final WalletService walletService;
     private final TransactionsService transactionsService;
+    private final TagRepository tagRepository;
+    private final UserTagRepository userTagRepository;
+    private final AccountNotificationEndpointRepository accountNotificationEndpointRepository;
 
     @Transactional
     public Account registerUser(RegistrationRequestWithOtp request) {
+        log.info(
+                "Self registration started. tenantId={}, tenantSchema={}, mobile={}",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                request != null && request.getUser() != null ? maskMobile(request.getUser().getMobile()) : null
+        );
 
         Optional<Account> acc = accountRepository.findByMobileNumber(request.getUser().getMobile());
         if (acc.isPresent() && acc.get().getStatus().equals("ACTIVE")) {
-            throw new ApplicationException(ErrorCodes.USER_EXISTS,"User already exists");
+            throw new ApplicationException(ErrorCodes.USER_EXISTS, "User already exists");
         }
-        Optional<Otp> otpOpt = otpRepository.findByOtpValue(
-                Integer.parseInt(request.getUser().getOtp()));
+        Optional<Otp> otpOpt = otpRepository.findByOtpValueAndStatusOrderByCreatedAtDesc(
+                Integer.parseInt(request.getUser().getOtp()),
+                "CREATED"
+        );
 
         if (otpOpt.isEmpty() || !otpOpt.get().getMobileNumber().equals(request.getUser().getMobile()) ||
                 !otpOpt.get().getReferenceType().equals("REGISTRATION") ||
-                !otpOpt.get().getStatus().equals("CREATED") ||
                 otpOpt.get().getExpiresAt().isBefore(TenantTime.now())) {
-            throw new ApplicationException(ErrorCodes.INVALID_OTP,"Invalid or expired OTP");
-        }else{
+            throw new ApplicationException(ErrorCodes.INVALID_OTP, "Invalid or expired OTP");
+        } else {
             log.info("Otp validation done. registering user");
         }
+        Otp otp = otpOpt.get();
+        otp.setStatus("PASSED");
+        otp.setVerifiedAt(TenantTime.now());
+        otpRepository.save(otp);
+        log.info("OTP marked as PASSED after validation. otpId={}, mobile={}", otp.getOtpId(), maskMobile(otp.getMobileNumber()));
 
         List<Enumeration> currencyList =
                 enumerationRepository.findByEnumTypeAndIsActive("CURRENCY", true);
         List<Enumeration> walletTypeList =
-                enumerationRepository.findByEnumTypeAndIsActive("WALLET_TYPE",  true);
+                enumerationRepository.findByEnumTypeAndIsActive("WALLET_TYPE", true);
+        log.info(
+                "Self registration setup data loaded. tenantId={}, tenantSchema={}, mobile={}, activeCurrencyCount={}, activeWalletTypeCount={}",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                maskMobile(request.getUser().getMobile()),
+                currencyList.size(),
+                walletTypeList.size()
+        );
 
         Account account = new Account();
         account.setAccountId(IdGenerator.generateAccountId());
         account.setMobileNumber(request.getUser().getMobile());
         account.setAccountType("SUBSCRIBER");
+        account.setPreferredLang(resolvePreferredLanguage(null));
         account.setStatus("ACTIVE");
         account.setCreatedAt(TenantTime.now());
         account.setCreatedBy(account.getAccountId());
         accountRepository.save(account);
+        syncAccountNotificationEndpoints(account);
+        log.info(
+                "Self registration account persisted. tenantId={}, tenantSchema={}, accountId={}, mobile={}, accountType={}",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                account.getAccountId(),
+                maskMobile(account.getMobileNumber()),
+                account.getAccountType()
+        );
 
         List<Wallet> wallets = new ArrayList<>();
         List<WalletBalance> walletBalances = new ArrayList<>();
@@ -95,7 +145,7 @@ public class AccountService {
             for (Enumeration currency : currencyList) {
 
                 Wallet wallet = new Wallet();
-                if(account.getAccountType().equals("SUBSCRIBER") && type.getEnumCode().equals("COMMISSION")){
+                if (account.getAccountType().equals("SUBSCRIBER") && type.getEnumCode().equals("COMMISSION")) {
                     continue;
                 }
                 wallet.setWalletId(walletRepository.getNextWalletId());
@@ -115,25 +165,70 @@ public class AccountService {
 
         UserRole userRole = new UserRole();
         userRole.setUserId(account.getAccountId());
-        userRole.setRoleId(roleRepository.findByRoleCode("CUSTOMER").get().getRoleId());
+        log.info(
+                "Self registration role lookup starting. tenantId={}, tenantSchema={}, accountId={}, roleCode={}",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                account.getAccountId(),
+                SUBSCRIBER_ROLE_CODE
+        );
+        Optional<Role> subscriberRole = roleRepository.findByRoleCode(SUBSCRIBER_ROLE_CODE);
+        if (subscriberRole.isEmpty()) {
+            log.error(
+                    "Self registration role lookup failed. tenantId={}, tenantSchema={}, accountId={}, roleCode={}, activeCurrencyCount={}, activeWalletTypeCount={}",
+                    TenantContext.getTenantId(),
+                    TenantContext.getTenant(),
+                    account.getAccountId(),
+                    SUBSCRIBER_ROLE_CODE,
+                    currencyList.size(),
+                    walletTypeList.size()
+            );
+            throw new ApplicationException(ErrorCodes.INVALID_ROLE, "Required role SUBSCRIBER is missing for tenant " + TenantContext.getTenantId());
+        }
+        log.info(
+                "Self registration role lookup completed. tenantId={}, tenantSchema={}, accountId={}, roleCode={}, roleId={}",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                account.getAccountId(),
+                SUBSCRIBER_ROLE_CODE,
+                subscriberRole.get().getRoleId()
+        );
+        userRole.setRoleId(subscriberRole.get().getRoleId());
         userRole.setAssignedAt(TenantTime.now());
         userRole.setAssignedBy(account.getAccountId());
 
         userRoleRepository.save(userRole);
+        log.info(
+                "Self registration user role persisted. tenantId={}, tenantSchema={}, accountId={}, roleCode={}, roleId={}",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                account.getAccountId(),
+                SUBSCRIBER_ROLE_CODE,
+                userRole.getRoleId()
+        );
         walletRepository.saveAll(wallets);
         walletBalanceRepository.saveAll(walletBalances);
+        log.info(
+                "Self registration wallets persisted. tenantId={}, tenantSchema={}, accountId={}, walletCount={}, walletBalanceCount={}",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                account.getAccountId(),
+                wallets.size(),
+                walletBalances.size()
+        );
+        addDefaultTags(account.getAccountId(), account.getAccountType());
 
         AccountAuth accountAuth = new AccountAuth();
         long accountAuthId = IdGenerator.generateAccountAuthId();
         accountAuth.setId(accountAuthId);
         accountAuth.setAuthType("PIN");
-        String pin = IdGenerator.generate4DigitPin();
+        String pin = isTestingMode() ? TESTING_MODE_PIN : IdGenerator.generate4DigitPin();
         String UUID = java.util.UUID.randomUUID().toString();
         accountAuth.setAuthHash(UUID);
         accountAuth.setAuthValue(IdGenerator.hashPin(pin, UUID)); //TODO: Generate random PIN and send to user via notification.
         accountAuth.setIsFirstTimeLogin(true);
         accountAuth.setFailedAttempts(0);
-
+        accountAuthRepository.save(accountAuth);
 
         //TODO : create auths for the user and send welcome notification.
         AccountIdentifier accountIdentifier = new AccountIdentifier();
@@ -143,38 +238,92 @@ public class AccountService {
         accountIdentifier.setStatus("ACTIVE");
         accountIdentifier.setAuthId(accountAuthId);
         accountIdentifierRepository.save(accountIdentifier);
-        accountAuthRepository.save(accountAuth);
+        log.info(
+                "Self registration completed. tenantId={}, tenantSchema={}, accountId={}, authId={}, identifierType=MOBILE",
+                TenantContext.getTenantId(),
+                TenantContext.getTenant(),
+                account.getAccountId(),
+                accountAuthId
+        );
+
         return account;
     }
 
     @Transactional
     public Account registerAccountByRole(RegisterUserRequest accountRequest) {
 
+        if (accountRequest == null || accountRequest.getUser() == null) {
+            log.warn("RegisterUser validation failed. requestId={}, reason=request_or_user_missing", accountRequest != null ? accountRequest.getRequestId() : null);
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Request body and user details are required");
+        }
+
+        RegisterUserRequest.BusinessAccount requestedUser = accountRequest.getUser();
+        log.info(
+                "RegisterUser service started. requestId={}, accountType={}, role={}, loginId={}, mobile={}, preferredLang={}, actorAccountId={}, actorAccountType={}",
+                accountRequest.getRequestId(),
+                requestedUser.getAccountType(),
+                requestedUser.getRole(),
+                requestedUser.getLoginId(),
+                maskMobile(requestedUser.getMobileNumber()),
+                requestedUser.getPreferredLang(),
+                currentAccountIdOrAnonymous(),
+                currentAccountTypeOrUnknown()
+        );
+
         String accountType = accountRequest.getUser().getAccountType();
         String normalizedAccountType = accountType == null ? "" : accountType.toUpperCase(Locale.ROOT);
         Set<String> allowedAccountTypes = Set.of("ADMIN", "AGENT", "MERCHANT", "BILLER");
         if (!allowedAccountTypes.contains(normalizedAccountType)) {
+            log.warn(
+                    "RegisterUser validation failed. requestId={}, reason=unsupported_account_type, accountType={}, allowedAccountTypes={}",
+                    accountRequest.getRequestId(),
+                    accountType,
+                    allowedAccountTypes
+            );
             throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT_TYPE, "Unsupported account type");
         }
 
-        if (accountRequest == null || accountRequest.getUser().getMobileNumber() == null
-                || accountRequest.getUser().getMobileNumber().isBlank()) {
+        if (requestedUser.getMobileNumber() == null || requestedUser.getMobileNumber().isBlank()) {
+            log.warn("RegisterUser validation failed. requestId={}, reason=mobile_missing", accountRequest.getRequestId());
             throw new ApplicationException(ErrorCodes.INVALID_MOBILE, "Mobile number is required");
         }
 
-        Optional<Account> existingAccount = accountRepository.findByMobileNumber(accountRequest.getUser().getMobileNumber());
+        log.info("RegisterUser validation checkpoint. requestId={}, step=checking_existing_mobile, mobile={}",
+                accountRequest.getRequestId(), maskMobile(requestedUser.getMobileNumber()));
+        Optional<Account> existingAccount = accountRepository.findByMobileNumber(requestedUser.getMobileNumber());
         if (existingAccount.isPresent() && "ACTIVE".equals(existingAccount.get().getStatus())) {
+            log.warn(
+                    "RegisterUser validation failed. requestId={}, reason=active_mobile_exists, existingAccountId={}, mobile={}",
+                    accountRequest.getRequestId(),
+                    existingAccount.get().getAccountId(),
+                    maskMobile(requestedUser.getMobileNumber())
+            );
             throw new ApplicationException(ErrorCodes.USER_EXISTS, "User already exists");
         }
 
+        log.info("RegisterUser validation checkpoint. requestId={}, step=checking_existing_login_id, loginId={}",
+                accountRequest.getRequestId(), requestedUser.getLoginId());
         Optional<AccountIdentifier> existingLoginId = accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus
-                ("LOGINID",accountRequest.getUser().getLoginId(),"ACTIVE");
+                ("LOGINID", requestedUser.getLoginId(), "ACTIVE");
         if (existingLoginId.isPresent()) {
+            log.warn(
+                    "RegisterUser validation failed. requestId={}, reason=active_login_id_exists, loginId={}, existingAccountId={}",
+                    accountRequest.getRequestId(),
+                    requestedUser.getLoginId(),
+                    existingLoginId.get().getAccountId()
+            );
             throw new ApplicationException(ErrorCodes.LOGIN_ID_EXISTS, "Login Id already exists");
         }
 
-        Optional<Role> requestRole = roleRepository.findByRoleCode(accountRequest.getUser().getRole());
+        log.info("RegisterUser validation checkpoint. requestId={}, step=checking_role, role={}",
+                accountRequest.getRequestId(), requestedUser.getRole());
+        Optional<Role> requestRole = roleRepository.findByRoleCode(requestedUser.getRole());
         if (requestRole.isEmpty()) {
+            log.warn(
+                    "RegisterUser validation failed. requestId={}, reason=role_not_found, role={}",
+                    accountRequest.getRequestId(),
+                    requestedUser.getRole()
+            );
             throw new ApplicationException(ErrorCodes.INVALID_ROLE, "Role is Invalid");
         }
 
@@ -182,32 +331,46 @@ public class AccountService {
                 enumerationRepository.findByEnumTypeAndIsActive("CURRENCY", true);
         List<Enumeration> walletTypeList =
                 enumerationRepository.findByEnumTypeAndIsActive("WALLET_TYPE", true);
+        log.info(
+                "RegisterUser wallet setup data loaded. requestId={}, activeCurrencyCount={}, activeWalletTypeCount={}",
+                accountRequest.getRequestId(),
+                currencyList.size(),
+                walletTypeList.size()
+        );
 
         Account account = new Account();
         account.setAccountId(IdGenerator.generateAccountId());
         account.setAccountType(normalizedAccountType);
         account.setStatus("ACTIVE");
-        account.setMobileNumber(accountRequest.getUser().getMobileNumber());
-        account.setFirstName(accountRequest.getUser().getFirstName());
-        account.setLastName(accountRequest.getUser().getLastName());
-        account.setEmail(accountRequest.getUser().getEmail());
-        account.setAddress(accountRequest.getUser().getAddress());
-        account.setGender(accountRequest.getUser().getGender());
-        account.setDateOfBirth(accountRequest.getUser().getDateOfBirth());
-        account.setPreferredLang(accountRequest.getUser().getPreferredLang());
-        account.setNationality(accountRequest.getUser().getNationality());
-        account.setSsn(accountRequest.getUser().getSsn());
-        account.setRemarks(accountRequest.getUser().getRemarks());
+        account.setMobileNumber(requestedUser.getMobileNumber());
+        account.setFirstName(requestedUser.getFirstName());
+        account.setLastName(requestedUser.getLastName());
+        account.setEmail(requestedUser.getEmail());
+        account.setAddress(requestedUser.getAddress());
+        account.setGender(requestedUser.getGender());
+        account.setDateOfBirth(requestedUser.getDateOfBirth());
+        account.setPreferredLang(resolvePreferredLanguage(requestedUser.getPreferredLang()));
+        account.setNationality(requestedUser.getNationality());
+        account.setSsn(requestedUser.getSsn());
+        account.setRemarks(requestedUser.getRemarks());
         account.setCreatedAt(TenantTime.now());
-       // account.setCreatedBy(accountRequest.getCreatedBy()); TODO : check the logic for created BY
+        // account.setCreatedBy(accountRequest.getCreatedBy()); TODO : check the logic for created BY
         accountRepository.save(account);
+        syncAccountNotificationEndpoints(account);
+        log.info(
+                "RegisterUser account persisted. requestId={}, accountId={}, accountType={}, preferredLang={}",
+                accountRequest.getRequestId(),
+                account.getAccountId(),
+                account.getAccountType(),
+                account.getPreferredLang()
+        );
 
-        if(!normalizedAccountType.equalsIgnoreCase("ADMIN")) {
+        if (!normalizedAccountType.equalsIgnoreCase("ADMIN")) {
             List<Wallet> wallets = new ArrayList<>();
             List<WalletBalance> walletBalances = new ArrayList<>();
             for (Enumeration type : walletTypeList) {
-                if(type.getEnumCode().equalsIgnoreCase("SALARY") ||
-                        type.getEnumCode().equalsIgnoreCase("BONUS")){
+                if (type.getEnumCode().equalsIgnoreCase("SALARY") ||
+                        type.getEnumCode().equalsIgnoreCase("BONUS")) {
                     continue;
                 }
                 for (Enumeration currency : currencyList) {
@@ -229,7 +392,17 @@ public class AccountService {
             }
             walletRepository.saveAll(wallets);
             walletBalanceRepository.saveAll(walletBalances);
+            log.info(
+                    "RegisterUser wallets persisted. requestId={}, accountId={}, walletCount={}, walletBalanceCount={}",
+                    accountRequest.getRequestId(),
+                    account.getAccountId(),
+                    wallets.size(),
+                    walletBalances.size()
+            );
 
+        } else {
+            log.info("RegisterUser wallet creation skipped for admin account. requestId={}, accountId={}",
+                    accountRequest.getRequestId(), account.getAccountId());
         }
 
         UserRole userRole = new UserRole();
@@ -242,7 +415,7 @@ public class AccountService {
         long accountAuthId = IdGenerator.generateAccountAuthId();
         accountAuth.setId(accountAuthId);
         accountAuth.setAuthType("PASSWORD");
-        String password = IdGenerator.generatePassword(8);
+        String password = isTestingMode() ? TESTING_MODE_PASSWORD : IdGenerator.generatePassword(8);
         log.info("password is : " + password);
         String uuid = java.util.UUID.randomUUID().toString();
         accountAuth.setAuthHash(uuid);
@@ -260,7 +433,7 @@ public class AccountService {
         AccountIdentifier accountIdentifierLoginId = new AccountIdentifier();
         accountIdentifierLoginId.setAccountId(account.getAccountId());
         accountIdentifierLoginId.setIdentifierType("LOGINID");
-        accountIdentifierLoginId.setIdentifierValue(accountRequest.getUser().getLoginId());
+        accountIdentifierLoginId.setIdentifierValue(requestedUser.getLoginId());
         accountIdentifierLoginId.setStatus("ACTIVE");
         accountIdentifierLoginId.setAuthId(accountAuthId);
 
@@ -268,10 +441,112 @@ public class AccountService {
 
         //Send notification for the generated password.
         userRoleRepository.save(userRole);
+        accountAuthRepository.save(accountAuth);
         accountIdentifierRepository.save(accountIdentifier);
         accountIdentifierRepository.save(accountIdentifierLoginId);
-        accountAuthRepository.save(accountAuth);
+        log.info(
+                "RegisterUser auth and identifiers persisted. requestId={}, accountId={}, authId={}, identifiers=[MOBILE,LOGINID]",
+                accountRequest.getRequestId(),
+                account.getAccountId(),
+                accountAuthId
+        );
+
+        addDefaultTags(account.getAccountId(), account.getAccountType());
+        log.info(
+                "RegisterUser service completed. requestId={}, accountId={}, accountType={}, role={}",
+                accountRequest.getRequestId(),
+                account.getAccountId(),
+                account.getAccountType(),
+                requestedUser.getRole()
+        );
         return account;
+    }
+
+    private void addDefaultTags(String accountId, String accountType) {
+        if (accountType == null || accountType.isBlank()) {
+            return;
+        }
+
+        List<UserTag> defaultTags = tagRepository
+                .findByCategoryIgnoreCaseAndTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase(
+                        accountType,
+                        BASE_TAG_TYPE,
+                        "ACTIVE"
+                )
+                .stream()
+                .filter(tag -> userTagRepository.findByAccountIdAndTagId(accountId, tag.getTagId()).isEmpty())
+                .map(tag -> buildDefaultUserTag(accountId, tag))
+                .toList();
+
+        if (!defaultTags.isEmpty()) {
+            userTagRepository.saveAll(defaultTags);
+        }
+    }
+
+    private boolean isTestingMode() {
+        return enumerationRepository
+                .findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
+                        SYSTEM_CONFIG_ENUM_TYPE,
+                        TESTING_MODE_ENUM_CODE
+                )
+                .map(Enumeration::getEnumValue)
+                .map(String::trim)
+                .map(value -> value.equalsIgnoreCase("true")
+                        || value.equalsIgnoreCase("yes")
+                        || value.equalsIgnoreCase("y")
+                        || value.equals("1"))
+                .orElse(false);
+    }
+
+    private String maskMobile(String mobileNumber) {
+        if (mobileNumber == null || mobileNumber.length() <= 4) {
+            return mobileNumber;
+        }
+        return "****" + mobileNumber.substring(mobileNumber.length() - 4);
+    }
+
+    private String currentAccountIdOrAnonymous() {
+        try {
+            return JWTUtils.getCurrentAccountId();
+        } catch (Exception ignored) {
+            return "anonymous";
+        }
+    }
+
+    private String currentAccountTypeOrUnknown() {
+        try {
+            return JWTUtils.getCurrentAccountType();
+        } catch (Exception ignored) {
+            return "unknown";
+        }
+    }
+
+    private String resolvePreferredLanguage(String preferredLanguage) {
+        if (preferredLanguage == null || preferredLanguage.isBlank()) {
+            return supportedLanguageRepository
+                    .findFirstByIsDefaultTrueAndIsActiveTrueOrderByDisplayOrderAscIdAsc()
+                    .map(SupportedLanguage::getLanguageCode)
+                    .orElseThrow(() -> new ApplicationException(
+                            ErrorCodes.INVALID_LANGUAGE,
+                            "Default supported language is not configured"
+                    ));
+        }
+
+        return supportedLanguageRepository
+                .findByLanguageCodeIgnoreCaseAndIsActiveTrue(preferredLanguage.trim())
+                .map(SupportedLanguage::getLanguageCode)
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCodes.INVALID_LANGUAGE,
+                        "Preferred language is not supported"
+                ));
+    }
+
+    private UserTag buildDefaultUserTag(String accountId, Tag tag) {
+        UserTag userTag = new UserTag();
+        userTag.setAccountId(accountId);
+        userTag.setTagId(tag.getTagId());
+        userTag.setCreatedBy(accountId);
+        return userTag;
     }
 
     @Transactional
@@ -279,7 +554,7 @@ public class AccountService {
 
         Optional<Account> account = accountRepository.findByMobileNumber(request.getUser().getMobile());
         if (account.isPresent() && account.get().getStatus().equals("ACTIVE")) {
-            throw new ApplicationException(ErrorCodes.USER_EXISTS,"User already exists");
+            throw new ApplicationException(ErrorCodes.USER_EXISTS, "User already exists");
         }
 
         Optional<Otp> existingOtp = otpRepository.findTopByMobileNumberAndReferenceTypeAndStatusOrderByCreatedAtDesc(
@@ -289,8 +564,8 @@ public class AccountService {
         if (existingOtp.isPresent() && existingOtp.get().getExpiresAt().isBefore(TenantTime.now())) {
             existingOtp.get().setStatus("EXPIRED");
             otpRepository.save(existingOtp.get());
-        }else if(existingOtp.isPresent()){
-            throw new ApplicationException(ErrorCodes.OTP_GENERATED,"OTP Already generated for this mobile number");
+        } else if (existingOtp.isPresent()) {
+            throw new ApplicationException(ErrorCodes.OTP_GENERATED, "OTP Already generated for this mobile number");
         }
         Otp otp = new Otp();
         otp.setReferenceType("REGISTRATION");
@@ -309,7 +584,6 @@ public class AccountService {
     }
 
 
-
     @Transactional
     public void updateAccountDetails(UpdateAccountRequest request) {
 
@@ -322,17 +596,27 @@ public class AccountService {
         account.setLastName(request.getUser().getLastName());
         account.setAddress(request.getUser().getAddress());
         account.setGender(request.getUser().getGender().toString());
-        if(request.getUser().getPreferredLanguage() == null) {
+        if (request.getUser().getPreferredLanguage() == null) {
             account.setPreferredLang("en");
-        }else{
+        } else {
             account.setPreferredLang(request.getUser().getPreferredLanguage());
         }
         account.setDateOfBirth(request.getUser().getDob());
         account.setSsn(request.getUser().getSsn());
         account.setNationality(request.getUser().getNationality());
+        account.setAttr1(request.getUser().getAttr1());
+        account.setAttr2(request.getUser().getAttr2());
+        account.setAttr3(request.getUser().getAttr3());
+        account.setAttr4(request.getUser().getAttr4());
+        account.setAttr5(request.getUser().getAttr5());
+        account.setAttr6(request.getUser().getAttr6());
+        account.setAttr7(request.getUser().getAttr7());
+        account.setAttr8(request.getUser().getAttr8());
+        account.setAttr9(request.getUser().getAttr9());
+        account.setAttr10(request.getUser().getAttr10());
         account.setUpdatedBy(account.getAccountId());
         account.setUpdatedAt(TenantTime.now());
-        if(request.getUser().getEmail() !=null){
+        if (request.getUser().getEmail() != null) {
             account.setEmail(request.getUser().getEmail());
 
             /*
@@ -357,6 +641,7 @@ public class AccountService {
 
         }
         accountRepository.save(account);
+        syncAccountNotificationEndpoints(account);
 
     }
 
@@ -385,15 +670,16 @@ public class AccountService {
     @Transactional(readOnly = true)
     public AccountKycDetailsResponse getAccountWithKycDetails(String accountId) {
 
-        if(!JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountId))
-        {
+        if (!JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountId)) {
             throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
         }
 
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
-        List<KycDocument> kycDocuments = kycDocumentRepository.findByAccountIdAndIsActiveTrue(accountId);
-        return new AccountKycDetailsResponse(account, kycDocuments);
+        List<KycDocument> kycDocuments = kycDocumentRepository.findByAccountId(accountId);
+        List<AccountIdentifier> accountIdentifiers =
+                accountIdentifierRepository.findByAccountIdAndStatus(accountId, Constants.ACCOUNT_STATUS_ACTIVE);
+        return new AccountKycDetailsResponse(account, kycDocuments, accountIdentifiers);
     }
 
     @Transactional
@@ -534,6 +820,41 @@ public class AccountService {
         if (!authChallenges.isEmpty()) {
             authChallengeRepository.saveAll(authChallenges);
         }
+    }
+
+    private void syncAccountNotificationEndpoints(Account account) {
+        if (account == null || account.getAccountId() == null) {
+            return;
+        }
+
+        upsertPrimaryNotificationEndpoint(
+                account.getAccountId(),
+                ENDPOINT_TYPE_MOBILE,
+                account.getMobileNumber()
+        );
+        upsertPrimaryNotificationEndpoint(
+                account.getAccountId(),
+                ENDPOINT_TYPE_EMAIL,
+                account.getEmail()
+        );
+    }
+
+    private void upsertPrimaryNotificationEndpoint(String accountId, String endpointType, String endpointValue) {
+        if (endpointValue == null || endpointValue.isBlank()) {
+            return;
+        }
+
+        AccountNotificationEndpoint endpoint = accountNotificationEndpointRepository
+                .findByAccountIdAndEndpointTypeAndIsPrimaryTrue(accountId, endpointType)
+                .orElseGet(AccountNotificationEndpoint::new);
+
+        endpoint.setAccountId(accountId);
+        endpoint.setEndpointType(endpointType);
+        endpoint.setEndpointValue(endpointValue.trim());
+        endpoint.setIsPrimary(Boolean.TRUE);
+        endpoint.setStatus(Constants.ACCOUNT_STATUS_ACTIVE);
+        endpoint.setUpdatedAt(TenantTime.now());
+        accountNotificationEndpointRepository.save(endpoint);
     }
 
 }

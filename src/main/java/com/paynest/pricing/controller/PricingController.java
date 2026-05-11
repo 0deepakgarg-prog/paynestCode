@@ -2,6 +2,7 @@ package com.paynest.pricing.controller;
 
 import com.paynest.config.dto.response.ApiResponse;
 import com.paynest.pricing.dto.request.CreatePricingRuleRequest;
+import com.paynest.pricing.dto.request.UpdatePricingRuleRequest;
 import com.paynest.pricing.dto.request.UpdatePricingStatusRequest;
 import com.paynest.pricing.dto.response.PricingRuleResponse;
 import com.paynest.pricing.service.PricingService;
@@ -49,6 +50,16 @@ public class PricingController {
         PricingRuleResponse response = pricingService.getPricingRule(id);
         return ResponseEntity.ok(
                 new ApiResponse("SUCCESS", "Pricing rule fetched successfully", "pricing", response)
+        );
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse> updatePricingRule(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdatePricingRuleRequest request) {
+        PricingRuleResponse response = pricingService.updatePricingRule(id, request);
+        return ResponseEntity.ok(
+                new ApiResponse("SUCCESS", "Pricing rule updated successfully", "pricing", response)
         );
     }
 

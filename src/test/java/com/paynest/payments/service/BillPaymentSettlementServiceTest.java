@@ -135,7 +135,7 @@ class BillPaymentSettlementServiceTest {
         Transactions transaction = successfulBillTransaction();
         TransactionDetails debitDetail = debitDetail("BP240401-123456-A0001", "101", "SUBSCRIBER");
         TransactionDetails creditDetail = creditDetail("BP240401-123456-A0001", "202", "BILLER");
-        Wallet customerWallet = wallet(101L, "sub-1");
+        Wallet subscriberWallet = wallet(101L, "sub-1");
         Wallet billerWallet = wallet(202L, "biller-1");
         Transactions rollbackTransaction = new Transactions();
         rollbackTransaction.setTransferStatus(Constants.TRANSACTION_SUCCESS);
@@ -146,7 +146,7 @@ class BillPaymentSettlementServiceTest {
         when(transactionsRepository.findByTransactionId(anyString())).thenReturn(rollbackTransaction);
         when(transactionDetailsRepository.findByIdTransactionId("BP240401-123456-A0001"))
                 .thenReturn(List.of(debitDetail, creditDetail));
-        when(walletRepository.findById(101L)).thenReturn(Optional.of(customerWallet));
+        when(walletRepository.findById(101L)).thenReturn(Optional.of(subscriberWallet));
         when(walletRepository.findById(202L)).thenReturn(Optional.of(billerWallet));
         when(propertyReader.getPropertyValue("currency.factor")).thenReturn("100");
         when(propertyReader.getPropertyValue("server.instance")).thenReturn("A");
@@ -182,7 +182,7 @@ class BillPaymentSettlementServiceTest {
                     eq("BILLER"),
                     eq("SUBSCRIBER"),
                     eq(billerWallet),
-                    eq(customerWallet),
+                    eq(subscriberWallet),
                     eq(InitiatedBy.DEBITOR),
                     eq(null),
                     additionalInfoCaptor.capture(),
@@ -194,7 +194,7 @@ class BillPaymentSettlementServiceTest {
 
             verify(balanceService).transferWalletAmount(
                     billerWallet,
-                    customerWallet,
+                    subscriberWallet,
                     new BigDecimal("10.50"),
                     "BILLPAY_RB",
                     InitiatedBy.DEBITOR,
@@ -264,7 +264,7 @@ class BillPaymentSettlementServiceTest {
         BillPaymentStatusRecord record = new BillPaymentStatusRecord();
         record.setTransactionId("BP240401-123456-A0001");
         record.setStatus(BillPaymentStatus.PENDING);
-        record.setCustomerAccountId("sub-1");
+        record.setSubscriberAccountId("sub-1");
         record.setBillerAccountId("biller-1");
         record.setTraceId("bill-trace-1");
         return record;

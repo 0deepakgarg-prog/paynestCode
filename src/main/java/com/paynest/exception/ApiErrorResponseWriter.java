@@ -8,7 +8,7 @@ import com.paynest.config.tenant.TenantTime;
 import com.paynest.config.tenant.TraceContext;
 import com.paynest.payments.dto.BasePaymentResponse;
 import com.paynest.payments.enums.TransactionStatus;
-import com.paynest.service.ErrorCatalogService;
+import com.paynest.payments.service.ErrorCatalogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

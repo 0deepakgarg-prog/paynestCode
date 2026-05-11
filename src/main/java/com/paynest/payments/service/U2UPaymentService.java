@@ -26,9 +26,8 @@ import com.paynest.users.repository.WalletRepository;
 import com.paynest.config.security.JWTUtils;
 import com.paynest.users.service.AuthService;
 import com.paynest.payments.service.BalanceService;
-import com.paynest.service.TransactionsService;
+import com.paynest.payments.service.TransactionsService;
 import com.paynest.config.tenant.TraceContext;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -45,8 +45,12 @@ public class U2UPaymentService {
     private static final Logger log = LoggerFactory.getLogger(U2UPaymentService.class);
     private static final String OPERATION_NAME = "U2U";
     private static final String TRANSACTION_PREFIX = "UU";
-    private static final AccountType DEBITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
-    private static final AccountType CREDITOR_ACCOUNT_TYPE = AccountType.SUBSCRIBER;
+    private static final Set<AccountType> ALLOWED_ACCOUNT_TYPES = Set.of(
+            AccountType.SUBSCRIBER,
+            AccountType.AGENT,
+            AccountType.MERCHANT,
+            AccountType.BILLER
+    );
 
     private final WalletRepository walletRepository;
     private final AccountRepository accountRepository;
@@ -83,8 +87,8 @@ public class U2UPaymentService {
         normalizeRequest(request);
         String currency = request.getTransaction().getCurrency();
 
-        validateParty(request.getDebitor(), InitiatedBy.DEBITOR, DEBITOR_ACCOUNT_TYPE);
-        validateParty(request.getCreditor(), InitiatedBy.CREDITOR, CREDITOR_ACCOUNT_TYPE);
+        validateParty(request.getDebitor(), InitiatedBy.DEBITOR);
+        validateParty(request.getCreditor(), InitiatedBy.CREDITOR);
         validateMatchingWalletTypes(request.getDebitor(), request.getCreditor());
 
         AccountIdentifier debitorIdentifier = getIdentifier(request.getDebitor());
@@ -94,7 +98,7 @@ public class U2UPaymentService {
                 validateJWT,
                 debitorIdentifier,
                 request.getDebitor().getAuthentication(),
-                DEBITOR_ACCOUNT_TYPE
+                request.getDebitor().getAccountType()
         );
 
         Account debitorAccount = getAccount(debitorIdentifier);
@@ -110,6 +114,8 @@ public class U2UPaymentService {
                 debitorAuthentication.getType(),
                 debitorIdentifier
         );
+
+        //TODO : SC calculation and applying the fees
 
         Wallet debitorWallet = getWallet(
                 debitorAccount.getAccountId(),
@@ -170,8 +176,8 @@ public class U2UPaymentService {
                 .build();
     }
 
-    private void validateParty(Party party, InitiatedBy role, AccountType expectedType) {
-        if (party.getAccountType() != expectedType) {
+    private void validateParty(Party party, InitiatedBy role) {
+        if (party.getAccountType() == null || !ALLOWED_ACCOUNT_TYPES.contains(party.getAccountType())) {
             throw new ApplicationException(
                     role == InitiatedBy.DEBITOR
                             ? PaymentErrorCode.INVALID_DEBITOR_USER_TYPE
@@ -180,6 +186,7 @@ public class U2UPaymentService {
                     Map.of(
                             "role", role.name(),
                             "accountType", String.valueOf(party.getAccountType()),
+                            "allowedAccountTypes", ALLOWED_ACCOUNT_TYPES.toString(),
                             "operationType", OPERATION_NAME
                     )
             );
@@ -423,27 +430,11 @@ public class U2UPaymentService {
                 request.getInitiatedBy()
         );
 
-        if (request.getMetadata() != null && !request.getMetadata().isEmpty()) {
-            transactionsService.updateMetadata(
-                    transactionId,
-                    new JSONObject(request.getMetadata())
-            );
-        }
-
-        if (request.getAdditionalInfo() != null && !request.getAdditionalInfo().isEmpty()) {
-            transactionsService.updateAdditionalInfo(
-                    transactionId,
-                    new JSONObject(request.getAdditionalInfo())
-            );
-        }
-
-        transactionsService.updatePaymentReference(
+        transactionsService.updateOptionalTransactionFields(
                 transactionId,
-                request.getPaymentReference()
-        );
-
-        transactionsService.updateComments(
-                transactionId,
+                request.getMetadata(),
+                request.getAdditionalInfo(),
+                request.getPaymentReference(),
                 request.getComments()
         );
     }

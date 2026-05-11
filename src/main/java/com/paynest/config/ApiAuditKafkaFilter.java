@@ -122,7 +122,7 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
 
     private AuditApiLog buildAuditApiLog(HttpServletRequest request,
                                          ContentCachingResponseWrapper response,
-                                         String responseBody,String requestBody,
+                                         String responseBody, String requestBody,
                                          long durationMs) {
         AuditApiLog auditApiLog = new AuditApiLog();
         auditApiLog.setTraceId(TraceContext.getTraceId());

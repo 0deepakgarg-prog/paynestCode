@@ -3,6 +3,7 @@ package com.paynest.service;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
 import com.paynest.config.tenant.TraceContext;
+import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.payments.entity.TransactionDetails;
 import com.paynest.payments.entity.TransactionDetailsId;
 import com.paynest.payments.entity.Transactions;
@@ -11,6 +12,8 @@ import com.paynest.payments.repository.TransactionDetailsRepository;
 import com.paynest.payments.repository.TransactionsRepository;
 import com.paynest.payments.repository.WalletLedgerRepository;
 import com.paynest.payments.service.BalanceService;
+import com.paynest.payments.service.TransactionsService;
+import com.paynest.payments.validation.WalletRestrictionValidator;
 import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
 import com.paynest.users.repository.AccountRepository;
@@ -58,10 +61,16 @@ class BalanceServiceTest {
     private WalletLedgerRepository ledgerRepo;
 
     @Mock
-    private com.paynest.payments.service.TransactionsService transactionsService;
+    private TransactionsService transactionsService;
 
     @Mock
     private WalletCacheService walletCacheService;
+
+    @Mock
+    private TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+
+    @Mock
+    private WalletRestrictionValidator walletRestrictionValidator;
 
     private BalanceService balanceService;
 
@@ -77,7 +86,9 @@ class BalanceServiceTest {
                 balanceRepository,
                 ledgerRepo,
                 transactionsService,
-                walletCacheService
+                walletCacheService,
+                transactionNotificationEventPublisher,
+                walletRestrictionValidator
         );
     }
 

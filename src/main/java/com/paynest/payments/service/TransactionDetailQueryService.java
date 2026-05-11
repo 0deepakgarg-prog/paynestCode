@@ -190,8 +190,8 @@ public class TransactionDetailQueryService {
                 fullName(account),
                 account == null ? null : account.getMobileNumber(),
                 wallet == null ? parseWalletId(detail == null ? null : detail.getWalletNumber()).orElse(null) : wallet.getWalletId(),
-                wallet == null ? null : wallet.getWalletType(),
-                wallet == null ? null : wallet.getCurrency(),
+                firstPresent(detail == null ? null : detail.getWalletType(), wallet == null ? null : wallet.getWalletType()),
+                firstPresent(detail == null ? null : detail.getCurrency(), wallet == null ? null : wallet.getCurrency()),
                 detail == null ? entryType : detail.getEntryType()
         );
     }
@@ -214,6 +214,8 @@ public class TransactionDetailQueryService {
                 detail.getIdentifierId(),
                 detail.getSecondIdentifierId(),
                 parseWalletId(detail.getWalletNumber()).orElse(null),
+                detail.getWalletType(),
+                detail.getCurrency(),
                 formatTransferDate(detail.getTransferOn()),
                 detail.getServiceCode(),
                 detail.getTransferStatus(),

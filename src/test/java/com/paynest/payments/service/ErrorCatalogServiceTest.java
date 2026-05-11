@@ -1,10 +1,10 @@
-package com.paynest.service;
+package com.paynest.payments.service;
 
-import com.paynest.entity.ErrorCatalog;
+import com.paynest.users.entity.ErrorCatalog;
 import com.paynest.config.entity.SupportedLanguage;
 import com.paynest.config.repository.SupportedLanguageRepository;
 import com.paynest.config.tenant.TenantContext;
-import com.paynest.repository.ErrorCatalogRepository;
+import com.paynest.users.repository.ErrorCatalogRepository;
 import com.paynest.tenant.RequestLanguageContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

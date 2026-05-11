@@ -77,7 +77,7 @@ class BillPayPaymentSecurityE2ETest {
     }
 
     @Test
-    void billPaySettlementShouldUseSettleTxnEndpoint() {
+    void billPaySettlementShouldUseInternalSettleTxnEndpoint() {
         String payload = """
                 {
                   "settlementStatus": true
@@ -89,11 +89,10 @@ class BillPayPaymentSecurityE2ETest {
                 .header("X-Tenant-Id", "tenant-1")
                 .body(payload)
                 .when()
-                .post("/api/v1/pay/settleTxn")
+                .post("/api/v1/internal/settletxn")
                 .then()
                 .statusCode(400)
                 .body("responseStatus", equalTo("FAILURE"))
-                .body("operationType", equalTo("settleTxn"))
                 .body("code", equalTo("TRACE_ID_MISSING"));
     }
 }
