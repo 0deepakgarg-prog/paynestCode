@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -376,7 +375,7 @@ public class TransactionSettlementService {
                 .message(Boolean.TRUE.equals(settlementStatus)
                         ? "Transaction settled successfully"
                         : "Transaction rolled back successfully")
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transaction.getTransactionId())
                 .transactionTraceId(transaction.getTraceId())

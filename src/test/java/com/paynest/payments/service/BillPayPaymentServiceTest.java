@@ -18,6 +18,8 @@ import com.paynest.payments.enums.BillPaymentStatus;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.enums.TransactionStatus;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
+import com.paynest.pricing.dto.response.PricingComputationResponse;
+import com.paynest.pricing.service.PricingService;
 import com.paynest.users.entity.Account;
 import com.paynest.users.entity.AccountIdentifier;
 import com.paynest.users.entity.Wallet;
@@ -79,6 +81,9 @@ class BillPayPaymentServiceTest {
 
     @Mock
     private BillPaymentStatusService billPaymentStatusService;
+
+    @Mock
+    private PricingService pricingService;
 
     @Test
     void processPayment_shouldParkFundsInBillerFicCreatePendingBillStatusAndReturnSuccess() {
@@ -165,6 +170,59 @@ class BillPayPaymentServiceTest {
     }
 
     @Test
+    void processPayment_shouldParkFundsAndDebitServiceChargeWhenPricingReturnsCharge() {
+        BillPayPaymentService billPayPaymentService = billPayPaymentService();
+        BillPayPaymentRequest request = validRequest();
+        AccountIdentifier debitorIdentifier = identifier("sub-1", "9999999999", "MOBILE", 10L);
+        AccountIdentifier creditorIdentifier = identifier("biller-1", "biller-login", "LOGINID", 20L);
+        Account debitorAccount = account("sub-1", "SUBSCRIBER");
+        Account creditorAccount = account("biller-1", "BILLER");
+        Wallet debitorWallet = wallet(101L, "sub-1", "USD", "MAIN");
+        Wallet creditorWallet = wallet(202L, "biller-1", "USD", "MAIN");
+        PricingComputationResponse pricingComputation = new PricingComputationResponse();
+        pricingComputation.addServiceCharge(new BigDecimal("1.00"));
+        pricingComputation.markServiceChargeAffectedParty("SENDER");
+
+        doNothing().when(basePaymentRequestValidator).validate(request);
+        when(accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus("MOBILE", "9999999999", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(Optional.of(debitorIdentifier));
+        when(accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus("LOGINID", "biller-login", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(Optional.of(creditorIdentifier));
+        when(accountRepository.findByAccountIdAndStatus("sub-1", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(List.of(debitorAccount));
+        when(accountRepository.findByAccountIdAndStatus("biller-1", Constants.ACCOUNT_STATUS_ACTIVE))
+                .thenReturn(List.of(creditorAccount));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("sub-1", "USD", "MAIN"))
+                .thenReturn(Optional.of(debitorWallet));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("biller-1", "USD", "MAIN"))
+                .thenReturn(Optional.of(creditorWallet));
+        when(pricingService.calculatePricingAmounts(request)).thenReturn(pricingComputation);
+        when(propertyReader.getPropertyValue("server.instance")).thenReturn("A");
+
+        TraceContext.setTraceId("trace-1");
+        try (MockedStatic<JWTUtils> jwtUtils = org.mockito.Mockito.mockStatic(JWTUtils.class)) {
+            jwtUtils.when(JWTUtils::getCurrentAccountId).thenReturn("sub-1");
+            jwtUtils.when(JWTUtils::getCurrentAccountType).thenReturn("SUBSCRIBER");
+            jwtUtils.when(JWTUtils::getCurrentAuthType).thenReturn("PIN");
+
+            BillPayPaymentResponse response = billPayPaymentService.processPayment(request, true);
+
+            verify(balanceService).parkWalletAmountInFicWithPricing(
+                    debitorWallet,
+                    creditorWallet,
+                    new BigDecimal("10.50"),
+                    "BILLPAY",
+                    InitiatedBy.DEBITOR,
+                    response.getTransactionId(),
+                    pricingComputation
+            );
+            verify(balanceService, never()).parkWalletAmountInFic(any(), any(), any(), any(), any(), any());
+        } finally {
+            TraceContext.clear();
+        }
+    }
+
+    @Test
     void processPayment_shouldRejectWhenCreditorIsNotBiller() {
         BillPayPaymentService billPayPaymentService = billPayPaymentService();
         BillPayPaymentRequest request = validRequest();
@@ -191,7 +249,8 @@ class BillPayPaymentServiceTest {
                 paymentTransactionRecorderService,
                 balanceService,
                 authService,
-                billPaymentStatusService
+                billPaymentStatusService,
+                pricingService
         );
     }
 

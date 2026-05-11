@@ -49,7 +49,9 @@ public class PaymentTransactionRecorderService {
                 creditorAccountType,
                 debitorWallet,
                 creditorWallet,
-                initiatedBy
+                initiatedBy,
+                paymentReference,
+                comments
         );
 
         transactionsService.updateOptionalTransactionFields(

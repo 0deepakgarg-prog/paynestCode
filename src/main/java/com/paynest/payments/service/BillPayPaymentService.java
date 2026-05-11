@@ -21,6 +21,8 @@ import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.enums.BillPaymentStatus;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
+import com.paynest.pricing.dto.response.PricingComputationResponse;
+import com.paynest.pricing.service.PricingService;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.WalletRepository;
@@ -32,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Map;
 
@@ -55,6 +57,7 @@ public class BillPayPaymentService {
     private final BalanceService balanceService;
     private final AuthService authService;
     private final BillPaymentStatusService billPaymentStatusService;
+    private final PricingService pricingService;
 
     public BillPayPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
@@ -65,7 +68,8 @@ public class BillPayPaymentService {
             PaymentTransactionRecorderService paymentTransactionRecorderService,
             BalanceService balanceService,
             AuthService authService,
-            BillPaymentStatusService billPaymentStatusService
+            BillPaymentStatusService billPaymentStatusService,
+            PricingService pricingService
     ) {
         this.basePaymentRequestValidator = basePaymentRequestValidator;
         this.accountIdentifierRepository = accountIdentifierRepository;
@@ -76,6 +80,7 @@ public class BillPayPaymentService {
         this.balanceService = balanceService;
         this.authService = authService;
         this.billPaymentStatusService = billPaymentStatusService;
+        this.pricingService = pricingService;
     }
 
     public BillPayPaymentResponse processPayment(BillPayPaymentRequest request, boolean validateJWT) {
@@ -125,6 +130,7 @@ public class BillPayPaymentService {
                 currency,
                 InitiatedBy.CREDITOR.name()
         );
+        PricingComputationResponse pricingComputation = pricingService.calculatePricingAmounts(request);
 
         String transactionId = IdGenerator.generateTransactionId(
                 TRANSACTION_PREFIX,
@@ -150,19 +156,58 @@ public class BillPayPaymentService {
                     creditorAccount.getAccountId()
             );
 
-            balanceService.parkWalletAmountInFic(
-                    debitorWallet,
-                    creditorWallet,
-                    request.getTransaction().getAmount(),
-                    request.getOperationType(),
-                    request.getInitiatedBy(),
-                    transactionId
-            );
+            if (hasPricingAdjustments(pricingComputation)) {
+                balanceService.parkWalletAmountInFicWithPricing(
+                        debitorWallet,
+                        creditorWallet,
+                        request.getTransaction().getAmount(),
+                        request.getOperationType(),
+                        request.getInitiatedBy(),
+                        transactionId,
+                        pricingComputation
+                );
+            } else {
+                balanceService.parkWalletAmountInFic(
+                        debitorWallet,
+                        creditorWallet,
+                        request.getTransaction().getAmount(),
+                        request.getOperationType(),
+                        request.getInitiatedBy(),
+                        transactionId
+                );
+            }
         } catch (ApplicationException ex) {
             throw ex.withTransactionId(transactionId);
         }
 
         return buildSuccessResponse(request, transactionId);
+    }
+
+    private BigDecimal getServiceChargeAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getServiceChargeAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getServiceChargeAmount();
+    }
+
+    private BigDecimal getDiscountAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getDiscountAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getDiscountAmount();
+    }
+
+    private BigDecimal getCashbackAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getCashbackAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getCashbackAmount();
+    }
+
+    private boolean hasPricingAdjustments(PricingComputationResponse pricingComputation) {
+        return getServiceChargeAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0
+                || getDiscountAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0
+                || getCashbackAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0;
     }
 
     private BillPayPaymentResponse buildSuccessResponse(BillPayPaymentRequest request, String transactionId) {
@@ -171,7 +216,7 @@ public class BillPayPaymentService {
                 .operationType(request.getOperationType())
                 .code("PAYMENT_SUCCESS")
                 .message("Bill payment successful and pending settlement")
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())

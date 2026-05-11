@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
@@ -20,7 +20,7 @@ public class U2UPaymentResponse {
 
     private String message;
 
-    private Instant timestamp;
+    private LocalDateTime timestamp;
 
     private String traceId;
 
@@ -28,5 +28,30 @@ public class U2UPaymentResponse {
 
     private BigDecimal amount;
 
+    private BigDecimal totalAmount;
+
     private String currency;
+
+    private ServiceChargeDetails serviceCharge;
+    private PricingAdjustmentDetails discount;
+    private PricingAdjustmentDetails cashback;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Data
+    @Builder
+    public static class ServiceChargeDetails {
+        private BigDecimal amount;
+        private String payer;
+        private String currency;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Data
+    @Builder
+    public static class PricingAdjustmentDetails {
+        private BigDecimal amount;
+        private String party;
+        private String payBy;
+        private String currency;
+    }
 }

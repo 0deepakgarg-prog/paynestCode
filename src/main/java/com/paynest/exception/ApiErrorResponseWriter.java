@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Map;
 
@@ -104,7 +103,7 @@ public class ApiErrorResponseWriter {
                     .operationType(extractOperationType(request))
                     .code(code)
                     .message(message)
-                    .timestamp(TenantTime.instant())
+                    .timestamp(TenantTime.now())
                     .traceId(TraceContext.getTraceId())
                     .transactionId(transactionId)
                     .build();

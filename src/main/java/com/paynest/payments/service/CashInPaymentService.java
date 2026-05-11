@@ -20,6 +20,8 @@ import com.paynest.payments.dto.CashInPaymentResponse;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
+import com.paynest.pricing.dto.response.PricingComputationResponse;
+import com.paynest.pricing.service.PricingService;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.WalletRepository;
@@ -33,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Map;
 
@@ -55,6 +57,7 @@ public class CashInPaymentService {
     private final TransactionsService transactionsService;
     private final BalanceService balanceService;
     private final AuthService authService;
+    private final PricingService pricingService;
 
     public CashInPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
@@ -64,7 +67,8 @@ public class CashInPaymentService {
             PropertyReader propertyReader,
             TransactionsService transactionsService,
             BalanceService balanceService,
-            AuthService authService
+            AuthService authService,
+            PricingService pricingService
     ) {
         this.basePaymentRequestValidator = basePaymentRequestValidator;
         this.accountIdentifierRepository = accountIdentifierRepository;
@@ -74,6 +78,7 @@ public class CashInPaymentService {
         this.transactionsService = transactionsService;
         this.balanceService = balanceService;
         this.authService = authService;
+        this.pricingService = pricingService;
     }
 
     public CashInPaymentResponse processPayment(CashInPaymentRequest request, boolean validateJWT) {
@@ -122,6 +127,7 @@ public class CashInPaymentService {
                 currency,
                 InitiatedBy.CREDITOR.name()
         );
+        PricingComputationResponse pricingComputation = pricingService.calculatePricingAmounts(request);
 
         String transactionId = IdGenerator.generateTransactionId(
                 TRANSACTION_PREFIX,
@@ -140,19 +146,58 @@ public class CashInPaymentService {
                     creditorWallet
             );
 
-            balanceService.transferWalletAmount(
-                    debitorWallet,
-                    creditorWallet,
-                    request.getTransaction().getAmount(),
-                    request.getOperationType(),
-                    request.getInitiatedBy(),
-                    transactionId
-            );
+            if (hasPricingAdjustments(pricingComputation)) {
+                balanceService.transferWalletAmountWithPricing(
+                        debitorWallet,
+                        creditorWallet,
+                        request.getTransaction().getAmount(),
+                        request.getOperationType(),
+                        request.getInitiatedBy(),
+                        transactionId,
+                        pricingComputation
+                );
+            } else {
+                balanceService.transferWalletAmount(
+                        debitorWallet,
+                        creditorWallet,
+                        request.getTransaction().getAmount(),
+                        request.getOperationType(),
+                        request.getInitiatedBy(),
+                        transactionId
+                );
+            }
         } catch (ApplicationException ex) {
             throw ex.withTransactionId(transactionId);
         }
 
         return buildSuccessResponse(request, transactionId);
+    }
+
+    private BigDecimal getServiceChargeAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getServiceChargeAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getServiceChargeAmount();
+    }
+
+    private BigDecimal getDiscountAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getDiscountAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getDiscountAmount();
+    }
+
+    private BigDecimal getCashbackAmount(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getCashbackAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return pricingComputation.getCashbackAmount();
+    }
+
+    private boolean hasPricingAdjustments(PricingComputationResponse pricingComputation) {
+        return getServiceChargeAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0
+                || getDiscountAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0
+                || getCashbackAmount(pricingComputation).compareTo(BigDecimal.ZERO) > 0;
     }
 
     private CashInPaymentResponse buildSuccessResponse(CashInPaymentRequest request, String transactionId) {
@@ -161,7 +206,7 @@ public class CashInPaymentService {
                 .operationType(request.getOperationType())
                 .code("PAYMENT_SUCCESS")
                 .message("Cash-in successful")
-                .timestamp(TenantTime.instant())
+                .timestamp(TenantTime.now())
                 .traceId(TraceContext.getTraceId())
                 .transactionId(transactionId)
                 .amount(request.getTransaction().getAmount())

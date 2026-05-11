@@ -1,6 +1,7 @@
 package com.paynest.pricing.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.paynest.config.tenant.TenantTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -82,7 +83,7 @@ public class PricingRule {
 
     @PrePersist
     protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TenantTime.now();
         if (createdAt == null) {
             createdAt = now;
         }
@@ -96,6 +97,6 @@ public class PricingRule {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = TenantTime.now();
     }
 }
