@@ -9,12 +9,18 @@ import com.paynest.config.tenant.TraceContext;
 import com.paynest.exception.ApplicationException;
 import com.paynest.exception.PaymentErrorCode;
 import com.paynest.payments.entity.TransactionDetails;
+import com.paynest.payments.entity.TransactionDetailsId;
 import com.paynest.payments.entity.Transactions;
 import com.paynest.payments.entity.WalletLedger;
+import com.paynest.payments.entity.CashbackPayout;
+import com.paynest.payments.repository.CashbackPayoutRepository;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.repository.TransactionDetailsRepository;
 import com.paynest.payments.repository.TransactionsRepository;
 import com.paynest.payments.repository.WalletLedgerRepository;
+import com.paynest.payments.validation.WalletRestrictionValidator;
+import com.paynest.notifications.service.TransactionNotificationEventPublisher;
+import com.paynest.pricing.dto.response.PricingComputationResponse;
 import com.paynest.users.dto.response.BalanceResponse;
 import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
@@ -24,50 +30,76 @@ import com.paynest.users.repository.WalletRepository;
 import com.paynest.users.service.WalletCacheService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class BalanceService {
 
+    private static final String SYSTEM_ACCOUNT_ID = "SYS0001";
+    private static final String SERVICE_CHARGE_PAYER_SENDER = "SENDER";
+    private static final String SERVICE_CHARGE_PAYER_RECEIVER = "RECEIVER";
+    private static final String SERVICE_CHARGE_PAYER_SYSTEM = "SYSTEM";
+    private static final String SERVICE_CHARGE_WALLET_TYPE = "SC";
+    private static final String COMMISSION_WALLET_TYPE = "COMMDIS";
+    private static final String MAIN_WALLET_TYPE = "MAIN";
+    private static final String CASHBACK_SCHEDULE_IMMEDIATE = "IMMEDIATE";
+    private static final String CASHBACK_SCHEDULE_END_OF_DAY = "END_OF_DAY";
+    private static final String CASHBACK_SCHEDULE_END_OF_MONTH = "END_OF_MONTH";
     private final WalletRepository walletRepository;
     private final WalletBalanceRepository balanceRepository;
     private final AccountRepository accountRepo;
     private final TransactionsRepository transactionsRepository;
     private final TransactionDetailsRepository transactionDetailsRepository;
+    private final CashbackPayoutRepository cashbackPayoutRepository;
     private final PropertyReader propertyReader;
     private final WalletBalanceRepository balanceRepo;
     private final WalletLedgerRepository ledgerRepo;
     private final TransactionsService transactionsService;
     private final WalletCacheService walletCacheService;
+    private final WalletRestrictionValidator walletRestrictionValidator;
+    private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
 
     public BalanceService(WalletRepository walletRepository,
                           WalletBalanceRepository balanceRepository,
                           AccountRepository accountRepo,
                           TransactionsRepository transactionsRepository,
                           TransactionDetailsRepository transactionDetailsRepository,
+                          CashbackPayoutRepository cashbackPayoutRepository,
                           PropertyReader propertyReader,
                           WalletBalanceRepository balanceRepo,
                           WalletLedgerRepository ledgerRepo,
                           TransactionsService transactionsService,
-                          WalletCacheService walletCacheService) {
+                          WalletCacheService walletCacheService,
+                          WalletRestrictionValidator walletRestrictionValidator,
+                          TransactionNotificationEventPublisher transactionNotificationEventPublisher) {
         this.walletRepository = walletRepository;
         this.balanceRepository = balanceRepository;
         this.accountRepo = accountRepo;
         this.transactionsRepository = transactionsRepository;
         this.transactionDetailsRepository = transactionDetailsRepository;
+        this.cashbackPayoutRepository = cashbackPayoutRepository;
         this.propertyReader = propertyReader;
         this.balanceRepo = balanceRepo;
         this.ledgerRepo = ledgerRepo;
         this.transactionsService = transactionsService;
         this.walletCacheService = walletCacheService;
+        this.walletRestrictionValidator = walletRestrictionValidator;
+        this.transactionNotificationEventPublisher = transactionNotificationEventPublisher;
     }
 
     public BalanceResponse getBalance(Long walletId) {
@@ -431,7 +463,7 @@ public class BalanceService {
                     .setScale(2, RoundingMode.HALF_UP);
             validateCurrencyExchangeTransactionDetails(txnId);
 
-            Map<Long, WalletBalance> lockedBalances = lockBalances(
+            Map<Long, WalletBalance> lockedBalances = lockBalancesInWalletIdOrder(
                     debitorWallet,
                     systemSourceWallet,
                     systemTargetWallet,
@@ -826,36 +858,13 @@ public class BalanceService {
                     receiverFicBefore,
                     receiverFicAfter
             );
-            saveServiceChargeTransactionDetails(
+            updatePrimaryTransactionDetailAmounts(
                     txnId,
-                    now,
-                    Constants.TRANSACTION_SUCCESS,
-                    serviceCode,
-                    serviceChargeWallet,
-                    systemWallet,
+                    dbAmount,
                     dbServiceChargeAmount,
-                    serviceChargePayerBalBefore,
-                    serviceChargePayerBalAfter,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFrozenBefore
-                            : receiverFrozenBefore,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFrozenAfter
-                            : receiverFrozenAfter,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFicBefore
-                            : receiverFicBefore,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFicAfter
-                            : receiverFicAfter,
-                    systemBalBefore,
-                    systemBalAfter,
-                    systemFrozenBefore,
-                    systemFrozenAfter,
-                    systemFicBefore,
-                    systemFicAfter
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO
             );
-
             walletCacheService.refreshAccountWallets(debitorWallet.getAccountId());
             walletCacheService.refreshAccountWallets(creditorWallet.getAccountId());
             walletCacheService.refreshAccountWallets(systemWallet.getAccountId());
@@ -894,6 +903,7 @@ public class BalanceService {
         BigDecimal discountAmount = positiveAmount(pricingComputation.getDiscountAmount());
         BigDecimal netAmount = resolveDiscountedAmount(amount, discountAmount);
         BigDecimal serviceChargeAmount = positiveAmount(pricingComputation.getServiceChargeAmount());
+        BigDecimal commissionAmount = positiveAmount(pricingComputation.getCommissionAmount());
         String serviceChargePayer = pricingComputation.getServiceChargeAffectedParty();
 
         try {
@@ -913,6 +923,29 @@ public class BalanceService {
                 transferWalletAmount(debitorWallet, creditorWallet, netAmount, serviceCode, initiatedBy, txnId);
             }
 
+            Long nextSequenceNumber = 3L;
+            PricingAdjustmentApplication commissionApplication = applyCommissionIfRequired(
+                    debitorWallet,
+                    creditorWallet,
+                    serviceCode,
+                    txnId,
+                    pricingComputation,
+                    Constants.TRANSACTION_SUCCESS,
+                    nextSequenceNumber
+            );
+            nextSequenceNumber = nextSequenceNumber(commissionApplication, nextSequenceNumber);
+
+            PricingAdjustmentApplication discountApplication = applyDiscountIfRequired(
+                    debitorWallet,
+                    creditorWallet,
+                    serviceCode,
+                    txnId,
+                    pricingComputation,
+                    Constants.TRANSACTION_SUCCESS,
+                    nextSequenceNumber
+            );
+            nextSequenceNumber = nextSequenceNumber(discountApplication, nextSequenceNumber);
+
             CashbackApplication cashbackApplication = applyCashbackIfRequired(
                     debitorWallet,
                     creditorWallet,
@@ -920,7 +953,7 @@ public class BalanceService {
                     txnId,
                     pricingComputation,
                     Constants.TRANSACTION_SUCCESS,
-                    isWalletServiceCharge(serviceChargeAmount, serviceChargePayer) ? 5L : 3L
+                    nextSequenceNumber
             );
 
             updatePricingTransactionSummary(
@@ -930,11 +963,14 @@ public class BalanceService {
                     netAmount,
                     serviceChargeAmount,
                     discountAmount,
+                    commissionAmount,
                     positiveAmount(pricingComputation.getCashbackAmount()),
                     serviceChargePayer,
                     debitorWallet,
                     creditorWallet,
                     pricingComputation,
+                    commissionApplication,
+                    discountApplication,
                     cashbackApplication
             );
         } catch (ApplicationException ex) {
@@ -1105,6 +1141,7 @@ public class BalanceService {
         BigDecimal discountAmount = positiveAmount(pricingComputation.getDiscountAmount());
         BigDecimal netAmount = resolveDiscountedAmount(amount, discountAmount);
         BigDecimal serviceChargeAmount = positiveAmount(pricingComputation.getServiceChargeAmount());
+        BigDecimal commissionAmount = positiveAmount(pricingComputation.getCommissionAmount());
         String serviceChargePayer = pricingComputation.getServiceChargeAffectedParty();
 
         try {
@@ -1124,6 +1161,29 @@ public class BalanceService {
                 parkWalletAmountInFic(debitorWallet, creditorWallet, netAmount, serviceCode, initiatedBy, txnId);
             }
 
+            Long nextSequenceNumber = 3L;
+            PricingAdjustmentApplication commissionApplication = applyCommissionIfRequired(
+                    debitorWallet,
+                    creditorWallet,
+                    serviceCode,
+                    txnId,
+                    pricingComputation,
+                    Constants.TRANSACTION_AMBIGUOUS,
+                    nextSequenceNumber
+            );
+            nextSequenceNumber = nextSequenceNumber(commissionApplication, nextSequenceNumber);
+
+            PricingAdjustmentApplication discountApplication = applyDiscountIfRequired(
+                    debitorWallet,
+                    creditorWallet,
+                    serviceCode,
+                    txnId,
+                    pricingComputation,
+                    Constants.TRANSACTION_AMBIGUOUS,
+                    nextSequenceNumber
+            );
+            nextSequenceNumber = nextSequenceNumber(discountApplication, nextSequenceNumber);
+
             CashbackApplication cashbackApplication = applyCashbackIfRequired(
                     debitorWallet,
                     creditorWallet,
@@ -1131,7 +1191,7 @@ public class BalanceService {
                     txnId,
                     pricingComputation,
                     Constants.TRANSACTION_AMBIGUOUS,
-                    isWalletServiceCharge(serviceChargeAmount, serviceChargePayer) ? 5L : 3L
+                    nextSequenceNumber
             );
 
             updatePricingTransactionSummary(
@@ -1141,11 +1201,14 @@ public class BalanceService {
                     netAmount,
                     serviceChargeAmount,
                     discountAmount,
+                    commissionAmount,
                     positiveAmount(pricingComputation.getCashbackAmount()),
                     serviceChargePayer,
                     debitorWallet,
                     creditorWallet,
                     pricingComputation,
+                    commissionApplication,
+                    discountApplication,
                     cashbackApplication
             );
         } catch (ApplicationException ex) {
@@ -1397,36 +1460,13 @@ public class BalanceService {
                     receiverFicBefore,
                     receiverFicAfter
             );
-            saveServiceChargeTransactionDetails(
+            updatePrimaryTransactionDetailAmounts(
                     txnId,
-                    now,
-                    Constants.TRANSACTION_AMBIGUOUS,
-                    serviceCode,
-                    serviceChargeWallet,
-                    systemWallet,
+                    dbAmount,
                     dbServiceChargeAmount,
-                    serviceChargePayerBalBefore,
-                    serviceChargePayerBalAfter,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFrozenBefore
-                            : receiverFrozenBefore,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFrozenAfter
-                            : receiverFrozenAfter,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFicBefore
-                            : receiverFicBefore,
-                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
-                            ? senderFicAfter
-                            : receiverFicAfter,
-                    systemBalBefore,
-                    systemBalAfter,
-                    systemFrozenBefore,
-                    systemFrozenAfter,
-                    systemFicBefore,
-                    systemFicAfter
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO
             );
-
             walletCacheService.refreshAccountWallets(debitorWallet.getAccountId());
             walletCacheService.refreshAccountWallets(creditorWallet.getAccountId());
             walletCacheService.refreshAccountWallets(systemWallet.getAccountId());
@@ -1642,6 +1682,12 @@ public class BalanceService {
         detail.setServiceCode(serviceCode);
         detail.setTransferStatus(status);
         detail.setWalletNumber(wallet.getWalletId().toString());
+        detail.setWalletType(wallet.getWalletType());
+        detail.setCurrency(wallet.getCurrency());
+        detail.setTransactionType(Constants.TXN_TYPE_DR.equalsIgnoreCase(entryType)
+                ? Constants.TXN_DETAIL_TYPE_SERVICE_CHARGE_PAID
+                : Constants.TXN_DETAIL_TYPE_SERVICE_CHARGE_RECEIVED);
+        setPricingDetailAttributes(detail, "service_charge", amount);
         return detail;
     }
 
@@ -1658,6 +1704,7 @@ public class BalanceService {
             return false;
         }
         return positiveAmount(pricingComputation.getServiceChargeAmount()).compareTo(BigDecimal.ZERO) > 0
+                || positiveAmount(pricingComputation.getCommissionAmount()).compareTo(BigDecimal.ZERO) > 0
                 || positiveAmount(pricingComputation.getDiscountAmount()).compareTo(BigDecimal.ZERO) > 0
                 || positiveAmount(pricingComputation.getCashbackAmount()).compareTo(BigDecimal.ZERO) > 0;
     }
@@ -1721,7 +1768,7 @@ public class BalanceService {
         return normalizedPayBy;
     }
 
-    private CashbackApplication applyCashbackIfRequired(
+    private PricingAdjustmentApplication applyCommissionIfRequired(
             Wallet debitorWallet,
             Wallet creditorWallet,
             String serviceCode,
@@ -1730,36 +1777,109 @@ public class BalanceService {
             String status,
             Long firstSequenceNumber
     ) {
-        BigDecimal cashbackAmount = pricingComputation == null
+        BigDecimal commissionAmount = pricingComputation == null
                 ? BigDecimal.ZERO
-                : positiveAmount(pricingComputation.getCashbackAmount());
-        if (cashbackAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            return CashbackApplication.none();
+                : positiveAmount(pricingComputation.getCommissionAmount());
+        if (commissionAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return PricingAdjustmentApplication.none();
         }
 
-        String beneficiaryParty = normalizeWalletParty(pricingComputation.getCashbackAffectedParty(), "cashback payer");
-        String payBy = normalizeCashbackPayBy(
-                defaultIfBlank(pricingComputation.getCashbackPayBy(), SERVICE_CHARGE_PAYER_SYSTEM)
+        String beneficiaryParty = normalizeWalletParty(
+                pricingComputation.getCommissionAffectedParty(),
+                "commission beneficiary"
         );
-        if (payBy.equals(beneficiaryParty)) {
-            throw new ApplicationException(
-                    ErrorCodes.INVALID_REQUEST,
-                    "Cashback payBy cannot be the same as cashback beneficiary"
-            );
-        }
-
-        Wallet beneficiaryWallet = SERVICE_CHARGE_PAYER_RECEIVER.equals(beneficiaryParty)
+        Wallet partyWallet = SERVICE_CHARGE_PAYER_RECEIVER.equals(beneficiaryParty)
                 ? creditorWallet
                 : debitorWallet;
-        Wallet sourceWallet = switch (payBy) {
-            case SERVICE_CHARGE_PAYER_SENDER -> debitorWallet;
-            case SERVICE_CHARGE_PAYER_RECEIVER -> creditorWallet;
-            default -> getActiveSystemWallet(beneficiaryWallet);
-        };
+        Wallet sourceWallet = getActiveSystemWallet(partyWallet, COMMISSION_WALLET_TYPE, "commission");
+        Wallet beneficiaryWallet = findActiveAccountWallet(
+                partyWallet.getAccountId(),
+                partyWallet.getCurrency(),
+                COMMISSION_WALLET_TYPE
+        ).orElseGet(() -> getActiveAccountWallet(
+                partyWallet.getAccountId(),
+                partyWallet.getCurrency(),
+                MAIN_WALLET_TYPE,
+                "commission beneficiary"
+        ));
 
+        return applyFundedPricingAdjustment(
+                "commission",
+                debitorWallet,
+                creditorWallet,
+                serviceCode,
+                txnId,
+                commissionAmount,
+                sourceWallet,
+                beneficiaryWallet,
+                beneficiaryParty,
+                status,
+                firstSequenceNumber
+        );
+    }
+
+    private PricingAdjustmentApplication applyDiscountIfRequired(
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            String serviceCode,
+            String txnId,
+            PricingComputationResponse pricingComputation,
+            String status,
+            Long firstSequenceNumber
+    ) {
+        BigDecimal discountAmount = pricingComputation == null
+                ? BigDecimal.ZERO
+                : positiveAmount(pricingComputation.getDiscountAmount());
+        if (discountAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return PricingAdjustmentApplication.none();
+        }
+
+        String beneficiaryParty = normalizeWalletParty(
+                pricingComputation.getDiscountAffectedParty(),
+                "discount beneficiary"
+        );
+        Wallet partyWallet = SERVICE_CHARGE_PAYER_RECEIVER.equals(beneficiaryParty)
+                ? creditorWallet
+                : debitorWallet;
+        Wallet sourceWallet = getActiveSystemWallet(partyWallet, COMMISSION_WALLET_TYPE, "discount");
+        Wallet beneficiaryWallet = getActiveAccountWallet(
+                partyWallet.getAccountId(),
+                partyWallet.getCurrency(),
+                MAIN_WALLET_TYPE,
+                "discount beneficiary"
+        );
+
+        return applyFundedPricingAdjustment(
+                "discount",
+                debitorWallet,
+                creditorWallet,
+                serviceCode,
+                txnId,
+                discountAmount,
+                sourceWallet,
+                beneficiaryWallet,
+                beneficiaryParty,
+                status,
+                firstSequenceNumber
+        );
+    }
+
+    private PricingAdjustmentApplication applyFundedPricingAdjustment(
+            String adjustmentType,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            String serviceCode,
+            String txnId,
+            BigDecimal adjustmentAmount,
+            Wallet sourceWallet,
+            Wallet beneficiaryWallet,
+            String beneficiaryParty,
+            String status,
+            Long firstSequenceNumber
+    ) {
         BigDecimal currencyFactor = new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
         LocalDateTime now = TenantTime.now();
-        BigDecimal dbCashbackAmount = cashbackAmount
+        BigDecimal dbAdjustmentAmount = adjustmentAmount
                 .multiply(currencyFactor)
                 .setScale(2, RoundingMode.HALF_UP);
 
@@ -1774,13 +1894,13 @@ public class BalanceService {
                 .subtract(sourceFicBefore)
                 .subtract(sourceFrozenBefore);
 
-        if (requiresBalanceCheck(sourceWallet) && sourceNetBalance.compareTo(dbCashbackAmount) < 0) {
+        if (requiresBalanceCheck(sourceWallet) && sourceNetBalance.compareTo(dbAdjustmentAmount) < 0) {
             throw new ApplicationException(
                     PaymentErrorCode.INSUFFICIENT_BALANCE,
                     null,
                     txnId,
                     Map.of(
-                            "amount", dbCashbackAmount.toPlainString(),
+                            "amount", dbAdjustmentAmount.toPlainString(),
                             "walletId", sourceWallet.getWalletId()
                     )
             );
@@ -1790,15 +1910,16 @@ public class BalanceService {
         BigDecimal beneficiaryFicBefore = beneficiaryBalance.getFicBalance();
         BigDecimal beneficiaryFrozenBefore = beneficiaryBalance.getFrozenBalance();
 
-        BigDecimal sourceBalAfter = sourceBalBefore.subtract(dbCashbackAmount);
-        BigDecimal beneficiaryBalAfter = beneficiaryBalBefore.add(dbCashbackAmount);
+        BigDecimal sourceBalAfter = sourceBalBefore.subtract(dbAdjustmentAmount);
+        BigDecimal beneficiaryBalAfter = beneficiaryBalBefore.add(dbAdjustmentAmount);
 
-        saveCashbackLedgerEntries(
+        savePricingAdjustmentLedgerEntries(
+                adjustmentType,
                 txnId,
                 serviceCode,
                 sourceWallet,
                 beneficiaryWallet,
-                dbCashbackAmount,
+                dbAdjustmentAmount,
                 sourceBalBefore,
                 sourceBalAfter,
                 beneficiaryBalBefore,
@@ -1811,13 +1932,14 @@ public class BalanceService {
         balanceRepo.save(sourceBalance);
         balanceRepo.save(beneficiaryBalance);
 
-        saveCashbackTransactionDetails(
+        savePricingAdjustmentTransactionDetails(
+                adjustmentType,
                 txnId,
                 now,
                 serviceCode,
                 sourceWallet,
                 beneficiaryWallet,
-                dbCashbackAmount,
+                dbAdjustmentAmount,
                 sourceBalBefore,
                 sourceBalAfter,
                 sourceFrozenBefore,
@@ -1837,39 +1959,169 @@ public class BalanceService {
         walletCacheService.refreshAccountWallets(sourceWallet.getAccountId());
         walletCacheService.refreshAccountWallets(beneficiaryWallet.getAccountId());
 
-        return new CashbackApplication(
+        return new PricingAdjustmentApplication(
                 true,
+                adjustmentType,
                 sourceWallet,
                 beneficiaryWallet,
-                dbCashbackAmount,
-                cashbackAmount,
-                payBy,
+                dbAdjustmentAmount,
+                adjustmentAmount,
                 beneficiaryParty,
                 firstSequenceNumber,
                 firstSequenceNumber + 1
         );
     }
 
-    private void saveCashbackLedgerEntries(
+    private Long nextSequenceNumber(PricingAdjustmentApplication application, Long currentSequenceNumber) {
+        if (application == null || !application.applied) {
+            return currentSequenceNumber;
+        }
+        return application.creditSequenceNumber + 1;
+    }
+
+    private CashbackApplication applyCashbackIfRequired(
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            String serviceCode,
+            String txnId,
+            PricingComputationResponse pricingComputation,
+            String status,
+            Long firstSequenceNumber
+    ) {
+        BigDecimal cashbackAmount = pricingComputation == null
+                ? BigDecimal.ZERO
+                : positiveAmount(pricingComputation.getCashbackAmount());
+        if (cashbackAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return CashbackApplication.none();
+        }
+
+        String beneficiaryParty = normalizeWalletParty(pricingComputation.getCashbackAffectedParty(), "cashback beneficiary");
+        Wallet beneficiaryWallet = SERVICE_CHARGE_PAYER_RECEIVER.equals(beneficiaryParty)
+                ? creditorWallet
+                : debitorWallet;
+
+        BigDecimal currencyFactor = new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
+        LocalDateTime now = TenantTime.now();
+        BigDecimal dbCashbackAmount = cashbackAmount
+                .multiply(currencyFactor)
+                .setScale(2, RoundingMode.HALF_UP);
+        String paymentSchedule = resolveCashbackPaymentSchedule(pricingComputation);
+        LocalDateTime payAt = resolveCashbackPayAt(paymentSchedule, now);
+
+        CashbackPayout payout = new CashbackPayout();
+        payout.setOriginalTransactionId(txnId);
+        payout.setServiceCode(serviceCode);
+        payout.setBeneficiaryAccountId(beneficiaryWallet.getAccountId());
+        payout.setBeneficiaryParty(beneficiaryParty);
+        payout.setAmount(dbCashbackAmount);
+        payout.setCurrency(trimCurrency(beneficiaryWallet.getCurrency()));
+        payout.setPaymentSchedule(paymentSchedule);
+        payout.setPayAt(payAt);
+        payout.setStatus(CashbackPayoutService.STATUS_PENDING);
+        payout.setPricingRuleDetails(buildPricingRules(
+                pricingComputation == null ? null : pricingComputation.getCashbackRules()
+        ).toString());
+        cashbackPayoutRepository.save(payout);
+
+        return new CashbackApplication(
+                true,
+                beneficiaryWallet,
+                dbCashbackAmount,
+                cashbackAmount,
+                SERVICE_CHARGE_PAYER_SYSTEM,
+                beneficiaryParty,
+                paymentSchedule,
+                payAt,
+                payout.getCashbackPayoutId()
+        );
+    }
+
+    private String resolveCashbackPaymentSchedule(PricingComputationResponse pricingComputation) {
+        if (pricingComputation == null || pricingComputation.getCashbackRules() == null) {
+            return CASHBACK_SCHEDULE_IMMEDIATE;
+        }
+        return pricingComputation.getCashbackRules().stream()
+                .map(PricingComputationResponse.PricingRuleDetails::getPricingConfig)
+                .map(this::extractCashbackPaymentSchedule)
+                .filter(schedule -> schedule != null && !schedule.isBlank())
+                .findFirst()
+                .orElse(CASHBACK_SCHEDULE_IMMEDIATE);
+    }
+
+    private String extractCashbackPaymentSchedule(com.fasterxml.jackson.databind.JsonNode pricingConfig) {
+        if (pricingConfig == null || pricingConfig.isNull()) {
+            return null;
+        }
+
+        for (String fieldName : List.of("cashbackPayout", "cashback_payout", "payout", "payment")) {
+            com.fasterxml.jackson.databind.JsonNode nested = pricingConfig.get(fieldName);
+            String nestedSchedule = extractCashbackPaymentSchedule(nested);
+            if (nestedSchedule != null) {
+                return nestedSchedule;
+            }
+        }
+
+        for (String fieldName : List.of("paymentSchedule", "payment_schedule", "payoutSchedule", "payout_schedule", "payAt", "pay_at")) {
+            com.fasterxml.jackson.databind.JsonNode value = pricingConfig.get(fieldName);
+            if (value != null && value.isTextual()) {
+                return normalizeCashbackPaymentSchedule(value.asText());
+            }
+        }
+
+        return null;
+    }
+
+    private String normalizeCashbackPaymentSchedule(String paymentSchedule) {
+        if (paymentSchedule == null || paymentSchedule.isBlank()) {
+            return CASHBACK_SCHEDULE_IMMEDIATE;
+        }
+
+        String normalizedSchedule = paymentSchedule.trim().toUpperCase().replace('-', '_').replace(' ', '_');
+        return switch (normalizedSchedule) {
+            case "NOW", "INSTANT", "IMMEDIATE" -> CASHBACK_SCHEDULE_IMMEDIATE;
+            case "EOD", "END_OF_DAY", "END_OF_TODAY" -> CASHBACK_SCHEDULE_END_OF_DAY;
+            case "EOM", "END_OF_MONTH", "MONTH_END" -> CASHBACK_SCHEDULE_END_OF_MONTH;
+            default -> CASHBACK_SCHEDULE_IMMEDIATE;
+        };
+    }
+
+    private LocalDateTime resolveCashbackPayAt(String paymentSchedule, LocalDateTime now) {
+        String normalizedSchedule = normalizeCashbackPaymentSchedule(paymentSchedule);
+        return switch (normalizedSchedule) {
+            case CASHBACK_SCHEDULE_END_OF_DAY -> now.toLocalDate().atTime(23, 59, 59);
+            case CASHBACK_SCHEDULE_END_OF_MONTH -> now.toLocalDate()
+                    .withDayOfMonth(now.toLocalDate().lengthOfMonth())
+                    .atTime(23, 59, 59);
+            default -> now;
+        };
+    }
+
+    private void savePricingAdjustmentLedgerEntries(
+            String adjustmentType,
             String txnId,
             String serviceCode,
             Wallet sourceWallet,
             Wallet beneficiaryWallet,
-            BigDecimal dbCashbackAmount,
+            BigDecimal dbAdjustmentAmount,
             BigDecimal sourceBalanceBefore,
             BigDecimal sourceBalanceAfter,
             BigDecimal beneficiaryBalanceBefore,
             BigDecimal beneficiaryBalanceAfter
     ) {
-        String debitDescription = "Cashback debit; sourceAccountId=%s; sourceWalletId=%d; beneficiaryAccountId=%s; beneficiaryWalletId=%d"
+        String displayType = adjustmentType == null || adjustmentType.isBlank()
+                ? "Pricing adjustment"
+                : adjustmentType.substring(0, 1).toUpperCase() + adjustmentType.substring(1).toLowerCase();
+        String debitDescription = "%s debit; sourceAccountId=%s; sourceWalletId=%d; beneficiaryAccountId=%s; beneficiaryWalletId=%d"
                 .formatted(
+                        displayType,
                         sourceWallet.getAccountId(),
                         sourceWallet.getWalletId(),
                         beneficiaryWallet.getAccountId(),
                         beneficiaryWallet.getWalletId()
                 );
-        String creditDescription = "Cashback credit; sourceAccountId=%s; sourceWalletId=%d; beneficiaryAccountId=%s; beneficiaryWalletId=%d"
+        String creditDescription = "%s credit; sourceAccountId=%s; sourceWalletId=%d; beneficiaryAccountId=%s; beneficiaryWalletId=%d"
                 .formatted(
+                        displayType,
                         sourceWallet.getAccountId(),
                         sourceWallet.getWalletId(),
                         beneficiaryWallet.getAccountId(),
@@ -1879,7 +2131,7 @@ public class BalanceService {
                 txnId,
                 sourceWallet,
                 Constants.TXN_TYPE_DR,
-                dbCashbackAmount,
+                dbAdjustmentAmount,
                 sourceBalanceBefore,
                 sourceBalanceAfter,
                 serviceCode,
@@ -1889,7 +2141,7 @@ public class BalanceService {
                 txnId,
                 beneficiaryWallet,
                 Constants.TXN_TYPE_CR,
-                dbCashbackAmount,
+                dbAdjustmentAmount,
                 beneficiaryBalanceBefore,
                 beneficiaryBalanceAfter,
                 serviceCode,
@@ -1897,13 +2149,14 @@ public class BalanceService {
         );
     }
 
-    private void saveCashbackTransactionDetails(
+    private void savePricingAdjustmentTransactionDetails(
+            String adjustmentType,
             String txnId,
             LocalDateTime now,
             String serviceCode,
             Wallet sourceWallet,
             Wallet beneficiaryWallet,
-            BigDecimal dbCashbackAmount,
+            BigDecimal dbAdjustmentAmount,
             BigDecimal sourceBalanceBefore,
             BigDecimal sourceBalanceAfter,
             BigDecimal sourceFrozenBefore,
@@ -1937,7 +2190,7 @@ public class BalanceService {
                 "SYSTEM",
                 systemIdentifier,
                 beneficiaryIdentifier,
-                dbCashbackAmount,
+                dbAdjustmentAmount,
                 sourceBalanceBefore,
                 sourceBalanceAfter,
                 sourceFrozenBefore,
@@ -1957,7 +2210,7 @@ public class BalanceService {
                 beneficiaryUserType,
                 beneficiaryIdentifier,
                 systemIdentifier,
-                dbCashbackAmount,
+                dbAdjustmentAmount,
                 beneficiaryBalanceBefore,
                 beneficiaryBalanceAfter,
                 beneficiaryFrozenBefore,
@@ -1969,7 +2222,45 @@ public class BalanceService {
                 status
         );
 
+        setPricingAdjustmentMetadata(debitDetail, adjustmentType, dbAdjustmentAmount, true);
+        setPricingAdjustmentMetadata(creditDetail, adjustmentType, dbAdjustmentAmount, false);
+
         transactionDetailsRepository.saveAll(List.of(debitDetail, creditDetail));
+    }
+
+    private void setPricingAdjustmentMetadata(
+            TransactionDetails detail,
+            String adjustmentType,
+            BigDecimal amount,
+            boolean debit
+    ) {
+        String normalizedAdjustmentType = adjustmentType == null ? "" : adjustmentType.trim().toLowerCase();
+        if ("commission".equals(normalizedAdjustmentType)) {
+            detail.setTransactionType(debit
+                    ? Constants.TXN_DETAIL_TYPE_COMMISSION_PAID
+                    : Constants.TXN_DETAIL_TYPE_COMMISSION_RECEIVED);
+        } else if ("discount".equals(normalizedAdjustmentType)) {
+            detail.setTransactionType(debit
+                    ? Constants.TXN_DETAIL_TYPE_DISCOUNT_PAID
+                    : Constants.TXN_DETAIL_TYPE_DISCOUNT_RECEIVED);
+        }
+        setPricingDetailAttributes(detail, normalizedAdjustmentType, amount);
+    }
+
+    private void setPricingDetailAttributes(TransactionDetails detail, String adjustmentType, BigDecimal amount) {
+        detail.setAttr6Name(resolvePricingDetailName(adjustmentType));
+        detail.setAttr6Value(amount == null ? null : amount.toPlainString());
+    }
+
+    private String resolvePricingDetailName(String adjustmentType) {
+        String normalizedAdjustmentType = adjustmentType == null ? "" : adjustmentType.trim().toLowerCase();
+        if ("commission".equals(normalizedAdjustmentType)) {
+            return "COMMISSION";
+        }
+        if ("discount".equals(normalizedAdjustmentType)) {
+            return "DISCOUNT";
+        }
+        return "SERVICE_CHARGE";
     }
 
     private void updatePricingTransactionSummary(
@@ -1979,11 +2270,14 @@ public class BalanceService {
             BigDecimal netAmount,
             BigDecimal serviceChargeAmount,
             BigDecimal discountAmount,
+            BigDecimal commissionAmount,
             BigDecimal cashbackAmount,
             String serviceChargePayer,
             Wallet debitorWallet,
             Wallet creditorWallet,
             PricingComputationResponse pricingComputation,
+            PricingAdjustmentApplication commissionApplication,
+            PricingAdjustmentApplication discountApplication,
             CashbackApplication cashbackApplication
     ) {
         BigDecimal currencyFactor = new BigDecimal(propertyReader.getPropertyValue("currency.factor"));
@@ -1991,6 +2285,7 @@ public class BalanceService {
         BigDecimal dbNetAmount = netAmount.multiply(currencyFactor).setScale(2, RoundingMode.HALF_UP);
         BigDecimal dbServiceChargeAmount = serviceChargeAmount.multiply(currencyFactor).setScale(2, RoundingMode.HALF_UP);
         BigDecimal dbDiscountAmount = discountAmount.multiply(currencyFactor).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal dbCommissionAmount = commissionAmount.multiply(currencyFactor).setScale(2, RoundingMode.HALF_UP);
         BigDecimal dbCashbackAmount = cashbackAmount.multiply(currencyFactor).setScale(2, RoundingMode.HALF_UP);
 
         Transactions transaction = transactionsRepository.findByTransactionId(txnId);
@@ -2006,21 +2301,37 @@ public class BalanceService {
                     serviceChargeAmount,
                     dbDiscountAmount,
                     discountAmount,
+                    dbCommissionAmount,
+                    commissionAmount,
                     dbCashbackAmount,
                     cashbackAmount,
                     serviceChargePayer,
                     debitorWallet,
                     creditorWallet,
                     pricingComputation,
+                    commissionApplication,
+                    discountApplication,
                     cashbackApplication
             ));
             transactionsRepository.save(transaction);
         }
 
-        updatePrimaryTransactionDetailAmounts(txnId, dbNetAmount);
+        updatePrimaryTransactionDetailAmounts(
+                txnId,
+                dbNetAmount,
+                dbServiceChargeAmount,
+                dbCommissionAmount,
+                dbDiscountAmount
+        );
     }
 
-    private void updatePrimaryTransactionDetailAmounts(String txnId, BigDecimal dbNetAmount) {
+    private void updatePrimaryTransactionDetailAmounts(
+            String txnId,
+            BigDecimal dbNetAmount,
+            BigDecimal dbServiceChargeAmount,
+            BigDecimal dbCommissionAmount,
+            BigDecimal dbDiscountAmount
+    ) {
         List<TransactionDetails> transactionDetails = transactionDetailsRepository.findByIdTransactionId(txnId).stream()
                 .filter(transactionDetail -> transactionDetail.getId() != null)
                 .filter(transactionDetail -> transactionDetail.getId().getTxnSequenceNumber() <= 2)
@@ -2028,8 +2339,43 @@ public class BalanceService {
         for (TransactionDetails transactionDetail : transactionDetails) {
             transactionDetail.setTransactionValue(dbNetAmount);
             transactionDetail.setApprovedValue(dbNetAmount);
+            setPrimaryPricingAttributes(
+                    transactionDetail,
+                    dbServiceChargeAmount,
+                    dbCommissionAmount,
+                    dbDiscountAmount
+            );
         }
         transactionDetailsRepository.saveAll(transactionDetails);
+    }
+
+    private void setPrimaryPricingAttributes(
+            TransactionDetails detail,
+            BigDecimal dbServiceChargeAmount,
+            BigDecimal dbCommissionAmount,
+            BigDecimal dbDiscountAmount
+    ) {
+        List<String> names = new ArrayList<>();
+        List<String> amounts = new ArrayList<>();
+        addPricingAttribute(names, amounts, "SERVICE_CHARGE", dbServiceChargeAmount);
+        addPricingAttribute(names, amounts, "COMMISSION", dbCommissionAmount);
+        addPricingAttribute(names, amounts, "DISCOUNT", dbDiscountAmount);
+        if (!names.isEmpty()) {
+            detail.setAttr6Name(String.join(";", names));
+            detail.setAttr6Value(String.join(";", amounts));
+        }
+    }
+
+    private void addPricingAttribute(
+            List<String> names,
+            List<String> amounts,
+            String name,
+            BigDecimal amount
+    ) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+            names.add(name);
+            amounts.add(amount.toPlainString());
+        }
     }
 
     private void updateTransactionDetails(
@@ -2054,6 +2400,7 @@ public class BalanceService {
             transactionDetail.setTransferOn(now);
             transactionDetail.setTransferStatus(status);
             if (transactionDetail.getEntryType().equalsIgnoreCase(Constants.TXN_TYPE_DR)) {
+                transactionDetail.setTransactionType(Constants.TXN_DETAIL_TYPE_MONEY_PAID);
                 transactionDetail.setPreviousBalance(senderBalBefore);
                 transactionDetail.setPostBalance(senderBalAfter);
                 transactionDetail.setPreviousFrozenBalance(senderFrozenBefore);
@@ -2062,6 +2409,7 @@ public class BalanceService {
                 transactionDetail.setPostFicBalance(senderFicAfter);
             }
             if (transactionDetail.getEntryType().equalsIgnoreCase(Constants.TXN_TYPE_CR)) {
+                transactionDetail.setTransactionType(Constants.TXN_DETAIL_TYPE_MONEY_RECEIVED);
                 transactionDetail.setPreviousBalance(receiverBalBefore);
                 transactionDetail.setPostBalance(receiverBalAfter);
                 transactionDetail.setPreviousFrozenBalance(receiverFrozenBefore);
@@ -2200,14 +2548,18 @@ public class BalanceService {
     }
 
     private Wallet getActiveSystemWallet(Wallet serviceChargeWallet) {
+        return getActiveSystemWallet(serviceChargeWallet, SERVICE_CHARGE_WALLET_TYPE, "service charge");
+    }
+
+    private Wallet getActiveSystemWallet(Wallet referenceWallet, String walletType, String purpose) {
         Wallet systemWallet = walletRepository.findByAccountIdAndCurrencyAndWalletType(
                         SYSTEM_ACCOUNT_ID,
-                        serviceChargeWallet.getCurrency(),
-                        serviceChargeWallet.getWalletType()
+                        referenceWallet.getCurrency(),
+                        walletType
                 )
                 .orElseThrow(() -> new ApplicationException(
                         ErrorCodes.SYSTEM_WALLET_NOT_FOUND,
-                        "System wallet not found for service charge"
+                        "System wallet not found for " + purpose
                 ));
 
         if (!Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(systemWallet.getStatus())) {
@@ -2219,6 +2571,20 @@ public class BalanceService {
         }
 
         return systemWallet;
+    }
+
+    private Wallet getActiveAccountWallet(String accountId, String currency, String walletType, String purpose) {
+        return findActiveAccountWallet(accountId, currency, walletType)
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCodes.INVALID_WALLET_NO,
+                        "Active " + walletType + " wallet not found for " + purpose
+                ));
+    }
+
+    private Optional<Wallet> findActiveAccountWallet(String accountId, String currency, String walletType) {
+        return walletRepository.findByAccountIdAndCurrencyAndWalletType(accountId, currency, walletType)
+                .filter(wallet -> Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(wallet.getStatus()))
+                .filter(wallet -> !Boolean.TRUE.equals(wallet.getIsLocked()));
     }
 
     private String buildServiceChargeDetails(
@@ -2238,8 +2604,7 @@ public class BalanceService {
                 .formatted(serviceChargePayer));
         serviceCharge.put("serviceCode", serviceCode);
         serviceCharge.put("ledgerTxnType", serviceCode);
-        serviceCharge.put("transactionDetailServiceCode", serviceCode);
-        serviceCharge.put("transactionDetailSequences", new JSONArray(List.of(3, 4)));
+        serviceCharge.put("detailTableEntry", false);
         serviceCharge.put("amount", dbServiceChargeAmount);
         serviceCharge.put("requestAmount", serviceChargeAmount);
         serviceCharge.put("transactionAmount", dbAmount);
@@ -2267,12 +2632,16 @@ public class BalanceService {
             BigDecimal requestServiceChargeAmount,
             BigDecimal dbDiscountAmount,
             BigDecimal requestDiscountAmount,
+            BigDecimal dbCommissionAmount,
+            BigDecimal requestCommissionAmount,
             BigDecimal dbCashbackAmount,
             BigDecimal requestCashbackAmount,
             String serviceChargePayer,
             Wallet debitorWallet,
             Wallet creditorWallet,
             PricingComputationResponse pricingComputation,
+            PricingAdjustmentApplication commissionApplication,
+            PricingAdjustmentApplication discountApplication,
             CashbackApplication cashbackApplication
     ) {
         JSONObject root = new JSONObject();
@@ -2286,6 +2655,8 @@ public class BalanceService {
         summary.put("requestNetTransactionAmount", requestNetAmount);
         summary.put("serviceChargeAmount", dbServiceChargeAmount);
         summary.put("requestServiceChargeAmount", requestServiceChargeAmount);
+        summary.put("commissionAmount", dbCommissionAmount);
+        summary.put("requestCommissionAmount", requestCommissionAmount);
         summary.put("cashbackAmount", dbCashbackAmount);
         summary.put("requestCashbackAmount", requestCashbackAmount);
         summary.put("totalTransactionValue", dbNetAmount.add(dbServiceChargeAmount));
@@ -2305,8 +2676,7 @@ public class BalanceService {
                     .formatted(normalizedPayer));
             serviceCharge.put("serviceCode", serviceCode);
             serviceCharge.put("ledgerTxnType", serviceCode);
-            serviceCharge.put("transactionDetailServiceCode", serviceCode);
-            serviceCharge.put("transactionDetailSequences", new JSONArray(List.of(3, 4)));
+            serviceCharge.put("detailTableEntry", false);
             serviceCharge.put("amount", dbServiceChargeAmount);
             serviceCharge.put("requestAmount", requestServiceChargeAmount);
             serviceCharge.put("transactionAmount", dbNetAmount);
@@ -2338,6 +2708,17 @@ public class BalanceService {
             discount.put("affectedParty", pricingComputation == null
                     ? JSONObject.NULL
                     : pricingComputation.getDiscountAffectedParty());
+            if (discountApplication != null && discountApplication.applied) {
+                discount.put("fundingDescription", "Discount debited from system commission wallet and credited to beneficiary main wallet");
+                discount.put("transactionDetailSequences", new JSONArray(List.of(
+                        discountApplication.debitSequenceNumber,
+                        discountApplication.creditSequenceNumber
+                )));
+                discount.put("debitedAccountId", discountApplication.sourceWallet.getAccountId());
+                discount.put("debitedWalletId", discountApplication.sourceWallet.getWalletId());
+                discount.put("creditedAccountId", discountApplication.beneficiaryWallet.getAccountId());
+                discount.put("creditedWalletId", discountApplication.beneficiaryWallet.getWalletId());
+            }
             discount.put("currency", trimCurrency(debitorWallet.getCurrency()));
             discount.put("pricingRules", buildPricingRules(
                     pricingComputation == null ? null : pricingComputation.getDiscountRules()
@@ -2345,25 +2726,48 @@ public class BalanceService {
             root.put("discount", discount);
         }
 
+        if (commissionApplication != null && commissionApplication.applied) {
+            JSONObject commission = new JSONObject();
+            commission.put("description", "Commission debited from system commission wallet and credited to beneficiary commission or main wallet");
+            commission.put("serviceCode", serviceCode);
+            commission.put("ledgerTxnType", serviceCode);
+            commission.put("transactionDetailServiceCode", serviceCode);
+            commission.put("transactionDetailSequences", new JSONArray(List.of(
+                    commissionApplication.debitSequenceNumber,
+                    commissionApplication.creditSequenceNumber
+            )));
+            commission.put("amount", commissionApplication.dbAmount);
+            commission.put("requestAmount", commissionApplication.requestAmount);
+            commission.put("beneficiary", commissionApplication.beneficiaryParty);
+            commission.put("debitedAccountId", commissionApplication.sourceWallet.getAccountId());
+            commission.put("debitedWalletId", commissionApplication.sourceWallet.getWalletId());
+            commission.put("creditedAccountId", commissionApplication.beneficiaryWallet.getAccountId());
+            commission.put("creditedWalletId", commissionApplication.beneficiaryWallet.getWalletId());
+            commission.put("currency", trimCurrency(commissionApplication.beneficiaryWallet.getCurrency()));
+            commission.put("pricingRules", buildPricingRules(
+                    pricingComputation == null ? null : pricingComputation.getCommissionRules()
+            ));
+            root.put("commission", commission);
+        }
+
         if (cashbackApplication != null && cashbackApplication.applied) {
             JSONObject cashback = new JSONObject();
-            cashback.put("description", "Cashback debited from %s and credited to %s"
-                    .formatted(cashbackApplication.payBy, cashbackApplication.beneficiaryParty));
+            cashback.put("description", "Cashback scheduled for separate payout from system commission wallet");
             cashback.put("serviceCode", serviceCode);
-            cashback.put("ledgerTxnType", serviceCode);
-            cashback.put("transactionDetailServiceCode", serviceCode);
-            cashback.put("transactionDetailSequences", new JSONArray(List.of(
-                    cashbackApplication.debitSequenceNumber,
-                    cashbackApplication.creditSequenceNumber
-            )));
             cashback.put("amount", cashbackApplication.dbAmount);
             cashback.put("requestAmount", cashbackApplication.requestAmount);
             cashback.put("payBy", cashbackApplication.payBy);
             cashback.put("beneficiary", cashbackApplication.beneficiaryParty);
-            cashback.put("debitedAccountId", cashbackApplication.sourceWallet.getAccountId());
-            cashback.put("debitedWalletId", cashbackApplication.sourceWallet.getWalletId());
+            cashback.put("cashbackPayoutId", cashbackApplication.cashbackPayoutId);
+            cashback.put("paymentSchedule", cashbackApplication.paymentSchedule);
+            cashback.put("payAt", cashbackApplication.payAt == null
+                    ? JSONObject.NULL
+                    : cashbackApplication.payAt.toString());
+            cashback.put("status", CashbackPayoutService.STATUS_PENDING);
+            cashback.put("debitedAccountId", SYSTEM_ACCOUNT_ID);
+            cashback.put("debitedWalletType", COMMISSION_WALLET_TYPE);
             cashback.put("creditedAccountId", cashbackApplication.beneficiaryWallet.getAccountId());
-            cashback.put("creditedWalletId", cashbackApplication.beneficiaryWallet.getWalletId());
+            cashback.put("creditedWalletType", "BONUS_OR_MAIN");
             cashback.put("currency", trimCurrency(cashbackApplication.beneficiaryWallet.getCurrency()));
             cashback.put("pricingRules", buildPricingRules(
                     pricingComputation == null ? null : pricingComputation.getCashbackRules()
@@ -2425,46 +2829,94 @@ public class BalanceService {
         return jsonNode.asText();
     }
 
-    private static final class CashbackApplication {
+    private static final class PricingAdjustmentApplication {
         private final boolean applied;
+        private final String adjustmentType;
         private final Wallet sourceWallet;
         private final Wallet beneficiaryWallet;
         private final BigDecimal dbAmount;
         private final BigDecimal requestAmount;
-        private final String payBy;
         private final String beneficiaryParty;
         private final Long debitSequenceNumber;
         private final Long creditSequenceNumber;
 
-        private CashbackApplication(
+        private PricingAdjustmentApplication(
                 boolean applied,
+                String adjustmentType,
                 Wallet sourceWallet,
                 Wallet beneficiaryWallet,
                 BigDecimal dbAmount,
                 BigDecimal requestAmount,
-                String payBy,
                 String beneficiaryParty,
                 Long debitSequenceNumber,
                 Long creditSequenceNumber
         ) {
             this.applied = applied;
+            this.adjustmentType = adjustmentType;
             this.sourceWallet = sourceWallet;
+            this.beneficiaryWallet = beneficiaryWallet;
+            this.dbAmount = dbAmount;
+            this.requestAmount = requestAmount;
+            this.beneficiaryParty = beneficiaryParty;
+            this.debitSequenceNumber = debitSequenceNumber;
+            this.creditSequenceNumber = creditSequenceNumber;
+        }
+
+        private static PricingAdjustmentApplication none() {
+            return new PricingAdjustmentApplication(
+                    false,
+                    null,
+                    null,
+                    null,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    null,
+                    null,
+                    null
+            );
+        }
+    }
+
+    private static final class CashbackApplication {
+        private final boolean applied;
+        private final Wallet beneficiaryWallet;
+        private final BigDecimal dbAmount;
+        private final BigDecimal requestAmount;
+        private final String payBy;
+        private final String beneficiaryParty;
+        private final String paymentSchedule;
+        private final LocalDateTime payAt;
+        private final Long cashbackPayoutId;
+
+        private CashbackApplication(
+                boolean applied,
+                Wallet beneficiaryWallet,
+                BigDecimal dbAmount,
+                BigDecimal requestAmount,
+                String payBy,
+                String beneficiaryParty,
+                String paymentSchedule,
+                LocalDateTime payAt,
+                Long cashbackPayoutId
+        ) {
+            this.applied = applied;
             this.beneficiaryWallet = beneficiaryWallet;
             this.dbAmount = dbAmount;
             this.requestAmount = requestAmount;
             this.payBy = payBy;
             this.beneficiaryParty = beneficiaryParty;
-            this.debitSequenceNumber = debitSequenceNumber;
-            this.creditSequenceNumber = creditSequenceNumber;
+            this.paymentSchedule = paymentSchedule;
+            this.payAt = payAt;
+            this.cashbackPayoutId = cashbackPayoutId;
         }
 
         private static CashbackApplication none() {
             return new CashbackApplication(
                     false,
                     null,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
                     null,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
                     null,
                     null,
                     null,

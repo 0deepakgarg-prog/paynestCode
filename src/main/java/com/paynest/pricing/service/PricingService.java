@@ -342,6 +342,7 @@ public class PricingService {
                 if (commissionResponse != null) {
                     selectedResponse.setCommissionAmount(commissionResponse.getCommissionAmount());
                     selectedResponse.setCommissionAffectedParty(commissionResponse.getCommissionAffectedParty());
+                    selectedResponse.setCommissionRules(commissionResponse.getCommissionRules());
                 }
 
                 PricingComputationResponse discountResponse = calculatePricingAmountsForRuleTypes(
@@ -451,6 +452,7 @@ public class PricingService {
         if (maxCommissionResponse != null) {
             fallbackResponse.setCommissionAmount(maxCommissionResponse.getCommissionAmount());
             fallbackResponse.setCommissionAffectedParty(maxCommissionResponse.getCommissionAffectedParty());
+            fallbackResponse.setCommissionRules(maxCommissionResponse.getCommissionRules());
         }
         if (maxCashbackResponse != null) {
             fallbackResponse.setCashbackAmount(maxCashbackResponse.getCashbackAmount());
@@ -583,6 +585,7 @@ public class PricingService {
             case "COMMISSION" -> {
                 response.addCommission(amount);
                 response.markCommissionAffectedParty(affectedParty);
+                response.addCommissionRule(toPricingRuleDetails(pricingRule, amount));
             }
             case "DISCOUNT" -> {
                 response.addDiscount(amount);
@@ -747,8 +750,9 @@ public class PricingService {
     }
 
     private AccountIdentifier resolveAccountIdentifier(String identifierType, String identifierValue) {
+        String lookupIdentifierType = "MSISDN".equalsIgnoreCase(identifierType) ? "MOBILE" : identifierType;
         return accountIdentifierRepository
-                .findByIdentifierTypeAndIdentifierValueAndStatus(identifierType, identifierValue, "ACTIVE")
+                .findByIdentifierTypeAndIdentifierValueAndStatus(lookupIdentifierType, identifierValue, "ACTIVE")
                 .orElseThrow(() -> new ApplicationException(
                         ErrorCodes.ACCOUNT_IDENTIFIER_NOT_FOUND,
                         "Active account identifier not found"
@@ -771,7 +775,7 @@ public class PricingService {
                 .toList();
 
         if (tagKeys.isEmpty()) {
-            throw new ApplicationException(ErrorCodes.TAG_NOT_FOUND, "Active tag not found for account: " + accountId);
+            return List.of("ALLTAGS");
         }
 
         return tagKeys;
@@ -920,6 +924,7 @@ public class PricingService {
         if (maxCommissionResponse != null) {
             targetResponse.setCommissionAmount(maxCommissionResponse.getCommissionAmount());
             targetResponse.setCommissionAffectedParty(maxCommissionResponse.getCommissionAffectedParty());
+            targetResponse.setCommissionRules(maxCommissionResponse.getCommissionRules());
         }
         if (maxCashbackResponse != null) {
             targetResponse.setCashbackAmount(maxCashbackResponse.getCashbackAmount());

@@ -58,6 +58,9 @@ public class TransactionDetails {
     @Column(name = "currency", length = 10)
     private String currency;
 
+    @Column(name = "transaction_type", length = 50)
+    private String transactionType;
+
     @Column(name = "previous_fic_balance")
     private BigDecimal previousFicBalance;
 

@@ -4,8 +4,10 @@ import com.paynest.config.dto.response.ApiResponse;
 import com.paynest.exception.ApplicationException;
 import com.paynest.users.dto.response.AccountKycDetailsResponse;
 import com.paynest.users.dto.request.*;
+import com.paynest.users.dto.response.AccountStatusChangeResponse;
 import com.paynest.users.dto.response.RegistrationResponse;
 import com.paynest.users.entity.Account;
+import com.paynest.users.entity.AccountStatusHistory;
 import com.paynest.users.service.PinService;
 import com.paynest.users.service.AccountService;
 import jakarta.validation.Valid;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.List;
 
 
 @RestController
@@ -184,6 +187,42 @@ public class AccountController {
                 );
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/{accountId}/suspend")
+    public ResponseEntity<ApiResponse> suspendAccount(
+            @PathVariable String accountId,
+            @RequestBody(required = false) AccountStatusChangeRequest request
+    ) {
+        AccountStatusChangeResponse response = accountService.suspendAccount(accountId, request);
+        return ResponseEntity.ok(new ApiResponse(
+                "SUCCESS",
+                "Account suspended successfully",
+                "accountStatus", response
+        ));
+    }
+
+    @PostMapping("/{accountId}/resume")
+    public ResponseEntity<ApiResponse> resumeAccount(
+            @PathVariable String accountId,
+            @RequestBody(required = false) AccountStatusChangeRequest request
+    ) {
+        AccountStatusChangeResponse response = accountService.resumeAccount(accountId, request);
+        return ResponseEntity.ok(new ApiResponse(
+                "SUCCESS",
+                "Account resumed successfully",
+                "accountStatus", response
+        ));
+    }
+
+    @GetMapping("/{accountId}/status-history")
+    public ResponseEntity<ApiResponse> getAccountStatusHistory(@PathVariable String accountId) {
+        List<AccountStatusHistory> history = accountService.getAccountStatusHistory(accountId);
+        return ResponseEntity.ok(new ApiResponse(
+                "SUCCESS",
+                "Account status history fetched successfully",
+                "accountStatusHistory", history
+        ));
     }
 
     @DeleteMapping("/subscriber/{accountId}")

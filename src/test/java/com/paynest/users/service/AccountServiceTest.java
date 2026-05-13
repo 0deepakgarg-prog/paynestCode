@@ -23,6 +23,7 @@ import com.paynest.users.repository.AccountAuthRepository;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.users.repository.AccountNotificationEndpointRepository;
 import com.paynest.users.repository.AccountRepository;
+import com.paynest.users.repository.AccountStatusHistoryRepository;
 import com.paynest.users.repository.AuthChallengeRepository;
 import com.paynest.config.repository.EnumerationRepository;
 import com.paynest.config.repository.SupportedLanguageRepository;
@@ -108,6 +109,9 @@ class AccountServiceTest {
     private WalletService walletService;
 
     @Mock
+    private WalletCacheService walletCacheService;
+
+    @Mock
     private TransactionsService transactionsService;
 
     @Mock
@@ -118,6 +122,9 @@ class AccountServiceTest {
 
     @Mock
     private AccountNotificationEndpointRepository accountNotificationEndpointRepository;
+
+    @Mock
+    private AccountStatusHistoryRepository accountStatusHistoryRepository;
 
     @InjectMocks
     private AccountService accountService;

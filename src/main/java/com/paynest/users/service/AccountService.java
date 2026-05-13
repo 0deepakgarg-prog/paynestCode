@@ -17,6 +17,7 @@ import com.paynest.tag.entity.UserTag;
 import com.paynest.tag.repository.TagRepository;
 import com.paynest.tag.repository.UserTagRepository;
 import com.paynest.users.dto.request.*;
+import com.paynest.users.dto.response.AccountStatusChangeResponse;
 import com.paynest.users.dto.response.AccountKycDetailsResponse;
 import com.paynest.users.entity.*;
 import com.paynest.exception.ApplicationException;
@@ -69,10 +70,12 @@ public class AccountService {
     private final UserRoleRepository userRoleRepository;
     private final AuthChallengeRepository authChallengeRepository;
     private final WalletService walletService;
+    private final WalletCacheService walletCacheService;
     private final TransactionsService transactionsService;
     private final TagRepository tagRepository;
     private final UserTagRepository userTagRepository;
     private final AccountNotificationEndpointRepository accountNotificationEndpointRepository;
+    private final AccountStatusHistoryRepository accountStatusHistoryRepository;
 
     @Transactional
     public Account registerUser(RegistrationRequestWithOtp request) {
@@ -272,7 +275,7 @@ public class AccountService {
 
         String accountType = accountRequest.getUser().getAccountType();
         String normalizedAccountType = accountType == null ? "" : accountType.toUpperCase(Locale.ROOT);
-        Set<String> allowedAccountTypes = Set.of("ADMIN", "AGENT", "MERCHANT", "BILLER");
+        Set<String> allowedAccountTypes = Set.of("ADMIN", "AGENT", "MERCHANT", "BILLER", "BUSINESS");
         if (!allowedAccountTypes.contains(normalizedAccountType)) {
             log.warn(
                     "RegisterUser validation failed. requestId={}, reason=unsupported_account_type, accountType={}, allowedAccountTypes={}",
@@ -591,6 +594,7 @@ public class AccountService {
 
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
+        ensureAccountCanBeMutated(account);
 
         account.setFirstName(request.getUser().getFirstName());
         account.setLastName(request.getUser().getLastName());
@@ -653,6 +657,7 @@ public class AccountService {
 
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
+        ensureAccountCanBeMutated(account);
 
         KycDocument kycDocument = new KycDocument();
         kycDocument.setAccountId(account.getAccountId());
@@ -683,11 +688,168 @@ public class AccountService {
     }
 
     @Transactional
+    public AccountStatusChangeResponse suspendAccount(String accountId, AccountStatusChangeRequest request) {
+        validateAdminAccess();
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
+        validateSuspendResumeTarget(account);
+        if (!Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(account.getStatus())) {
+            throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT_STATUS, "Only ACTIVE accounts can be suspended");
+        }
+        return changeAccountLifecycleStatus(
+                account,
+                Constants.ACCOUNT_STATUS_SUSPENDED,
+                "SUSPEND",
+                request
+        );
+    }
+
+    @Transactional
+    public AccountStatusChangeResponse resumeAccount(String accountId, AccountStatusChangeRequest request) {
+        validateAdminAccess();
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
+        validateSuspendResumeTarget(account);
+        if (!Constants.ACCOUNT_STATUS_SUSPENDED.equalsIgnoreCase(account.getStatus())) {
+            throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT_STATUS, "Only SUSPENDED accounts can be resumed");
+        }
+        return changeAccountLifecycleStatus(
+                account,
+                Constants.ACCOUNT_STATUS_ACTIVE,
+                "RESUME",
+                request
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<AccountStatusHistory> getAccountStatusHistory(String accountId) {
+        validateAdminAccess();
+        return accountStatusHistoryRepository.findByAccountIdOrderByPerformedAtDesc(accountId);
+    }
+
+    private AccountStatusChangeResponse changeAccountLifecycleStatus(
+            Account account,
+            String newStatus,
+            String actionType,
+            AccountStatusChangeRequest request
+    ) {
+        LocalDateTime now = TenantTime.now();
+        String previousStatus = account.getStatus();
+        String actorAccountId = JWTUtils.getCurrentAccountId();
+        String actorAccountType = JWTUtils.getCurrentAccountType();
+
+        account.setStatus(newStatus);
+        account.setUpdatedAt(now);
+        account.setUpdatedBy(actorAccountId);
+        accountRepository.save(account);
+
+        updateWalletStatusesForAccount(account.getAccountId(), newStatus, now);
+        revokeAuthChallengesIfSuspended(account.getAccountId(), newStatus);
+        accountStatusHistoryRepository.save(buildAccountStatusHistory(
+                account,
+                previousStatus,
+                newStatus,
+                actionType,
+                actorAccountId,
+                actorAccountType,
+                request,
+                now
+        ));
+
+        return new AccountStatusChangeResponse(
+                account.getAccountId(),
+                account.getAccountType(),
+                previousStatus,
+                newStatus,
+                actionType,
+                actorAccountId,
+                now
+        );
+    }
+
+    private void updateWalletStatusesForAccount(String accountId, String newStatus, LocalDateTime now) {
+        List<Wallet> wallets = walletRepository.findByAccountId(accountId);
+        for (Wallet wallet : wallets) {
+            if (Constants.ACCOUNT_STATUS_SUSPENDED.equalsIgnoreCase(newStatus)
+                    && Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(wallet.getStatus())) {
+                wallet.setStatus(Constants.ACCOUNT_STATUS_SUSPENDED);
+                wallet.setIsLocked(true);
+                wallet.setUpdatedAt(now);
+            } else if (Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(newStatus)
+                    && Constants.ACCOUNT_STATUS_SUSPENDED.equalsIgnoreCase(wallet.getStatus())) {
+                wallet.setStatus(Constants.ACCOUNT_STATUS_ACTIVE);
+                wallet.setIsLocked(false);
+                wallet.setUpdatedAt(now);
+            }
+        }
+        if (!wallets.isEmpty()) {
+            walletRepository.saveAll(wallets);
+            walletCacheService.refreshAccountWallets(accountId);
+        }
+    }
+
+    private void revokeAuthChallengesIfSuspended(String accountId, String newStatus) {
+        if (!Constants.ACCOUNT_STATUS_SUSPENDED.equalsIgnoreCase(newStatus)) {
+            return;
+        }
+        List<AuthChallenge> authChallenges = authChallengeRepository.findAllByAccountId(accountId);
+        for (AuthChallenge authChallenge : authChallenges) {
+            authChallenge.setStatus(Constants.ACCOUNT_STATUS_SUSPENDED);
+        }
+        if (!authChallenges.isEmpty()) {
+            authChallengeRepository.saveAll(authChallenges);
+        }
+    }
+
+    private AccountStatusHistory buildAccountStatusHistory(
+            Account account,
+            String previousStatus,
+            String newStatus,
+            String actionType,
+            String actorAccountId,
+            String actorAccountType,
+            AccountStatusChangeRequest request,
+            LocalDateTime now
+    ) {
+        AccountStatusHistory history = new AccountStatusHistory();
+        history.setAccountId(account.getAccountId());
+        history.setAccountType(account.getAccountType());
+        history.setActionType(actionType);
+        history.setPreviousStatus(previousStatus);
+        history.setNewStatus(newStatus);
+        history.setPerformedBy(actorAccountId);
+        history.setPerformedByType(actorAccountType);
+        history.setReason(request == null ? null : request.getReason());
+        history.setRemarks(request == null ? null : request.getRemarks());
+        history.setPerformedAt(now);
+        return history;
+    }
+
+    private void validateSuspendResumeTarget(Account account) {
+        if ("ADMIN".equalsIgnoreCase(account.getAccountType())) {
+            throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT_TYPE, "Admin accounts cannot be suspended through this API");
+        }
+    }
+
+    private void ensureAccountCanBeMutated(Account account) {
+        if (Constants.ACCOUNT_STATUS_SUSPENDED.equalsIgnoreCase(account.getStatus())) {
+            throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT_STATUS, "Suspended accounts cannot perform this operation");
+        }
+        if (!Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(account.getStatus())) {
+            throw new ApplicationException(ErrorCodes.INVALID_ACCOUNT_STATUS, "Account is not active");
+        }
+    }
+
+    private void validateAdminAccess() {
+        if (!"ADMIN".equalsIgnoreCase(JWTUtils.getCurrentAccountType())) {
+            throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Admin token is required");
+        }
+    }
+
+    @Transactional
     public void deleteSubscriber(String accountId) {
 
-        if (!"ADMIN".equalsIgnoreCase(JWTUtils.getCurrentAccountType())) {
-            throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
-        }
+        validateAdminAccess();
 
         Account subscriber = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
@@ -820,6 +982,7 @@ public class AccountService {
         if (!authChallenges.isEmpty()) {
             authChallengeRepository.saveAll(authChallenges);
         }
+        walletCacheService.refreshAccountWallets(subscriber.getAccountId());
     }
 
     private void syncAccountNotificationEndpoints(Account account) {

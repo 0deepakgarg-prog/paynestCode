@@ -1,6 +1,7 @@
 package com.paynest.config.service;
 
 import com.paynest.payments.service.BillPaymentStatusSchemaInitializer;
+import com.paynest.payments.service.CashbackPayoutSchemaInitializer;
 import com.paynest.payments.service.ServiceCatalogSchemaInitializer;
 import com.paynest.users.service.AccountNotificationEndpointSchemaInitializer;
 import com.paynest.users.service.NotificationTemplateSchemaInitializer;
@@ -22,6 +23,7 @@ public class TenantRegistryService {
 
     private final JdbcTemplate jdbcTemplate;
     private final BillPaymentStatusSchemaInitializer billPaymentStatusSchemaInitializer;
+    private final CashbackPayoutSchemaInitializer cashbackPayoutSchemaInitializer;
     private final ServiceCatalogSchemaInitializer serviceCatalogSchemaInitializer;
     private final AccountNotificationEndpointSchemaInitializer accountNotificationEndpointSchemaInitializer;
     private final NotificationTemplateSchemaInitializer notificationTemplateSchemaInitializer;
@@ -50,6 +52,7 @@ public class TenantRegistryService {
         });
 
        // billPaymentStatusSchemaInitializer.ensureTableExistsForSchemas(tenantSchemaMap.values());
+        //cashbackPayoutSchemaInitializer.ensureTableExistsForSchemas(tenantSchemaMap.values());
        // serviceCatalogSchemaInitializer.ensureTableExistsForSchemas(tenantSchemaMap.values());
        // accountNotificationEndpointSchemaInitializer.ensureTableExistsForSchemas(tenantSchemaMap.values());
        // notificationTemplateSchemaInitializer.ensureTableExistsForSchemas(tenantSchemaMap.values());
@@ -79,6 +82,10 @@ public class TenantRegistryService {
 
     public String getTimeZoneBySchema(String schemaName) {
         return schemaTimeZoneMap.getOrDefault(schemaName, "UTC");
+    }
+
+    public Map<String, String> getTenantSchemaMap() {
+        return Map.copyOf(tenantSchemaMap);
     }
 
     private List<Map<String, Object>> loadTenantRows() {

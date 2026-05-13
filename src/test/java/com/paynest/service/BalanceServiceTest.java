@@ -11,7 +11,10 @@ import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.repository.TransactionDetailsRepository;
 import com.paynest.payments.repository.TransactionsRepository;
 import com.paynest.payments.repository.WalletLedgerRepository;
+import com.paynest.payments.repository.CashbackPayoutRepository;
 import com.paynest.payments.service.BalanceService;
+import com.paynest.payments.validation.WalletRestrictionValidator;
+import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.pricing.dto.response.PricingComputationResponse;
 import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
@@ -55,6 +58,9 @@ class BalanceServiceTest {
     private TransactionDetailsRepository transactionDetailsRepository;
 
     @Mock
+    private CashbackPayoutRepository cashbackPayoutRepository;
+
+    @Mock
     private PropertyReader propertyReader;
 
     @Mock
@@ -66,6 +72,12 @@ class BalanceServiceTest {
     @Mock
     private WalletCacheService walletCacheService;
 
+    @Mock
+    private WalletRestrictionValidator walletRestrictionValidator;
+
+    @Mock
+    private TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+
     private BalanceService balanceService;
 
     @BeforeEach
@@ -76,11 +88,14 @@ class BalanceServiceTest {
                 accountRepo,
                 transactionsRepository,
                 transactionDetailsRepository,
+                cashbackPayoutRepository,
                 propertyReader,
                 balanceRepository,
                 ledgerRepo,
                 transactionsService,
-                walletCacheService
+                walletCacheService,
+                walletRestrictionValidator,
+                transactionNotificationEventPublisher
         );
     }
 
@@ -159,6 +174,7 @@ class BalanceServiceTest {
         Wallet debitorWallet = wallet(10L, "acc-1");
         Wallet creditorWallet = wallet(20L, "acc-2");
         Wallet systemWallet = wallet(30L, "SYS0001");
+        systemWallet.setWalletType("SC");
 
         WalletBalance debitorBalance = balance(10L, "5000.00");
         WalletBalance creditorBalance = balance(20L, "1000.00");
@@ -181,7 +197,7 @@ class BalanceServiceTest {
         creditDetail.setSecondIdentifierId("9003832992");
         creditDetail.setWalletNumber("20");
 
-        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("SYS0001", "USD", "MAIN"))
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("SYS0001", "USD", "SC"))
                 .thenReturn(java.util.Optional.of(systemWallet));
         when(propertyReader.getPropertyValue("currency.factor")).thenReturn("100");
         when(balanceRepository.lockBalance(10L)).thenReturn(debitorBalance);
@@ -216,26 +232,11 @@ class BalanceServiceTest {
         assertEquals(new BigDecimal("1000.00"), creditDetail.getPreviousBalance());
         assertEquals(new BigDecimal("2000.00"), creditDetail.getPostBalance());
         org.junit.jupiter.api.Assertions.assertTrue(transaction.getFeesDetails().contains("\"payer\":\"SENDER\""));
-        org.junit.jupiter.api.Assertions.assertTrue(transaction.getFeesDetails().contains("\"transactionDetailServiceCode\":\"U2U\""));
+        org.junit.jupiter.api.Assertions.assertTrue(transaction.getFeesDetails().contains("\"detailTableEntry\":false"));
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<TransactionDetails>> detailsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(transactionDetailsRepository, org.mockito.Mockito.times(2)).saveAll(detailsCaptor.capture());
-        List<TransactionDetails> feeDetails = detailsCaptor.getAllValues().get(1);
-        assertEquals(2, feeDetails.size());
-        assertEquals(Constants.TXN_TYPE_DR, feeDetails.get(0).getEntryType());
-        assertEquals(Constants.TXN_TYPE_CR, feeDetails.get(1).getEntryType());
-        assertEquals("U2U", feeDetails.get(0).getServiceCode());
-        assertEquals("SUBSCRIBER", feeDetails.get(0).getUserType());
-        assertEquals("9003832992", feeDetails.get(0).getIdentifierId());
-        assertEquals("30", feeDetails.get(0).getSecondIdentifierId());
-        assertEquals(new BigDecimal("150.00"), feeDetails.get(0).getTransactionValue());
-        assertEquals(BigDecimal.ZERO, feeDetails.get(0).getPreviousFrozenBalance());
-        assertEquals(BigDecimal.ZERO, feeDetails.get(0).getPostFrozenBalance());
-        assertEquals(BigDecimal.ZERO, feeDetails.get(0).getPreviousFicBalance());
-        assertEquals(BigDecimal.ZERO, feeDetails.get(0).getPostFicBalance());
-        assertEquals("SYSTEM", feeDetails.get(1).getUserType());
-        assertEquals("30", feeDetails.get(1).getIdentifierId());
-        assertEquals("9003832992", feeDetails.get(1).getSecondIdentifierId());
+        verify(transactionDetailsRepository).saveAll(detailsCaptor.capture());
+        assertEquals(List.of(debitDetail, creditDetail), detailsCaptor.getValue());
     }
 
     @Test
@@ -243,10 +244,14 @@ class BalanceServiceTest {
         Wallet debitorWallet = wallet(10L, "acc-1");
         Wallet creditorWallet = wallet(20L, "acc-2");
         Wallet systemWallet = wallet(30L, "SYS0001");
+        systemWallet.setWalletType("SC");
+        Wallet systemCommissionWallet = wallet(40L, "SYS0001");
+        systemCommissionWallet.setWalletType("COMMDIS");
 
         WalletBalance debitorBalance = balance(10L, "5000.00");
         WalletBalance creditorBalance = balance(20L, "1000.00");
         WalletBalance systemBalance = balance(30L, "1000.00");
+        WalletBalance systemCommissionBalance = balance(40L, "1000.00");
 
         Transactions transaction = new Transactions();
         transaction.setTransactionId("txn-pricing-1");
@@ -274,12 +279,17 @@ class BalanceServiceTest {
         pricingComputation.markCashbackAffectedParty("RECEIVER");
         pricingComputation.markCashbackPayBy("SYSTEM");
 
-        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("SYS0001", "USD", "MAIN"))
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("SYS0001", "USD", "SC"))
                 .thenReturn(java.util.Optional.of(systemWallet));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("SYS0001", "USD", "COMMDIS"))
+                .thenReturn(java.util.Optional.of(systemCommissionWallet));
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("acc-1", "USD", "MAIN"))
+                .thenReturn(java.util.Optional.of(debitorWallet));
         when(propertyReader.getPropertyValue("currency.factor")).thenReturn("100");
-        when(balanceRepository.lockBalance(10L)).thenReturn(debitorBalance);
+        when(balanceRepository.lockBalance(10L)).thenReturn(debitorBalance, debitorBalance);
         when(balanceRepository.lockBalance(20L)).thenReturn(creditorBalance, creditorBalance);
         when(balanceRepository.lockBalance(30L)).thenReturn(systemBalance, systemBalance);
+        when(balanceRepository.lockBalance(40L)).thenReturn(systemCommissionBalance);
         when(transactionsRepository.findByTransactionId("txn-pricing-1")).thenReturn(transaction);
         when(transactionDetailsRepository.findByIdTransactionId("txn-pricing-1"))
                 .thenReturn(List.of(debitDetail, creditDetail));
@@ -294,9 +304,10 @@ class BalanceServiceTest {
                 pricingComputation
         );
 
-        assertEquals(new BigDecimal("4050.00"), debitorBalance.getAvailableBalance());
-        assertEquals(new BigDecimal("1850.00"), creditorBalance.getAvailableBalance());
-        assertEquals(new BigDecimal("1100.00"), systemBalance.getAvailableBalance());
+        assertEquals(new BigDecimal("4250.00"), debitorBalance.getAvailableBalance());
+        assertEquals(new BigDecimal("1800.00"), creditorBalance.getAvailableBalance());
+        assertEquals(new BigDecimal("1150.00"), systemBalance.getAvailableBalance());
+        assertEquals(new BigDecimal("800.00"), systemCommissionBalance.getAvailableBalance());
         assertEquals(new BigDecimal("950.00"), transaction.getTransactionValue());
         assertEquals(new BigDecimal("800.00"), debitDetail.getTransactionValue());
         assertEquals(new BigDecimal("800.00"), creditDetail.getTransactionValue());
@@ -313,14 +324,14 @@ class BalanceServiceTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<TransactionDetails>> detailsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(transactionDetailsRepository, org.mockito.Mockito.times(4)).saveAll(detailsCaptor.capture());
-        List<TransactionDetails> cashbackDetails = detailsCaptor.getAllValues().get(2);
-        assertEquals(5L, cashbackDetails.get(0).getId().getTxnSequenceNumber());
-        assertEquals(6L, cashbackDetails.get(1).getId().getTxnSequenceNumber());
-        assertEquals("U2U", cashbackDetails.get(0).getServiceCode());
-        assertEquals("SYSTEM", cashbackDetails.get(0).getUserType());
-        assertEquals("SUBSCRIBER", cashbackDetails.get(1).getUserType());
-        assertEquals("9414473582", cashbackDetails.get(1).getIdentifierId());
+        verify(transactionDetailsRepository, org.mockito.Mockito.times(3)).saveAll(detailsCaptor.capture());
+        ArgumentCaptor<com.paynest.payments.entity.CashbackPayout> payoutCaptor =
+                ArgumentCaptor.forClass(com.paynest.payments.entity.CashbackPayout.class);
+        verify(cashbackPayoutRepository).save(payoutCaptor.capture());
+        assertEquals("txn-pricing-1", payoutCaptor.getValue().getOriginalTransactionId());
+        assertEquals("acc-2", payoutCaptor.getValue().getBeneficiaryAccountId());
+        assertEquals(new BigDecimal("50.00"), payoutCaptor.getValue().getAmount());
+        assertEquals("IMMEDIATE", payoutCaptor.getValue().getPaymentSchedule());
     }
 
     @Test
@@ -328,6 +339,7 @@ class BalanceServiceTest {
         Wallet debitorWallet = wallet(10L, "acc-1");
         Wallet creditorWallet = wallet(20L, "biller-1");
         Wallet systemWallet = wallet(30L, "SYS0001");
+        systemWallet.setWalletType("SC");
 
         WalletBalance debitorBalance = balance(10L, "5000.00");
         WalletBalance creditorBalance = balance(20L, "1000.00");
@@ -350,7 +362,7 @@ class BalanceServiceTest {
         creditDetail.setSecondIdentifierId("9003832992");
         creditDetail.setWalletNumber("20");
 
-        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("SYS0001", "USD", "MAIN"))
+        when(walletRepository.findByAccountIdAndCurrencyAndWalletType("SYS0001", "USD", "SC"))
                 .thenReturn(java.util.Optional.of(systemWallet));
         when(propertyReader.getPropertyValue("currency.factor")).thenReturn("100");
         when(balanceRepository.lockBalance(10L)).thenReturn(debitorBalance);

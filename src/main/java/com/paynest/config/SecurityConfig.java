@@ -2,6 +2,7 @@ package com.paynest.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.config.repository.AuditApiLogRepository;
+import com.paynest.config.security.AccountSuspensionFilter;
 import com.paynest.config.security.JwtAuthenticationFilter;
 import com.paynest.exception.ApiErrorResponseWriter;
 import com.paynest.exception.CommonErrorCode;
@@ -24,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AccountSuspensionFilter accountSuspensionFilter;
     private final TenantFilter tenantFilter;
     private final SecurityAuthenticationEntryPoint securityAuthenticationEntryPoint;
     private final SecurityAccessDeniedHandler securityAccessDeniedHandler;
@@ -48,6 +50,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/wallet/restrictions").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/account/*/suspend").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/account/*/resume").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/account/*/status-history").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/internal/settletxn").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -75,6 +80,7 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(jwtAuthenticationFilter, TenantFilter.class)
+                .addFilterAfter(accountSuspensionFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(apiAuditKafkaFilter(), TenantFilter.class);
 
         return http.build();

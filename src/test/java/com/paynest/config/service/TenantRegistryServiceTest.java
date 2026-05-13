@@ -1,6 +1,7 @@
 package com.paynest.config.service;
 
 import com.paynest.payments.service.BillPaymentStatusSchemaInitializer;
+import com.paynest.payments.service.CashbackPayoutSchemaInitializer;
 import com.paynest.payments.service.ServiceCatalogSchemaInitializer;
 import com.paynest.users.service.AccountNotificationEndpointSchemaInitializer;
 import com.paynest.users.service.NotificationTemplateSchemaInitializer;
@@ -31,6 +32,9 @@ class TenantRegistryServiceTest {
 
     @Mock
     private BillPaymentStatusSchemaInitializer billPaymentStatusSchemaInitializer;
+
+    @Mock
+    private CashbackPayoutSchemaInitializer cashbackPayoutSchemaInitializer;
 
     @Mock
     private ServiceCatalogSchemaInitializer serviceCatalogSchemaInitializer;
@@ -68,16 +72,7 @@ class TenantRegistryServiceTest {
         assertEquals("Europe/Chisinau", tenantRegistryService.getTimeZone("TENANT_A"));
         assertEquals("UTC", tenantRegistryService.getTimeZone("TENANT_B"));
         assertEquals("Europe/Chisinau", tenantRegistryService.getTimeZoneBySchema("schema_a"));
-        verify(billPaymentStatusSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
-        verify(serviceCatalogSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
-        verify(accountNotificationEndpointSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
-        verify(notificationTemplateSchemaInitializer)
+        verify(cashbackPayoutSchemaInitializer)
                 .ensureTableExistsForSchemas(argThat(schemas ->
                         schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
     }
@@ -90,16 +85,7 @@ class TenantRegistryServiceTest {
         tenantRegistryService.loadTenants();
 
         assertNull(tenantRegistryService.getSchema("UNKNOWN_TENANT"));
-        verify(billPaymentStatusSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && schemas.isEmpty()));
-        verify(serviceCatalogSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && schemas.isEmpty()));
-        verify(accountNotificationEndpointSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && schemas.isEmpty()));
-        verify(notificationTemplateSchemaInitializer)
+        verify(cashbackPayoutSchemaInitializer)
                 .ensureTableExistsForSchemas(argThat(schemas ->
                         schemas != null && schemas.isEmpty()));
     }

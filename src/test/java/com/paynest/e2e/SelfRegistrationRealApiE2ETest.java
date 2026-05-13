@@ -115,7 +115,7 @@ class SelfRegistrationRealApiE2ETest {
     private String mobileNumber;
     private BigDecimal seededAvailableBalanceOffset = BigDecimal.ZERO;
 
-    private record BusinessUser(String accountId, String accountType, String mobile, String accessToken,
+    private record BusinessUser(String accountId, String accountType, String mobile, String loginId, String accessToken,
                                 String password) {
     }
 
@@ -200,6 +200,8 @@ class SelfRegistrationRealApiE2ETest {
         ensureEnumeration("CURRENCY", "INR", "INR", "Indian Rupee");
         ensureEnumeration("CURRENCY", "EUR", "EUR", "Euro");
         ensureEnumeration("WALLET_TYPE", "MAIN", "MAIN", "Main wallet");
+        ensureEnumeration("ACCOUNT_STATUS", "SUSPENDED", "SUSPENDED", "Temporarily suspended");
+        ensureAccountStatusHistoryTable();
         ensureSubscriberRole();
         //  cleanupMobileNumber(mobileNumber);
         log.info("E2E setup completed for mobileNumber={}", mobileNumber);
@@ -1420,6 +1422,431 @@ class SelfRegistrationRealApiE2ETest {
         runIntraWalletUsdToInrScenario(agent);
     }
 
+    @Test
+    @Order(8)
+    void allTagsServiceCharges_shouldSupportSelfRegisteredUsersStockAndO2CForUsdAndInrWallets() {
+        String initiatingNetAdminToken = createNetworkAdminAndLogin("alltagsinit");
+        String approvingNetAdminToken = createNetworkAdminAndLogin("alltagsapprove");
+
+        createAllTagsServiceChargeRules(
+                initiatingNetAdminToken,
+                List.of("P2P", "U2U", "CASHIN", "CASHOUT", "MERCHANTPAY", "BILLPAY")
+        );
+        createAllTagsPricingRulePair(initiatingNetAdminToken, "CASHIN", "COMMISSION", "0.25", "2.50");
+        createAllTagsPricingRulePair(initiatingNetAdminToken, "CASHOUT", "COMMISSION", "0.25", "2.50");
+        createAllTagsPricingRulePair(initiatingNetAdminToken, "MERCHANTPAY", "DISCOUNT", "0.50", "5.00");
+        createAllTagsPricingRulePairFromConfigs(
+                initiatingNetAdminToken,
+                "BILLPAY",
+                "CASHBACK",
+                flatCashbackConfig("0.25", "END_OF_DAY"),
+                flatCashbackConfig("2.50", "END_OF_DAY")
+        );
+
+        List<SubscriberUser> subscribers = List.of(
+                createSubscriberChangePinAndLogin(800),
+                createSubscriberChangePinAndLogin(801),
+                createSubscriberChangePinAndLogin(802)
+        );
+        List<BusinessUser> agents = List.of(
+                createBusinessUserChangePasswordAndLogin(initiatingNetAdminToken, "AGENT", "AGENT", "alltagsagent1"),
+                createBusinessUserChangePasswordAndLogin(initiatingNetAdminToken, "AGENT", "AGENT", "alltagsagent2")
+        );
+        List<BusinessUser> merchants = List.of(
+                createBusinessUserChangePasswordAndLogin(initiatingNetAdminToken, "MERCHANT", "MERCHANT", "alltagsmerchant1"),
+                createBusinessUserChangePasswordAndLogin(initiatingNetAdminToken, "MERCHANT", "MERCHANT", "alltagsmerchant2")
+        );
+        List<BusinessUser> billers = List.of(
+                createBusinessUserChangePasswordAndLogin(initiatingNetAdminToken, "BILLER", "BILLER", "alltagsbiller1"),
+                createBusinessUserChangePasswordAndLogin(initiatingNetAdminToken, "BILLER", "BILLER", "alltagsbiller2")
+        );
+        BigDecimal usdSystemServiceChargeBalanceBefore = readSystemServiceChargeWalletAvailableBalance("USD");
+        BigDecimal inrSystemServiceChargeBalanceBefore = readSystemServiceChargeWalletAvailableBalance("INR");
+        BigDecimal usdSystemCommissionBalanceBefore = readSystemCommissionWalletAvailableBalance("USD");
+        BigDecimal inrSystemCommissionBalanceBefore = readSystemCommissionWalletAvailableBalance("INR");
+        List<String> usdServiceChargeTransactionIds = new ArrayList<>();
+        List<String> inrServiceChargeTransactionIds = new ArrayList<>();
+        List<String> serviceChargeOnlyTransactionIds = new ArrayList<>();
+
+        approveStock(initiatingNetAdminToken, approvingNetAdminToken, "req-e2e-alltags-stock-usd-" + uniqueSuffix(), "USD", "5000.00");
+        approveStock(initiatingNetAdminToken, approvingNetAdminToken, "req-e2e-alltags-stock-inr-" + uniqueSuffix(), "INR", "50000.00");
+
+        for (BusinessUser channelUser : List.of(agents.get(0), agents.get(1), merchants.get(0), merchants.get(1), billers.get(0), billers.get(1))) {
+            performApprovedO2CTransaction(initiatingNetAdminToken, approvingNetAdminToken, channelUser, "500.00", "USD");
+            performApprovedO2CTransaction(initiatingNetAdminToken, approvingNetAdminToken, channelUser, "5000.00", "INR");
+        }
+
+        assertAllTagsServiceChargePricing(agents.get(0).accessToken(), "CASHIN", "AGENT", agents.get(0).mobile(), "PASSWORD",
+                agents.get(0).password(), "SUBSCRIBER", subscribers.get(0).mobile(), "USD");
+        assertAllTagsServiceChargePricing(agents.get(1).accessToken(), "CASHIN", "AGENT", agents.get(1).mobile(), "PASSWORD",
+                agents.get(1).password(), "SUBSCRIBER", subscribers.get(1).mobile(), "INR");
+        String usdCashInTxnId = performCashInFromAgentWithServiceCharge(agents.get(0), subscribers.get(0), new BigDecimal("100.00"), "USD");
+        String inrCashInTxnId = performCashInFromAgentWithServiceCharge(agents.get(1), subscribers.get(1), new BigDecimal("1000.00"), "INR");
+        usdServiceChargeTransactionIds.add(usdCashInTxnId);
+        inrServiceChargeTransactionIds.add(inrCashInTxnId);
+
+        assertAllTagsServiceChargePricing(subscribers.get(0).accessToken(), "P2P", "SUBSCRIBER", subscribers.get(0).mobile(), "PIN",
+                subscribers.get(0).pin(), "SUBSCRIBER", subscribers.get(2).mobile(), "USD");
+        assertAllTagsServiceChargePricing(subscribers.get(1).accessToken(), "P2P", "SUBSCRIBER", subscribers.get(1).mobile(), "PIN",
+                subscribers.get(1).pin(), "SUBSCRIBER", subscribers.get(2).mobile(), "INR");
+        String usdP2pTxnId = performU2UWithServiceCharge(subscriberParticipant(subscribers.get(0)), subscriberParticipant(subscribers.get(2)), new BigDecimal("5.00"), "USD");
+        String inrP2pTxnId = performU2UWithServiceCharge(subscriberParticipant(subscribers.get(1)), subscriberParticipant(subscribers.get(2)), new BigDecimal("50.00"), "INR");
+        usdServiceChargeTransactionIds.add(usdP2pTxnId);
+        inrServiceChargeTransactionIds.add(inrP2pTxnId);
+        serviceChargeOnlyTransactionIds.add(usdP2pTxnId);
+        serviceChargeOnlyTransactionIds.add(inrP2pTxnId);
+
+        assertAllTagsServiceChargePricing(subscribers.get(0).accessToken(), "MERCHANTPAY", "SUBSCRIBER", subscribers.get(0).mobile(), "PIN",
+                subscribers.get(0).pin(), "MERCHANT", merchants.get(0).mobile(), "USD");
+        assertAllTagsServiceChargePricing(subscribers.get(1).accessToken(), "MERCHANTPAY", "SUBSCRIBER", subscribers.get(1).mobile(), "PIN",
+                subscribers.get(1).pin(), "MERCHANT", merchants.get(1).mobile(), "INR");
+        String usdMerchantTxnId = performMerchantPaymentWithServiceCharge(subscribers.get(0), merchants.get(0), new BigDecimal("3.00"), "USD");
+        String inrMerchantTxnId = performMerchantPaymentWithServiceCharge(subscribers.get(1), merchants.get(1), new BigDecimal("30.00"), "INR");
+        usdServiceChargeTransactionIds.add(usdMerchantTxnId);
+        inrServiceChargeTransactionIds.add(inrMerchantTxnId);
+
+        assertAllTagsServiceChargePricing(subscribers.get(0).accessToken(), "BILLPAY", "SUBSCRIBER", subscribers.get(0).mobile(), "PIN",
+                subscribers.get(0).pin(), "BILLER", billers.get(0).mobile(), "USD");
+        assertAllTagsServiceChargePricing(subscribers.get(1).accessToken(), "BILLPAY", "SUBSCRIBER", subscribers.get(1).mobile(), "PIN",
+                subscribers.get(1).pin(), "BILLER", billers.get(1).mobile(), "INR");
+        String usdBillPayTxnId = performBillPaymentWithServiceCharge(subscribers.get(0), billers.get(0), new BigDecimal("2.00"), "USD");
+        String inrBillPayTxnId = performBillPaymentWithServiceCharge(subscribers.get(1), billers.get(1), new BigDecimal("20.00"), "INR");
+        usdServiceChargeTransactionIds.add(usdBillPayTxnId);
+        inrServiceChargeTransactionIds.add(inrBillPayTxnId);
+        serviceChargeOnlyTransactionIds.add(usdBillPayTxnId);
+        serviceChargeOnlyTransactionIds.add(inrBillPayTxnId);
+
+        assertAllTagsServiceChargePricing(subscribers.get(0).accessToken(), "CASHOUT", "SUBSCRIBER", subscribers.get(0).mobile(), "PIN",
+                subscribers.get(0).pin(), "AGENT", agents.get(0).mobile(), "USD");
+        assertAllTagsServiceChargePricing(subscribers.get(1).accessToken(), "CASHOUT", "SUBSCRIBER", subscribers.get(1).mobile(), "PIN",
+                subscribers.get(1).pin(), "AGENT", agents.get(1).mobile(), "INR");
+        String usdCashOutTxnId = performCashOutWithServiceCharge(subscribers.get(0), agents.get(0), new BigDecimal("1.00"), "USD");
+        String inrCashOutTxnId = performCashOutWithServiceCharge(subscribers.get(1), agents.get(1), new BigDecimal("10.00"), "INR");
+        usdServiceChargeTransactionIds.add(usdCashOutTxnId);
+        inrServiceChargeTransactionIds.add(inrCashOutTxnId);
+
+        assertServiceChargeTransactionsHaveOnlyTransferDetails(serviceChargeOnlyTransactionIds);
+        assertCommissionTransactionDetails(usdCashInTxnId, agents.get(0).accountId(), "USD", new BigDecimal("25.00"));
+        assertCommissionTransactionDetails(inrCashInTxnId, agents.get(1).accountId(), "INR", new BigDecimal("250.00"));
+        assertCommissionTransactionDetails(usdCashOutTxnId, subscribers.get(0).accountId(), "USD", new BigDecimal("25.00"));
+        assertCommissionTransactionDetails(inrCashOutTxnId, subscribers.get(1).accountId(), "INR", new BigDecimal("250.00"));
+        assertDiscountTransactionDetails(usdMerchantTxnId, subscribers.get(0).accountId(), "USD", new BigDecimal("50.00"));
+        assertDiscountTransactionDetails(inrMerchantTxnId, subscribers.get(1).accountId(), "INR", new BigDecimal("500.00"));
+        assertCashbackPayoutEntry(usdBillPayTxnId, subscribers.get(0).accountId(), "USD", new BigDecimal("25.00"), "END_OF_DAY");
+        assertCashbackPayoutEntry(inrBillPayTxnId, subscribers.get(1).accountId(), "INR", new BigDecimal("250.00"), "END_OF_DAY");
+        assertBigDecimalEquals(
+                usdSystemServiceChargeBalanceBefore.add(new BigDecimal("500.00")),
+                readSystemServiceChargeWalletAvailableBalance("USD"),
+                "SYS0001 USD service charge wallet balance"
+        );
+        assertBigDecimalEquals(
+                inrSystemServiceChargeBalanceBefore.add(new BigDecimal("5000.00")),
+                readSystemServiceChargeWalletAvailableBalance("INR"),
+                "SYS0001 INR service charge wallet balance"
+        );
+        assertBigDecimalEquals(
+                usdSystemCommissionBalanceBefore.subtract(new BigDecimal("100.00")),
+                readSystemCommissionWalletAvailableBalance("USD"),
+                "SYS0001 USD commission wallet balance"
+        );
+        assertBigDecimalEquals(
+                inrSystemCommissionBalanceBefore.subtract(new BigDecimal("1000.00")),
+                readSystemCommissionWalletAvailableBalance("INR"),
+                "SYS0001 INR commission wallet balance"
+        );
+    }
+
+    @Test
+    @Order(9)
+    void suspendedAccounts_shouldOnlyLoginViewBalancesAndBlockFinancialAndKycOperationsWithHistory() {
+        String initiatingNetAdminToken = createNetworkAdminAndLogin("suspendinit");
+        String approvingNetAdminToken = createNetworkAdminAndLogin("suspendapprove");
+
+        approveStock(initiatingNetAdminToken, approvingNetAdminToken, "req-e2e-suspend-stock-" + uniqueSuffix(), "USD", "3000.00");
+
+        BusinessUser agent = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "AGENT",
+                "AGENT",
+                "suspendagent"
+        );
+        BusinessUser activeAgent = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "AGENT",
+                "AGENT",
+                "suspendactiveagent"
+        );
+        BusinessUser merchant = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "MERCHANT",
+                "MERCHANT",
+                "suspendmerchant"
+        );
+        BusinessUser biller = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "BILLER",
+                "BILLER",
+                "suspendbiller"
+        );
+        performApprovedO2CTransaction(initiatingNetAdminToken, approvingNetAdminToken, agent, "500.00");
+        performApprovedO2CTransaction(initiatingNetAdminToken, approvingNetAdminToken, activeAgent, "500.00");
+        performApprovedO2CTransaction(initiatingNetAdminToken, approvingNetAdminToken, merchant, "100.00");
+        performApprovedO2CTransaction(initiatingNetAdminToken, approvingNetAdminToken, biller, "100.00");
+
+        SubscriberUser suspendedSubscriber = createSubscriberChangePinAndLogin(900);
+        SubscriberUser activeSubscriber = createSubscriberChangePinAndLogin(901);
+        performCashInFromAgent(activeAgent, suspendedSubscriber, new BigDecimal("100.00"));
+        performCashInFromAgent(activeAgent, activeSubscriber, new BigDecimal("50.00"));
+
+        suspendAccount(initiatingNetAdminToken, suspendedSubscriber.accountId(), "suspend subscriber for E2E");
+        suspendAccount(initiatingNetAdminToken, agent.accountId(), "suspend agent for E2E");
+        assertAccountAndWalletSuspended(suspendedSubscriber.accountId());
+        assertAccountAndWalletSuspended(agent.accountId());
+        assertAccountStatusHistory(suspendedSubscriber.accountId(), "SUSPEND", "ACTIVE", "SUSPENDED", initiatingNetAdminToken);
+        assertAccountStatusHistory(agent.accountId(), "SUSPEND", "ACTIVE", "SUSPENDED", initiatingNetAdminToken);
+
+        String suspendedSubscriberToken = loginWithPin(
+                "req-e2e-suspended-subscriber-login",
+                suspendedSubscriber.mobile(),
+                suspendedSubscriber.pin(),
+                suspendedSubscriber.accountId(),
+                "SUBSCRIBER"
+        );
+        getJson(
+                "suspended subscriber can view own balance",
+                "/api/v1/wallet/getAccountWallets/{accountId}",
+                suspendedSubscriberToken,
+                suspendedSubscriber.accountId()
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("wallets", notNullValue());
+
+        String suspendedAgentToken = loginWithPassword(
+                "req-e2e-suspended-agent-login",
+                agent.loginId(),
+                agent.password(),
+                agent.accountId(),
+                agent.accountType()
+        );
+        getJson(
+                "suspended agent can view own balance",
+                "/api/v1/wallet/getAccountWallets/{accountId}",
+                suspendedAgentToken,
+                agent.accountId()
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("wallets", notNullValue());
+
+        assertSuspendedTokenBlocked(
+                "suspended subscriber cannot perform U2U",
+                "/api/v1/pay/U2U",
+                suspendedSubscriberToken,
+                u2uRequest(
+                        new U2UParticipant(suspendedSubscriber.accountId(), "SUBSCRIBER", suspendedSubscriber.mobile(), suspendedSubscriberToken, "PIN", suspendedSubscriber.pin()),
+                        subscriberParticipant(activeSubscriber),
+                        new BigDecimal("1.00")
+                )
+        );
+        assertSuspendedTokenBlocked(
+                "suspended subscriber cannot perform CASHOUT",
+                "/api/v1/pay/CASHOUT",
+                suspendedSubscriberToken,
+                cashOutRequest(new SubscriberUser(suspendedSubscriber.accountId(), suspendedSubscriber.mobile(), suspendedSubscriberToken, suspendedSubscriber.pin()), agent, new BigDecimal("1.00"))
+        );
+        assertSuspendedTokenBlocked(
+                "suspended subscriber cannot perform MERCHANTPAY",
+                "/api/v1/pay/MERCHANTPAY",
+                suspendedSubscriberToken,
+                merchantPaymentRequest(new SubscriberUser(suspendedSubscriber.accountId(), suspendedSubscriber.mobile(), suspendedSubscriberToken, suspendedSubscriber.pin()), merchant, new BigDecimal("1.00"))
+        );
+        assertSuspendedTokenBlocked(
+                "suspended subscriber cannot perform BILLPAY",
+                "/api/v1/pay/BILLPAY",
+                suspendedSubscriberToken,
+                billPaymentRequest(new SubscriberUser(suspendedSubscriber.accountId(), suspendedSubscriber.mobile(), suspendedSubscriberToken, suspendedSubscriber.pin()), biller, new BigDecimal("1.00"))
+        );
+        assertSuspendedTokenBlocked(
+                "suspended agent cannot perform CASHIN",
+                "/api/v1/pay/CASHIN",
+                suspendedAgentToken,
+                cashInRequest(new BusinessUser(agent.accountId(), agent.accountType(), agent.mobile(), agent.loginId(), suspendedAgentToken, agent.password()), activeSubscriber, new BigDecimal("1.00"))
+        );
+
+        assertPaymentBusinessFailure(
+                "active subscriber U2U to suspended subscriber fails",
+                "/api/v1/pay/U2U",
+                activeSubscriber.accessToken(),
+                u2uRequest(subscriberParticipant(activeSubscriber), subscriberParticipant(suspendedSubscriber), new BigDecimal("1.00")),
+                "U2U"
+        );
+        assertPaymentBusinessFailure(
+                "active agent CASHIN to suspended subscriber fails",
+                "/api/v1/pay/CASHIN",
+                activeAgent.accessToken(),
+                cashInRequest(activeAgent, suspendedSubscriber, new BigDecimal("1.00")),
+                "CASHIN"
+        );
+        assertPaymentBusinessFailure(
+                "admin O2C to suspended agent fails",
+                "/api/v1/pay/o2c/initiate",
+                initiatingNetAdminToken,
+                o2cInitiateRequest(agent, "1.00"),
+                "O2C_INITIATE"
+        );
+
+        assertSuspendedTokenBlocked(
+                "suspended subscriber cannot update KYC",
+                "/api/v1/account/addKyc",
+                suspendedSubscriberToken,
+                suspendedAccountKycRequest()
+        );
+        assertMainUsdBalanceFromEnquiry(
+                suspendedSubscriber.accountId(),
+                "SUBSCRIBER",
+                suspendedSubscriberToken,
+                new BigDecimal("100.00")
+        );
+        assertMainUsdBalanceFromEnquiry(
+                agent.accountId(),
+                agent.accountType(),
+                suspendedAgentToken,
+                new BigDecimal("500.00")
+        );
+        assertAvailableWalletBalanceSumIsZero("after suspended account blocked operations");
+    }
+
+    private void suspendAccount(String adminAccessToken, String accountId, String reason) {
+        postJson(
+                "admin suspends account " + accountId,
+                "/api/v1/account/{accountId}/suspend",
+                adminAccessToken,
+                """
+                        {
+                          "reason": "%s",
+                          "remarks": "E2E suspension validation"
+                        }
+                        """.formatted(reason),
+                accountId
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("accountStatus.accountId", equalTo(accountId))
+                .body("accountStatus.previousStatus", equalTo("ACTIVE"))
+                .body("accountStatus.newStatus", equalTo("SUSPENDED"))
+                .body("accountStatus.actionType", equalTo("SUSPEND"));
+    }
+
+    private void assertSuspendedTokenBlocked(String stepName, String path, String accessToken, String requestBody) {
+        postJson(stepName, path, accessToken, requestBody)
+                .then()
+                .statusCode(403)
+                .body("responseStatus", equalTo("FAILURE"))
+                .body("code", equalTo("ACCESS_DENIED"));
+    }
+
+    private void assertPaymentBusinessFailure(
+            String stepName,
+            String path,
+            String accessToken,
+            String requestBody,
+            String operationType
+    ) {
+        postJson(stepName, path, accessToken, requestBody)
+                .then()
+                .statusCode(400)
+                .body("responseStatus", equalTo("FAILURE"))
+                .body("operationType", equalTo(operationType));
+    }
+
+    private void assertAccountAndWalletSuspended(String accountId) {
+        String accountStatus = jdbcTemplate.queryForObject("""
+                SELECT status
+                FROM %s
+                WHERE account_id = ?
+                """.formatted(tenantTable("account")), String.class, accountId);
+        assertEquals("SUSPENDED", accountStatus);
+
+        List<Map<String, Object>> wallets = jdbcTemplate.queryForList("""
+                SELECT status,
+                       is_locked
+                FROM %s
+                WHERE account_id = ?
+                """.formatted(tenantTable("wallet")), accountId);
+        assertFalse(wallets.isEmpty(), "Expected wallets for suspended account " + accountId);
+        assertTrue(
+                wallets.stream().allMatch(wallet -> "SUSPENDED".equals(wallet.get("status"))),
+                "Expected all wallets to be SUSPENDED for account " + accountId
+        );
+        assertTrue(
+                wallets.stream().allMatch(wallet -> Boolean.TRUE.equals(wallet.get("is_locked"))),
+                "Expected all wallets to be locked for account " + accountId
+        );
+    }
+
+    private void assertAccountStatusHistory(
+            String accountId,
+            String expectedAction,
+            String expectedPreviousStatus,
+            String expectedNewStatus,
+            String adminAccessToken
+    ) {
+        Map<String, Object> latest = jdbcTemplate.queryForMap("""
+                SELECT account_id,
+                       action_type,
+                       previous_status,
+                       new_status,
+                       performed_by,
+                       performed_by_type,
+                       performed_at
+                FROM %s
+                WHERE account_id = ?
+                ORDER BY performed_at DESC
+                LIMIT 1
+                """.formatted(tenantTable("account_status_history")), accountId);
+        assertEquals(accountId, latest.get("account_id"));
+        assertEquals(expectedAction, latest.get("action_type"));
+        assertEquals(expectedPreviousStatus, latest.get("previous_status"));
+        assertEquals(expectedNewStatus, latest.get("new_status"));
+        assertEquals(jwtService.getClaims(adminAccessToken).getSubject(), latest.get("performed_by"));
+        assertEquals("ADMIN", latest.get("performed_by_type"));
+        assertTrue(latest.get("performed_at") != null, "Expected performed_at in account status history");
+
+        getJson(
+                "admin fetches account status history " + accountId,
+                "/api/v1/account/{accountId}/status-history",
+                adminAccessToken,
+                accountId
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("accountStatusHistory.size()", equalTo(1))
+                .body("accountStatusHistory[0].accountId", equalTo(accountId))
+                .body("accountStatusHistory[0].actionType", equalTo(expectedAction))
+                .body("accountStatusHistory[0].previousStatus", equalTo(expectedPreviousStatus))
+                .body("accountStatusHistory[0].newStatus", equalTo(expectedNewStatus))
+                .body("accountStatusHistory[0].performedBy", equalTo(jwtService.getClaims(adminAccessToken).getSubject()))
+                .body("accountStatusHistory[0].performedByType", equalTo("ADMIN"))
+                .body("accountStatusHistory[0].performedAt", notNullValue());
+    }
+
+    private String suspendedAccountKycRequest() {
+        return """
+                {
+                  "requestId": "req-e2e-suspended-kyc",
+                  "kycData": {
+                    "kycType": "%s",
+                    "kycValue": "%s",
+                    "issueDate": "%s",
+                    "expiryDate": "%s",
+                    "primary": true,
+                    "kycImageUrl": "%s"
+                  }
+                }
+                """.formatted(KYC_TYPE, KYC_VALUE, KYC_ISSUE_DATE, KYC_EXPIRY_DATE, KYC_IMAGE_URL);
+    }
+
     private void assertBlockedU2U(U2UParticipant sender, U2UParticipant receiver, String expectedErrorCode) {
         BigDecimal senderBefore = readMainUsdAvailableBalanceFromEnquiry(
                 sender.accountId(),
@@ -1546,6 +1973,198 @@ class SelfRegistrationRealApiE2ETest {
                   AND currency = ?
                   AND status = 'ACTIVE'
                 """.formatted(tenantTable("wallet")), Long.class, accountId, currency);
+    }
+
+    private BigDecimal readSystemServiceChargeWalletAvailableBalance(String currency) {
+        BigDecimal balance = jdbcTemplate.queryForObject("""
+                SELECT wb.available_balance
+                FROM %s wb
+                JOIN %s w ON w.wallet_id = wb.wallet_id
+                WHERE UPPER(w.account_id) = 'SYS0001'
+                  AND w.wallet_type = 'SC'
+                  AND w.currency = ?
+                  AND w.status = 'ACTIVE'
+                """.formatted(tenantTable("wallet_balance"), tenantTable("wallet")),
+                BigDecimal.class,
+                currency
+        );
+        if (balance == null) {
+            throw new AssertionError("Expected SYS0001 " + currency + " service charge wallet balance");
+        }
+        return balance;
+    }
+
+    private BigDecimal readSystemCommissionWalletAvailableBalance(String currency) {
+        BigDecimal balance = jdbcTemplate.queryForObject("""
+                SELECT wb.available_balance
+                FROM %s wb
+                JOIN %s w ON w.wallet_id = wb.wallet_id
+                WHERE UPPER(w.account_id) = 'SYS0001'
+                  AND w.wallet_type = 'COMMDIS'
+                  AND w.currency = ?
+                  AND w.status = 'ACTIVE'
+                """.formatted(tenantTable("wallet_balance"), tenantTable("wallet")),
+                BigDecimal.class,
+                currency
+        );
+        if (balance == null) {
+            throw new AssertionError("Expected SYS0001 " + currency + " commission wallet balance");
+        }
+        return balance;
+    }
+
+    private void assertServiceChargeTransactionsHaveOnlyTransferDetails(List<String> transactionIds) {
+        for (String transactionId : transactionIds) {
+            Integer detailCount = jdbcTemplate.queryForObject("""
+                    SELECT COUNT(*)
+                    FROM %s
+                    WHERE transaction_id = ?
+                    """.formatted(tenantTable("transaction_details")), Integer.class, transactionId);
+            assertEquals(2, detailCount, "Service-charge transaction should not write four details rows: " + transactionId);
+
+            Integer systemDetailCount = jdbcTemplate.queryForObject("""
+                    SELECT COUNT(*)
+                    FROM %s
+                    WHERE transaction_id = ?
+                      AND UPPER(account_id) = 'SYS0001'
+                    """.formatted(tenantTable("transaction_details")), Integer.class, transactionId);
+            assertEquals(0, systemDetailCount, "Service-charge transaction should not write SYS0001 transaction details: " + transactionId);
+
+            List<Map<String, Object>> primaryDetails = jdbcTemplate.queryForList("""
+                    SELECT attr_6_name,
+                           attr_6_value
+                    FROM %s
+                    WHERE transaction_id = ?
+                    ORDER BY txn_sequence_number
+                    """.formatted(tenantTable("transaction_details")), transactionId);
+            assertTrue(
+                    primaryDetails.stream().allMatch(detail -> String.valueOf(detail.get("attr_6_name")).contains("SERVICE_CHARGE")),
+                    "Service-charge transaction should show SERVICE_CHARGE in attr_6_name: " + transactionId
+            );
+            assertTrue(
+                    primaryDetails.stream().allMatch(detail -> detail.get("attr_6_value") != null),
+                    "Service-charge transaction should show service-charge amount in attr_6_value: " + transactionId
+            );
+        }
+    }
+
+    private void assertCommissionTransactionDetails(
+            String transactionId,
+            String expectedBeneficiaryAccountId,
+            String currency,
+            BigDecimal expectedStoredAmount
+    ) {
+        assertFundedPricingAdjustmentDetails(
+                transactionId,
+                expectedBeneficiaryAccountId,
+                currency,
+                expectedStoredAmount,
+                "commission"
+        );
+    }
+
+    private void assertDiscountTransactionDetails(
+            String transactionId,
+            String expectedBeneficiaryAccountId,
+            String currency,
+            BigDecimal expectedStoredAmount
+    ) {
+        assertFundedPricingAdjustmentDetails(
+                transactionId,
+                expectedBeneficiaryAccountId,
+                currency,
+                expectedStoredAmount,
+                "discount"
+        );
+    }
+
+    private void assertFundedPricingAdjustmentDetails(
+            String transactionId,
+            String expectedBeneficiaryAccountId,
+            String currency,
+            BigDecimal expectedStoredAmount,
+            String adjustmentType
+    ) {
+        List<Map<String, Object>> details = jdbcTemplate.queryForList("""
+                SELECT txn_sequence_number,
+                       account_id,
+                       entry_type,
+                       transaction_value,
+                       approved_value,
+                       wallet_type,
+                       currency,
+                       attr_6_name,
+                       attr_6_value
+                FROM %s
+                WHERE transaction_id = ?
+                ORDER BY txn_sequence_number
+                """.formatted(tenantTable("transaction_details")), transactionId);
+        assertEquals(4, details.size(), adjustmentType + " transaction should have transfer and adjustment details: " + transactionId);
+
+        Map<String, Object> systemDebit = details.get(2);
+        assertEquals("SYS0001", String.valueOf(systemDebit.get("account_id")).toUpperCase(Locale.ROOT));
+        assertEquals("DR", systemDebit.get("entry_type"));
+        assertEquals("COMMDIS", systemDebit.get("wallet_type"));
+        assertEquals(currency, systemDebit.get("currency"));
+        assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(systemDebit.get("transaction_value")), adjustmentType + " debit amount");
+        assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(systemDebit.get("approved_value")), adjustmentType + " debit approved amount");
+        assertPricingAttr6(systemDebit, adjustmentType, expectedStoredAmount);
+
+        Map<String, Object> beneficiaryCredit = details.get(3);
+        assertEquals(expectedBeneficiaryAccountId, beneficiaryCredit.get("account_id"));
+        assertEquals("CR", beneficiaryCredit.get("entry_type"));
+        assertEquals(currency, beneficiaryCredit.get("currency"));
+        assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(beneficiaryCredit.get("transaction_value")), adjustmentType + " credit amount");
+        assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(beneficiaryCredit.get("approved_value")), adjustmentType + " credit approved amount");
+        assertPricingAttr6(beneficiaryCredit, adjustmentType, expectedStoredAmount);
+        if ("discount".equals(adjustmentType)) {
+            assertEquals("MAIN", beneficiaryCredit.get("wallet_type"));
+        } else {
+            assertTrue(beneficiaryCredit.get("wallet_type") != null, "Expected commission beneficiary wallet type");
+        }
+    }
+
+    private void assertPricingAttr6(
+            Map<String, Object> detail,
+            String adjustmentType,
+            BigDecimal expectedStoredAmount
+    ) {
+        assertEquals(adjustmentType.toUpperCase(Locale.ROOT), detail.get("attr_6_name"));
+        assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(detail.get("attr_6_value")), adjustmentType + " attr_6 amount");
+    }
+
+    private void assertCashbackPayoutEntry(
+            String originalTransactionId,
+            String expectedBeneficiaryAccountId,
+            String currency,
+            BigDecimal expectedStoredAmount,
+            String expectedPaymentSchedule
+    ) {
+        List<Map<String, Object>> payouts = jdbcTemplate.queryForList("""
+                SELECT original_transaction_id,
+                       payout_transaction_id,
+                       service_code,
+                       beneficiary_account_id,
+                       amount,
+                       currency,
+                       payment_schedule,
+                       pay_at,
+                       status
+                FROM %s
+                WHERE original_transaction_id = ?
+                """.formatted(tenantTable("cashback_payout")), originalTransactionId);
+        assertEquals(1, payouts.size(), "Expected one cashback payout entry for " + originalTransactionId);
+
+        Map<String, Object> payout = payouts.get(0);
+        assertEquals(originalTransactionId, payout.get("original_transaction_id"));
+        assertEquals("BILLPAY", payout.get("service_code"));
+        assertEquals(expectedBeneficiaryAccountId, payout.get("beneficiary_account_id"));
+        assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(payout.get("amount")), "cashback payout amount");
+        assertEquals(currency, payout.get("currency"));
+        assertEquals(expectedPaymentSchedule, payout.get("payment_schedule"));
+        assertEquals("PENDING", payout.get("status"));
+        assertTrue(payout.get("pay_at") != null, "Expected cashback payout pay_at");
+        assertEquals(null, payout.get("payout_transaction_id"));
     }
 
     private Long createTag(
@@ -1707,6 +2326,142 @@ class SelfRegistrationRealApiE2ETest {
         );
     }
 
+    private void createAllTagsServiceChargeRules(String accessToken, List<String> serviceCodes) {
+        for (String serviceCode : serviceCodes) {
+            deactivateActiveAllTagsServiceChargeRules(accessToken, serviceCode);
+            createServiceChargeRule(
+                    accessToken,
+                    serviceCode,
+                    "ALLTAGS",
+                    "ALLTAGS",
+                    "alltags-" + serviceCode + "-usd-" + uniqueSuffix(),
+                    flatServiceChargeConfig("1.00"),
+                    "USD"
+            );
+            createServiceChargeRule(
+                    accessToken,
+                    serviceCode,
+                    "ALLTAGS",
+                    "ALLTAGS",
+                    "alltags-" + serviceCode + "-inr-" + uniqueSuffix(),
+                    flatServiceChargeConfig("10.00"),
+                    "INR"
+            );
+        }
+    }
+
+    private void createAllTagsPricingRulePair(
+            String accessToken,
+            String serviceCode,
+            String ruleType,
+            String usdFlatValue,
+            String inrFlatValue
+    ) {
+        createAllTagsPricingRulePairFromConfigs(
+                accessToken,
+                serviceCode,
+                ruleType,
+                flatServiceChargeConfig(usdFlatValue),
+                flatServiceChargeConfig(inrFlatValue)
+        );
+    }
+
+    private void createAllTagsPricingRulePairFromConfigs(
+            String accessToken,
+            String serviceCode,
+            String ruleType,
+            String usdPricingConfig,
+            String inrPricingConfig
+    ) {
+        deactivateActiveAllTagsPricingRules(accessToken, serviceCode, ruleType);
+        createPricingRule(
+                accessToken,
+                serviceCode,
+                ruleType,
+                "STATIC",
+                "ALLTAGS",
+                "ALLTAGS",
+                "alltags-" + ruleType.toLowerCase(Locale.ROOT) + "-" + serviceCode + "-usd-" + uniqueSuffix(),
+                usdPricingConfig,
+                "USD"
+        );
+        createPricingRule(
+                accessToken,
+                serviceCode,
+                ruleType,
+                "STATIC",
+                "ALLTAGS",
+                "ALLTAGS",
+                "alltags-" + ruleType.toLowerCase(Locale.ROOT) + "-" + serviceCode + "-inr-" + uniqueSuffix(),
+                inrPricingConfig,
+                "INR"
+        );
+    }
+
+    private void deactivateActiveAllTagsServiceChargeRules(String accessToken, String serviceCode) {
+        deactivateActiveAllTagsPricingRules(accessToken, serviceCode, "SERVICE_CHARGE");
+    }
+
+    private void deactivateActiveAllTagsPricingRules(String accessToken, String serviceCode, String ruleType) {
+        List<Long> pricingRuleIds = jdbcTemplate.queryForList("""
+                SELECT id
+                FROM %s
+                WHERE service_code = ?
+                  AND rule_type = ?
+                  AND sender_tag_key = 'ALLTAGS'
+                  AND receiver_tag_key = 'ALLTAGS'
+                  AND status = 'ACTIVE'
+                """.formatted(tenantTable("pricing_rules")), Long.class, serviceCode, ruleType);
+
+        for (Long pricingRuleId : pricingRuleIds) {
+            updatePricingRuleStatus(accessToken, pricingRuleId, "INACTIVE");
+        }
+    }
+
+    private void assertAllTagsServiceChargePricing(
+            String accessToken,
+            String serviceCode,
+            String senderAccountType,
+            String senderMobile,
+            String senderAuthType,
+            String senderAuthValue,
+            String receiverAccountType,
+            String receiverMobile,
+            String currency
+    ) {
+        BigDecimal expectedServiceCharge = "INR".equals(currency)
+                ? new BigDecimal("10.00")
+                : new BigDecimal("1.00");
+        Response pricingResponse = postJson(
+                "calculate " + serviceCode + " " + currency + " ALLTAGS service charge",
+                "/api/v1/pay/calculatePricing",
+                accessToken,
+                pricingRequestJson(
+                        serviceCode,
+                        senderAccountType,
+                        senderMobile,
+                        senderAuthType,
+                        senderAuthValue,
+                        receiverAccountType,
+                        receiverMobile,
+                        new BigDecimal("100.00"),
+                        currency
+                )
+        );
+        pricingResponse.then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("message", equalTo("Pricing calculated successfully"))
+                .body("pricingAmounts.senderTagKey", equalTo("ALLTAGS"))
+                .body("pricingAmounts.receiverTagKey", equalTo("ALLTAGS"))
+                .body("pricingAmounts.serviceChargeAffectedParty", equalTo("SENDER"));
+        assertBigDecimalEquals(
+                expectedServiceCharge,
+                toBigDecimal(pricingResponse.jsonPath().get("pricingAmounts.serviceChargeAmount")),
+                serviceCode + " " + currency + " ALLTAGS service charge"
+        );
+    }
+
     private void assertZeroServiceChargePricing(
             String accessToken,
             String serviceCode,
@@ -1773,14 +2528,36 @@ class SelfRegistrationRealApiE2ETest {
             String ruleNameSuffix,
             String pricingConfig
     ) {
+        return createServiceChargeRule(
+                accessToken,
+                serviceCode,
+                senderTagKey,
+                receiverTagKey,
+                ruleNameSuffix,
+                pricingConfig,
+                "USD"
+        );
+    }
+
+    private Long createServiceChargeRule(
+            String accessToken,
+            String serviceCode,
+            String senderTagKey,
+            String receiverTagKey,
+            String ruleNameSuffix,
+            String pricingConfig,
+            String currency
+    ) {
         return createPricingRule(
                 accessToken,
                 serviceCode,
                 "SERVICE_CHARGE",
+                "STATIC",
                 senderTagKey,
                 receiverTagKey,
                 ruleNameSuffix,
-                pricingConfig
+                pricingConfig,
+                currency
         );
     }
 
@@ -1852,6 +2629,30 @@ class SelfRegistrationRealApiE2ETest {
             String ruleNameSuffix,
             String pricingConfig
     ) {
+        return createPricingRule(
+                accessToken,
+                serviceCode,
+                ruleType,
+                pricingType,
+                senderTagKey,
+                receiverTagKey,
+                ruleNameSuffix,
+                pricingConfig,
+                "USD"
+        );
+    }
+
+    private Long createPricingRule(
+            String accessToken,
+            String serviceCode,
+            String ruleType,
+            String pricingType,
+            String senderTagKey,
+            String receiverTagKey,
+            String ruleNameSuffix,
+            String pricingConfig,
+            String currency
+    ) {
         Number pricingId = postJson(
                 "create service charge pricing rule",
                 "/api/v1/pricing",
@@ -1865,7 +2666,7 @@ class SelfRegistrationRealApiE2ETest {
                           "payer": "SENDER",
                           "senderTagKey": "%s",
                           "receiverTagKey": "%s",
-                          "currency": "USD",
+                          "currency": "%s",
                           "pricingConfig": %s,
                           "status": "ACTIVE"
                         }
@@ -1878,6 +2679,7 @@ class SelfRegistrationRealApiE2ETest {
                         pricingType,
                         senderTagKey,
                         receiverTagKey,
+                        currency,
                         pricingConfig
                 )
         ).then()
@@ -1943,6 +2745,22 @@ class SelfRegistrationRealApiE2ETest {
                 """.formatted(value);
     }
 
+    private String flatCashbackConfig(String value, String paymentSchedule) {
+        return """
+                {
+                  "basedOn": "TXNAMOUNT",
+                  "charging_strategy": "FLAT",
+                  "calc": {
+                    "type": "FLAT",
+                    "value": %s
+                  },
+                  "cashbackPayout": {
+                    "paymentSchedule": "%s"
+                  }
+                }
+                """.formatted(value, paymentSchedule);
+    }
+
     private String percentServiceChargeConfig(String value) {
         return """
                 {
@@ -1989,6 +2807,30 @@ class SelfRegistrationRealApiE2ETest {
             String receiverMobile,
             BigDecimal amount
     ) {
+        return pricingRequestJson(
+                serviceCode,
+                senderAccountType,
+                senderMobile,
+                senderAuthType,
+                senderAuthValue,
+                receiverAccountType,
+                receiverMobile,
+                amount,
+                "USD"
+        );
+    }
+
+    private String pricingRequestJson(
+            String serviceCode,
+            String senderAccountType,
+            String senderMobile,
+            String senderAuthType,
+            String senderAuthValue,
+            String receiverAccountType,
+            String receiverMobile,
+            BigDecimal amount,
+            String currency
+    ) {
         return """
                 {
                   "operationType": "%s",
@@ -2017,7 +2859,7 @@ class SelfRegistrationRealApiE2ETest {
                   },
                   "transaction": {
                     "amount": %s,
-                    "currency": "USD"
+                    "currency": "%s"
                   }
                 }
                 """.formatted(
@@ -2028,7 +2870,8 @@ class SelfRegistrationRealApiE2ETest {
                 senderAuthValue,
                 receiverAccountType,
                 receiverMobile,
-                amount.toPlainString()
+                amount.toPlainString(),
+                currency
         );
     }
 
@@ -2439,6 +3282,23 @@ class SelfRegistrationRealApiE2ETest {
         assertApprovedFinancialTransferTransaction(transactionId, "CASHIN", agent.accountId(), subscriber.accountId(), amount, currency);
     }
 
+    private String performCashInFromAgentWithServiceCharge(BusinessUser agent, SubscriberUser subscriber, BigDecimal amount, String currency) {
+        return postJson(
+                "agent cash-in with ALLTAGS service charge to subscriber " + subscriber.accountId() + " " + currency,
+                "/api/v1/pay/CASHIN",
+                agent.accessToken(),
+                cashInRequest(agent, subscriber, amount, currency)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("CASHIN"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("currency", equalTo(currency))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+    }
+
     private Map<String, BigDecimal> runU2UScenarios(List<SubscriberUser> subscribers, List<BusinessUser> businessUsers) {
         Map<String, BigDecimal> expectedBalances = new HashMap<>();
         BigDecimal cashInTotal = BigDecimal.ZERO;
@@ -2529,6 +3389,29 @@ class SelfRegistrationRealApiE2ETest {
         assertMainUsdBalanceFromEnquiry(receiver.accountId(), receiver.accountType(), receiver.accessToken(), expectedBalances.get(receiver.accountId()));
     }
 
+    private String performU2UWithServiceCharge(
+            U2UParticipant sender,
+            U2UParticipant receiver,
+            BigDecimal amount,
+            String currency
+    ) {
+        return postJson(
+                "U2U with ALLTAGS service charge from " + sender.accountId() + " to " + receiver.accountId() + " " + currency,
+                "/api/v1/pay/U2U",
+                sender.accessToken(),
+                u2uRequest(sender, receiver, amount, currency)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("U2U"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("currency", equalTo(currency))
+                .body("serviceCharge.payer", equalTo("SENDER"))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+    }
+
     private void assertInsufficientU2U(
             U2UParticipant sender,
             U2UParticipant receiver,
@@ -2602,6 +3485,28 @@ class SelfRegistrationRealApiE2ETest {
         assertApprovedFinancialTransferTransaction(transactionId, "CASHOUT", subscriber.accountId(), agent.accountId(), amount);
         assertMainUsdBalanceFromEnquiry(subscriber, expectedBalances.get(subscriber.accountId()));
         assertMainUsdBalanceFromEnquiry(agent, expectedBalances.get(agent.accountId()));
+    }
+
+    private String performCashOutWithServiceCharge(
+            SubscriberUser subscriber,
+            BusinessUser agent,
+            BigDecimal amount,
+            String currency
+    ) {
+        return postJson(
+                "subscriber cash-out with ALLTAGS service charge to agent " + agent.accountId() + " " + currency,
+                "/api/v1/pay/CASHOUT",
+                subscriber.accessToken(),
+                cashOutRequest(subscriber, agent, amount, currency)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("CASHOUT"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("currency", equalTo(currency))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
     }
 
     private void assertInsufficientCashOut(
@@ -2697,6 +3602,28 @@ class SelfRegistrationRealApiE2ETest {
         assertMainUsdBalanceFromEnquiry(merchant, expectedBalances.get(merchant.accountId()));
     }
 
+    private String performMerchantPaymentWithServiceCharge(
+            SubscriberUser subscriber,
+            BusinessUser merchant,
+            BigDecimal amount,
+            String currency
+    ) {
+        return postJson(
+                "merchant payment with ALLTAGS service charge from subscriber " + subscriber.accountId() + " " + currency,
+                "/api/v1/pay/MERCHANTPAY",
+                subscriber.accessToken(),
+                merchantPaymentRequest(subscriber, merchant, amount, currency)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("MERCHANTPAY"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("currency", equalTo(currency))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+    }
+
     private void performBillPaymentAndSettlement(
             SubscriberUser subscriber,
             BusinessUser biller,
@@ -2757,6 +3684,34 @@ class SelfRegistrationRealApiE2ETest {
 
         assertMainUsdBalanceFromEnquiry(subscriber, expectedBalances.get(subscriber.accountId()));
         assertMainUsdBalanceFromEnquiry(biller, expectedBalances.get(biller.accountId()));
+    }
+
+    private String performBillPaymentWithServiceCharge(
+            SubscriberUser subscriber,
+            BusinessUser biller,
+            BigDecimal amount,
+            String currency
+    ) {
+        Response response = postJson(
+                "bill payment with ALLTAGS service charge from subscriber " + subscriber.accountId() + " " + currency,
+                "/api/v1/pay/BILLPAY",
+                subscriber.accessToken(),
+                billPaymentRequest(subscriber, biller, amount, currency)
+        );
+        String transactionId = response.then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("BILLPAY"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("currency", equalTo(currency))
+                .body("billStatus", equalTo("PENDING"))
+                .body("transactionId", notNullValue())
+                .body("traceId", notNullValue())
+                .extract()
+                .path("transactionId");
+
+        assertBillPaymentStatus(transactionId, "PENDING");
+        return transactionId;
     }
 
     private void settleBillPayment(
@@ -2916,7 +3871,7 @@ class SelfRegistrationRealApiE2ETest {
         assertJwt(accessToken, accountId, "PASSWORD", accountType);
         assertUserRole(accountId, roleCode);
         assertBusinessAccount(accountId, accountType, mobile, loginId, firstName, "User", email);
-        return new BusinessUser(accountId, accountType, mobile, accessToken, updatedPassword);
+        return new BusinessUser(accountId, accountType, mobile, loginId, accessToken, updatedPassword);
     }
 
     private String loginWithPassword(
@@ -3061,6 +4016,49 @@ class SelfRegistrationRealApiE2ETest {
                   }
                 }
                 """.formatted(requestId, currency, amount, currency);
+    }
+
+    private String approveStock(
+            String initiatingAdminToken,
+            String approvingAdminToken,
+            String requestId,
+            String currency,
+            String amount
+    ) {
+        String initiatingAccountId = jwtService.getClaims(initiatingAdminToken).getSubject();
+        String approvingAccountId = jwtService.getClaims(approvingAdminToken).getSubject();
+        String transactionId = postJson(
+                "networkadmin initiates " + currency + " stock " + requestId,
+                "/api/v1/pay/stockInitiate",
+                initiatingAdminToken,
+                stockInitiateRequest(requestId, currency, amount)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("PENDING"))
+                .body("operationType", equalTo("STOCK"))
+                .body("code", equalTo("STOCK_INITIATED"))
+                .body("transactionId", notNullValue())
+                .body("currency", equalTo(currency))
+                .extract()
+                .path("transactionId");
+
+        assertStockTransactionInitiator(transactionId, initiatingAccountId);
+
+        postJson(
+                "different networkadmin approves " + currency + " stock " + requestId,
+                "/api/v1/pay/stockStatusUpdate",
+                approvingAdminToken,
+                stockApprovalRequest(transactionId, "APPROVED", null, "approved " + currency + " stock")
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("STOCK"))
+                .body("code", equalTo("STOCK_APPROVED"))
+                .body("transactionId", equalTo(transactionId))
+                .body("currency", equalTo(currency));
+
+        assertApprovedStockTransaction(transactionId, initiatingAccountId, approvingAccountId, currency);
+        return transactionId;
     }
 
     private String stockApprovalRequest(
@@ -3303,6 +4301,10 @@ class SelfRegistrationRealApiE2ETest {
     }
 
     private String cashOutRequest(SubscriberUser subscriber, BusinessUser agent, BigDecimal amount) {
+        return cashOutRequest(subscriber, agent, amount, "USD");
+    }
+
+    private String cashOutRequest(SubscriberUser subscriber, BusinessUser agent, BigDecimal amount, String currency) {
         return """
                 {
                   "operationType": "CASHOUT",
@@ -3333,7 +4335,7 @@ class SelfRegistrationRealApiE2ETest {
                   },
                   "transaction": {
                     "amount": %s,
-                    "currency": "USD"
+                    "currency": "%s"
                   },
                   "metadata": {
                     "scenario": "e2e-subscriber-cashout"
@@ -3345,11 +4347,16 @@ class SelfRegistrationRealApiE2ETest {
                 subscriber.mobile(),
                 subscriber.pin(),
                 agent.mobile(),
-                amount.toPlainString()
+                amount.toPlainString(),
+                currency
         );
     }
 
     private String u2uRequest(U2UParticipant sender, U2UParticipant receiver, BigDecimal amount) {
+        return u2uRequest(sender, receiver, amount, "USD");
+    }
+
+    private String u2uRequest(U2UParticipant sender, U2UParticipant receiver, BigDecimal amount, String currency) {
         return """
                 {
                   "operationType": "U2U",
@@ -3380,7 +4387,7 @@ class SelfRegistrationRealApiE2ETest {
                   },
                   "transaction": {
                     "amount": %s,
-                    "currency": "USD"
+                    "currency": "%s"
                   },
                   "metadata": {
                     "scenario": "e2e-u2u"
@@ -3395,11 +4402,16 @@ class SelfRegistrationRealApiE2ETest {
                 sender.authValue(),
                 receiver.accountType(),
                 receiver.mobile(),
-                amount.toPlainString()
+                amount.toPlainString(),
+                currency
         );
     }
 
     private String merchantPaymentRequest(SubscriberUser subscriber, BusinessUser merchant, BigDecimal amount) {
+        return merchantPaymentRequest(subscriber, merchant, amount, "USD");
+    }
+
+    private String merchantPaymentRequest(SubscriberUser subscriber, BusinessUser merchant, BigDecimal amount, String currency) {
         return """
                 {
                   "operationType": "MERCHANTPAY",
@@ -3430,7 +4442,7 @@ class SelfRegistrationRealApiE2ETest {
                   },
                   "transaction": {
                     "amount": %s,
-                    "currency": "USD"
+                    "currency": "%s"
                   },
                   "metadata": {
                     "scenario": "e2e-merchantpay"
@@ -3442,11 +4454,16 @@ class SelfRegistrationRealApiE2ETest {
                 subscriber.mobile(),
                 subscriber.pin(),
                 merchant.mobile(),
-                amount.toPlainString()
+                amount.toPlainString(),
+                currency
         );
     }
 
     private String billPaymentRequest(SubscriberUser subscriber, BusinessUser biller, BigDecimal amount) {
+        return billPaymentRequest(subscriber, biller, amount, "USD");
+    }
+
+    private String billPaymentRequest(SubscriberUser subscriber, BusinessUser biller, BigDecimal amount, String currency) {
         return """
                 {
                   "operationType": "BILLPAY",
@@ -3477,7 +4494,7 @@ class SelfRegistrationRealApiE2ETest {
                   },
                   "transaction": {
                     "amount": %s,
-                    "currency": "USD"
+                    "currency": "%s"
                   },
                   "metadata": {
                     "scenario": "e2e-billpay"
@@ -3489,7 +4506,8 @@ class SelfRegistrationRealApiE2ETest {
                 subscriber.mobile(),
                 subscriber.pin(),
                 biller.mobile(),
-                amount.toPlainString()
+                amount.toPlainString(),
+                currency
         );
     }
 
@@ -4535,6 +5553,44 @@ class SelfRegistrationRealApiE2ETest {
                       AND column_name = ?
                 )
                 """, Boolean.class, tableSchema, tableName, columnName);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    private void ensureAccountStatusHistoryTable() {
+        if (tableExists(TENANT_SCHEMA, "account_status_history")) {
+            return;
+        }
+
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    history_id BIGSERIAL PRIMARY KEY,
+                    account_id VARCHAR(100) NOT NULL,
+                    account_type VARCHAR(50),
+                    action_type VARCHAR(50) NOT NULL,
+                    previous_status VARCHAR(50),
+                    new_status VARCHAR(50) NOT NULL,
+                    performed_by VARCHAR(100) NOT NULL,
+                    performed_by_type VARCHAR(50),
+                    reason VARCHAR(500),
+                    remarks VARCHAR(1000),
+                    performed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """.formatted(tenantTable("account_status_history")));
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_account_status_history_account
+                ON %s (account_id, performed_at DESC)
+                """.formatted(tenantTable("account_status_history")));
+    }
+
+    private boolean tableExists(String tableSchema, String tableName) {
+        Boolean exists = jdbcTemplate.queryForObject("""
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM information_schema.tables
+                    WHERE table_schema = ?
+                      AND table_name = ?
+                )
+                """, Boolean.class, tableSchema, tableName);
         return Boolean.TRUE.equals(exists);
     }
 

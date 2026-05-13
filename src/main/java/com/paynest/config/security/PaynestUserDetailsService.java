@@ -1,5 +1,6 @@
 package com.paynest.config.security;
 
+import com.paynest.common.Constants;
 import com.paynest.users.entity.Account;
 import com.paynest.users.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,8 @@ public class PaynestUserDetailsService implements UserDetailsService {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new UsernameNotFoundException("Account not found"));
 
-        if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+        if (!Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(account.getStatus())
+                && !Constants.ACCOUNT_STATUS_SUSPENDED.equalsIgnoreCase(account.getStatus())) {
             throw new UsernameNotFoundException("Account is not active");
         }
 

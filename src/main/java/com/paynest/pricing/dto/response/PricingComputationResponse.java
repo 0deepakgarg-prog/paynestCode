@@ -21,6 +21,7 @@ public class PricingComputationResponse {
     private BigDecimal discountAmount = BigDecimal.ZERO;
     private BigDecimal cashbackAmount = BigDecimal.ZERO;
     private List<PricingRuleDetails> serviceChargeRules = new ArrayList<>();
+    private List<PricingRuleDetails> commissionRules = new ArrayList<>();
     private List<PricingRuleDetails> discountRules = new ArrayList<>();
     private List<PricingRuleDetails> cashbackRules = new ArrayList<>();
     private String cashbackPayBy;
@@ -38,6 +39,12 @@ public class PricingComputationResponse {
     public void addDiscountRule(PricingRuleDetails ruleDetails) {
         if (ruleDetails != null) {
             discountRules.add(ruleDetails);
+        }
+    }
+
+    public void addCommissionRule(PricingRuleDetails ruleDetails) {
+        if (ruleDetails != null) {
+            commissionRules.add(ruleDetails);
         }
     }
 

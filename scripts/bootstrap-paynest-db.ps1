@@ -167,6 +167,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_account_mobile_number
     ON $TenantSchema.account (mobile_number)
     WHERE mobile_number IS NOT NULL;
 
+CREATE TABLE IF NOT EXISTS $TenantSchema.account_status_history (
+    history_id BIGSERIAL PRIMARY KEY,
+    account_id VARCHAR(100) NOT NULL,
+    account_type VARCHAR(50),
+    action_type VARCHAR(50) NOT NULL,
+    previous_status VARCHAR(50),
+    new_status VARCHAR(50) NOT NULL,
+    performed_by VARCHAR(100) NOT NULL,
+    performed_by_type VARCHAR(50),
+    reason VARCHAR(500),
+    remarks VARCHAR(1000),
+    performed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_status_history_account
+    ON $TenantSchema.account_status_history (account_id, performed_at DESC);
+
 CREATE TABLE IF NOT EXISTS $TenantSchema.account_auth (
     auth_id BIGINT PRIMARY KEY,
     auth_hash VARCHAR(255),
@@ -599,6 +616,7 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.transaction_details (
     wallet_number VARCHAR(25),
     wallet_type VARCHAR(50),
     currency VARCHAR(10),
+    transaction_type VARCHAR(50),
     previous_fic_balance NUMERIC(19, 0),
     post_fic_balance NUMERIC(19, 0),
     previous_frozen_balance NUMERIC(19, 0),
@@ -627,6 +645,7 @@ ALTER TABLE $TenantSchema.transactions
 ALTER TABLE $TenantSchema.transaction_details
     ADD COLUMN IF NOT EXISTS wallet_type VARCHAR(50),
     ADD COLUMN IF NOT EXISTS currency VARCHAR(10),
+    ADD COLUMN IF NOT EXISTS transaction_type VARCHAR(50),
     ADD COLUMN IF NOT EXISTS attr_1_name VARCHAR(255),
     ADD COLUMN IF NOT EXISTS attr_1_value VARCHAR(255),
     ADD COLUMN IF NOT EXISTS attr_2_name VARCHAR(255),
@@ -676,6 +695,28 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.bill_payment_status (
     created_on TIMESTAMP NOT NULL,
     modified_on TIMESTAMP NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.cashback_payout (
+    cashback_payout_id BIGSERIAL PRIMARY KEY,
+    original_transaction_id VARCHAR(30) NOT NULL,
+    payout_transaction_id VARCHAR(30),
+    service_code VARCHAR(15) NOT NULL,
+    beneficiary_account_id VARCHAR(30) NOT NULL,
+    beneficiary_party VARCHAR(20),
+    amount NUMERIC(19, 4) NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    payment_schedule VARCHAR(30) NOT NULL,
+    pay_at TIMESTAMP NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    pricing_rule_details VARCHAR(4000),
+    failure_reason VARCHAR(300),
+    created_on TIMESTAMP NOT NULL,
+    modified_on TIMESTAMP NOT NULL,
+    version BIGINT
+);
+
+CREATE INDEX IF NOT EXISTS idx_cashback_payout_due
+    ON $TenantSchema.cashback_payout(status, pay_at);
 
 CREATE TABLE IF NOT EXISTS $TenantSchema.audit_api_log (
     id BIGSERIAL PRIMARY KEY,

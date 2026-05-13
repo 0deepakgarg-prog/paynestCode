@@ -51,7 +51,8 @@ public class U2UPaymentService {
             AccountType.SUBSCRIBER,
             AccountType.AGENT,
             AccountType.MERCHANT,
-            AccountType.BILLER
+            AccountType.BILLER,
+            AccountType.BUSINESS
     );
 
     private final WalletRepository walletRepository;

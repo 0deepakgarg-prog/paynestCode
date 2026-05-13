@@ -1,0 +1,2681 @@
+openapi: 3.0.3
+info:
+  title: PayNest API
+  version: "1.0.0"
+  description: >
+    Swagger-style OpenAPI document for PayNest wallet, account, pricing,
+    payment, tag, FX, transaction history, and receipt APIs.
+servers:
+  - url: http://localhost:8080
+    description: Local server
+tags:
+  - name: Authentication
+  - name: Accounts
+  - name: Wallets
+  - name: Payments
+  - name: Transactions
+  - name: Pricing
+  - name: Tags
+  - name: FX Rates
+  - name: Receipts
+  - name: Internal
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login by identifier and credential
+      security:
+        - tenantHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLoginResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/challenge-token:
+    get:
+      tags: [Authentication]
+      summary: Generate challenge token for authenticated account
+      responses:
+        "200":
+          description: Challenge token created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeTokenResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/register/selfGenOtp:
+    post:
+      tags: [Accounts]
+      summary: Generate OTP for self registration
+      security:
+        - tenantHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationRequest"
+      responses:
+        "200":
+          description: OTP generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/register/selfWithOtp:
+    post:
+      tags: [Accounts]
+      summary: Complete self registration using OTP
+      security:
+        - tenantHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationRequestWithOtp"
+      responses:
+        "200":
+          description: Account registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/registerUser:
+    post:
+      tags: [Accounts]
+      summary: Register admin or business account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+      responses:
+        "200":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/pin/changeDefault:
+    post:
+      tags: [Accounts]
+      summary: Change default PIN
+      requestBody:
+        $ref: "#/components/requestBodies/ChangePin"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/pin/change:
+    post:
+      tags: [Accounts]
+      summary: Change PIN
+      requestBody:
+        $ref: "#/components/requestBodies/ChangePin"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/password/changeDefault:
+    post:
+      tags: [Accounts]
+      summary: Change default password
+      requestBody:
+        $ref: "#/components/requestBodies/ChangePassword"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/password/change:
+    post:
+      tags: [Accounts]
+      summary: Change password
+      requestBody:
+        $ref: "#/components/requestBodies/ChangePassword"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/updateSelf:
+    put:
+      tags: [Accounts]
+      summary: Update authenticated account profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccountRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/addKyc:
+    post:
+      tags: [Accounts]
+      summary: Add KYC document to account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddAccountKycRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/getAccountDetails/{accountId}:
+    get:
+      tags: [Accounts]
+      summary: Get account, identifiers, and KYC details
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+      responses:
+        "200":
+          description: Account details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      accountDetails:
+                        $ref: "#/components/schemas/AccountKycDetailsResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/{accountId}/suspend:
+    post:
+      tags: [Accounts]
+      summary: Suspend an account
+      description: Admin-only operation. Suspended users can login and view only their own wallet balance.
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+      requestBody:
+        $ref: "#/components/requestBodies/AccountStatusChange"
+      responses:
+        "200":
+          description: Account suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountStatusApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/{accountId}/resume:
+    post:
+      tags: [Accounts]
+      summary: Resume a suspended account
+      description: Admin-only operation. Changes account status back to ACTIVE.
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+      requestBody:
+        $ref: "#/components/requestBodies/AccountStatusChange"
+      responses:
+        "200":
+          description: Account resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountStatusApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/{accountId}/status-history:
+    get:
+      tags: [Accounts]
+      summary: Get account status history
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+      responses:
+        "200":
+          description: Status history
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      statusHistory:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AccountStatusHistory"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/account/subscriber/{accountId}:
+    delete:
+      tags: [Accounts]
+      summary: Delete subscriber account
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/wallet/getAccountWallets/{accountId}:
+    get:
+      tags: [Wallets]
+      summary: Get wallets and balances for account
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+      responses:
+        "200":
+          description: Wallet list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      wallets:
+                        $ref: "#/components/schemas/AccountWalletsResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/wallet/restrictions:
+    post:
+      tags: [Wallets]
+      summary: Create wallet restriction
+      requestBody:
+        $ref: "#/components/requestBodies/WalletRestriction"
+      responses:
+        "200":
+          description: Restriction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletRestrictionApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/wallet/restrictions/{walletId}:
+    get:
+      tags: [Wallets]
+      summary: Get wallet restriction
+      parameters:
+        - $ref: "#/components/parameters/WalletIdPath"
+      responses:
+        "200":
+          description: Restriction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletRestrictionApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+    put:
+      tags: [Wallets]
+      summary: Update wallet restriction
+      parameters:
+        - $ref: "#/components/parameters/WalletIdPath"
+      requestBody:
+        $ref: "#/components/requestBodies/WalletRestriction"
+      responses:
+        "200":
+          description: Restriction updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletRestrictionApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/wallet/restrictions/{walletId}/history:
+    get:
+      tags: [Wallets]
+      summary: Get wallet restriction history
+      parameters:
+        - $ref: "#/components/parameters/WalletIdPath"
+      responses:
+        "200":
+          description: Restriction history
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      history:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/WalletRestrictionHistoryResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/U2U:
+    post:
+      tags: [Payments]
+      summary: User-to-user wallet transfer
+      requestBody:
+        $ref: "#/components/requestBodies/CommonPayment"
+      responses:
+        "200":
+          description: U2U transfer result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/U2UPaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/calculatePricing:
+    post:
+      tags: [Payments, Pricing]
+      summary: Calculate pricing for a payment request
+      requestBody:
+        $ref: "#/components/requestBodies/CommonPayment"
+      responses:
+        "200":
+          description: Pricing computation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      pricing:
+                        $ref: "#/components/schemas/PricingComputationResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/INTRAWALLET:
+    post:
+      tags: [Payments]
+      summary: Transfer between wallets of same account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntraWalletTransferRequest"
+      responses:
+        "200":
+          description: Intra-wallet transfer result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntraWalletTransferResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/MERCHANTPAY:
+    post:
+      tags: [Payments]
+      summary: Merchant payment
+      requestBody:
+        $ref: "#/components/requestBodies/CommonPayment"
+      responses:
+        "200":
+          description: Merchant payment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/CASHIN:
+    post:
+      tags: [Payments]
+      summary: Cash-in transaction
+      requestBody:
+        $ref: "#/components/requestBodies/CommonPayment"
+      responses:
+        "200":
+          description: Cash-in result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/CASHOUT:
+    post:
+      tags: [Payments]
+      summary: Cash-out transaction
+      requestBody:
+        $ref: "#/components/requestBodies/CommonPayment"
+      responses:
+        "200":
+          description: Cash-out result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/BILLPAY:
+    post:
+      tags: [Payments]
+      summary: Bill payment
+      requestBody:
+        $ref: "#/components/requestBodies/CommonPayment"
+      responses:
+        "200":
+          description: Bill payment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillPayPaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/o2c/initiate:
+    post:
+      tags: [Payments]
+      summary: Initiate operator-to-channel transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/O2CPaymentRequest"
+      responses:
+        "200":
+          description: O2C initiation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/o2c/status:
+    post:
+      tags: [Payments]
+      summary: Update O2C status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalRequest"
+      responses:
+        "200":
+          description: O2C status update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/stockInitiate:
+    post:
+      tags: [Payments]
+      summary: Initiate stock creation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockInitiateRequest"
+      responses:
+        "200":
+          description: Stock initiation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/stockStatusUpdate:
+    post:
+      tags: [Payments]
+      summary: Update stock creation status
+      requestBody:
+        $ref: "#/components/requestBodies/StockApproval"
+      responses:
+        "200":
+          description: Stock status update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/stockReimbursementInitiate:
+    post:
+      tags: [Payments]
+      summary: Initiate stock reimbursement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockReimbursementInitiateRequest"
+      responses:
+        "200":
+          description: Stock reimbursement initiation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pay/stockReimbursementStatusUpdate:
+    post:
+      tags: [Payments]
+      summary: Update stock reimbursement status
+      requestBody:
+        $ref: "#/components/requestBodies/StockApproval"
+      responses:
+        "200":
+          description: Stock reimbursement status update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasePaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/internal/settletxn:
+    post:
+      tags: [Internal]
+      summary: Settle pending transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettleTransactionRequest"
+      responses:
+        "200":
+          description: Settlement result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettleTransactionResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/transaction/{accountId}/{transactionId}:
+    get:
+      tags: [Transactions]
+      summary: Get transaction details for account
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transaction detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionDetailResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/transaction/history:
+    get:
+      tags: [Transactions]
+      summary: Get payment history
+      parameters:
+        - $ref: "#/components/parameters/HistoryAccountId"
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/PaymentMethodType"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Status"
+      responses:
+        "200":
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentHistoryResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/payment/history:
+    get:
+      tags: [Transactions]
+      summary: Get payment history alias
+      parameters:
+        - $ref: "#/components/parameters/HistoryAccountId"
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/PaymentMethodType"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Status"
+      responses:
+        "200":
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentHistoryResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pricing:
+    post:
+      tags: [Pricing]
+      summary: Create pricing rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePricingRuleRequest"
+            examples:
+              flatServiceChargeAllTags:
+                value:
+                  pricingName: E2E tag service charge P2P
+                  serviceCode: U2U
+                  ruleType: SERVICE_CHARGE
+                  pricingType: STATIC
+                  payer: SENDER
+                  senderTagKey: ALLTAGS
+                  receiverTagKey: ALLTAGS
+                  currency: USD
+                  pricingConfig:
+                    basedOn: TXNAMOUNT
+                    charging_strategy: FLAT
+                    calc:
+                      type: FLAT
+                      value: 1.00
+                  status: ACTIVE
+      responses:
+        "200":
+          description: Pricing rule created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingRuleApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+    get:
+      tags: [Pricing]
+      summary: Get all pricing rules
+      responses:
+        "200":
+          description: Pricing rules
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      pricingRules:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/PricingRuleResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pricing/{id}:
+    get:
+      tags: [Pricing]
+      summary: Get pricing rule by id
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Pricing rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingRuleApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [Pricing]
+      summary: Update pricing rule
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePricingRuleRequest"
+      responses:
+        "200":
+          description: Pricing rule updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingRuleApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/pricing/{id}/status:
+    patch:
+      tags: [Pricing]
+      summary: Update pricing rule status
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: "#/components/schemas/PricingStatus"
+      responses:
+        "200":
+          description: Pricing rule status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingRuleApiResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/tags:
+    get:
+      tags: [Tags]
+      summary: Get all tags
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      tags:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TagResponse"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      tags: [Tags]
+      summary: Create tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddTagRequest"
+      responses:
+        "200":
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      tag:
+                        $ref: "#/components/schemas/TagResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/tags/accounts/{accountId}:
+    get:
+      tags: [Tags]
+      summary: Get tags for account
+      parameters:
+        - $ref: "#/components/parameters/AccountIdPath"
+      responses:
+        "200":
+          description: Account tags
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      accountTags:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AccountTagResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/tags/categories:
+    get:
+      tags: [Tags]
+      summary: Get tag categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      categories:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/CategoryResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/tags/types:
+    get:
+      tags: [Tags]
+      summary: Get tag types
+      responses:
+        "200":
+          description: Tag types
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      tagTypes:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TagTypeResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/tags/{tagId}:
+    delete:
+      tags: [Tags]
+      summary: Delete tag
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/tags/{tagId}/accounts:
+    get:
+      tags: [Tags]
+      summary: Get accounts linked to tag
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Tag accounts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      tagAccounts:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TagAccountResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/tags/{tagId}/accounts/{accountId}:
+    post:
+      tags: [Tags]
+      summary: Link tag to account
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: "#/components/parameters/AccountIdPath"
+      responses:
+        "200":
+          description: Tag linked
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      accountTag:
+                        $ref: "#/components/schemas/UserTagResponse"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      tags: [Tags]
+      summary: Unlink tag from account
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: "#/components/parameters/AccountIdPath"
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/fx-rates:
+    post:
+      tags: [FX Rates]
+      summary: Create FX rate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFxRateRequest"
+      responses:
+        "200":
+          description: FX rate created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      fxRate:
+                        $ref: "#/components/schemas/FxRateResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/download/receipt:
+    get:
+      tags: [Receipts]
+      summary: Download transaction receipt PDF
+      parameters:
+        - name: transactionId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: accountId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: PDF receipt
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: "#/components/responses/Error"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    tenantHeader:
+      type: apiKey
+      in: header
+      name: X-Tenant-Id
+
+  parameters:
+    AccountIdPath:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+    WalletIdPath:
+      name: walletId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    HistoryAccountId:
+      name: accountId
+      in: query
+      required: false
+      schema:
+        type: string
+    FromDate:
+      name: fromDate
+      in: query
+      required: false
+      schema:
+        type: string
+    ToDate:
+      name: toDate
+      in: query
+      required: false
+      schema:
+        type: string
+    Offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+    PaymentMethodType:
+      name: paymentMethodType
+      in: query
+      required: false
+      schema:
+        type: string
+    Order:
+      name: order
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [ASC, DESC]
+    Status:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+
+  requestBodies:
+    ChangePin:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChangePinRequest"
+    ChangePassword:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChangePasswordRequest"
+    AccountStatusChange:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AccountStatusChangeRequest"
+    WalletRestriction:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WalletRestrictionRequest"
+    CommonPayment:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CommonPaymentRequest"
+    StockApproval:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StockApprovalRequest"
+
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorResponse"
+    SimpleSuccess:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: SUCCESS
+              message:
+                type: string
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: SUCCESS
+        code:
+          type: string
+          nullable: true
+        message:
+          type: string
+      additionalProperties: true
+
+    ApiErrorResponse:
+      type: object
+      properties:
+        responseStatus:
+          $ref: "#/components/schemas/TransactionStatus"
+        code:
+          type: string
+          example: INVALID_TOKEN
+        message:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        success:
+          type: boolean
+          example: false
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+
+    IdentifierType:
+      type: string
+      enum: [ACCOUNT_ID, MOBILE, MSISDN, LOGINID]
+    AuthType:
+      type: string
+      enum: [PIN, PASSWORD, OTP]
+    RequestGateway:
+      type: string
+      enum: [MOBILE, WEB]
+    InitiatedBy:
+      type: string
+      enum: [DEBITOR, CREDITOR]
+    TransactionStatus:
+      type: string
+      enum: [SUCCESS, FAILURE, PENDING]
+    BillPaymentStatus:
+      type: string
+      enum: [PENDING, SUCCESS, FAILED]
+    UserAccountType:
+      type: string
+      enum: [SUBSCRIBER, MERCHANT, ADMIN, AGENT]
+    PaymentAccountType:
+      type: string
+      enum: [SUBSCRIBER, MERCHANT, AGENT, BILLER, BUSINESS]
+    Gender:
+      type: string
+      enum: [MALE, FEMALE, OTHER]
+    WalletType:
+      type: string
+      description: Enum-backed values are MAIN, BONUS, SALARY; DB may also contain system wallet types such as BANK, SC, COMMDIS, TAX.
+      enum: [MAIN, BONUS, SALARY, BANK, SC, COMMDIS, TAX]
+    AccountStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE, BLOCKED, LOCKED, SUSPENDED]
+    PricingRuleType:
+      type: string
+      enum: [SERVICE_CHARGE, COMMISSION, DISCOUNT, CASHBACK]
+    PricingType:
+      type: string
+      description: Current service validator accepts STATIC and CAMPAIGN. ALLTAGS is used as a tag key, not pricingType.
+      enum: [STATIC, CAMPAIGN]
+    PricingPayer:
+      type: string
+      enum: [SENDER, RECEIVER, SYSTEM, SPLIT]
+    PricingPayBy:
+      type: string
+      enum: [SYSTEM, SENDER, RECEIVER]
+    PricingStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+
+    AuthLoginRequest:
+      type: object
+      required: [requestId, user, authFactor]
+      properties:
+        requestId:
+          type: string
+        user:
+          type: object
+          required: [identifierType, identifierValue]
+          properties:
+            identifierType:
+              $ref: "#/components/schemas/IdentifierType"
+            identifierValue:
+              type: string
+        authFactor:
+          type: object
+          required: [authType, credential]
+          properties:
+            authType:
+              $ref: "#/components/schemas/AuthType"
+            credential:
+              type: string
+              format: password
+
+    AuthLoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        accountId:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        accessToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+          format: int64
+
+    ChallengeTokenResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        accountId:
+          type: string
+        tokenType:
+          type: string
+        challengeToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+          format: int64
+
+    RegistrationRequest:
+      type: object
+      required: [requestId, user]
+      properties:
+        requestId:
+          type: string
+        user:
+          type: object
+          required: [mobile]
+          properties:
+            mobile:
+              type: string
+
+    RegistrationRequestWithOtp:
+      type: object
+      required: [requestId, user]
+      properties:
+        requestId:
+          type: string
+        user:
+          type: object
+          required: [mobile, otp]
+          properties:
+            mobile:
+              type: string
+            otp:
+              type: string
+
+    RegistrationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        requestId:
+          type: string
+        message:
+          type: string
+        accountId:
+          type: string
+
+    RegisterUserRequest:
+      type: object
+      required: [requestId, user]
+      properties:
+        requestId:
+          type: string
+        user:
+          type: object
+          properties:
+            mobileNumber:
+              type: string
+            accountType:
+              $ref: "#/components/schemas/UserAccountType"
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+              format: email
+            address:
+              type: string
+            gender:
+              $ref: "#/components/schemas/Gender"
+            dateOfBirth:
+              type: string
+              format: date
+            preferredLang:
+              type: string
+            nationality:
+              type: string
+            ssn:
+              type: string
+            remarks:
+              type: string
+            loginId:
+              type: string
+            role:
+              type: string
+
+    ChangePinRequest:
+      type: object
+      properties:
+        oldPin:
+          type: string
+          format: password
+        newPin:
+          type: string
+          format: password
+        accountId:
+          type: string
+        identifierType:
+          $ref: "#/components/schemas/IdentifierType"
+        identifierValue:
+          type: string
+
+    ChangePasswordRequest:
+      type: object
+      properties:
+        requestId:
+          type: string
+        user:
+          type: object
+          properties:
+            identifierType:
+              $ref: "#/components/schemas/IdentifierType"
+            identifierValue:
+              type: string
+        authFactorOld:
+          $ref: "#/components/schemas/AuthFactor"
+        authFactorNew:
+          $ref: "#/components/schemas/AuthFactor"
+
+    AuthFactor:
+      type: object
+      properties:
+        authType:
+          $ref: "#/components/schemas/AuthType"
+        credential:
+          type: string
+          format: password
+
+    UpdateAccountRequest:
+      type: object
+      properties:
+        requestId:
+          type: string
+        user:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            email:
+              type: string
+            address:
+              type: string
+            gender:
+              $ref: "#/components/schemas/Gender"
+            nationality:
+              type: string
+            ssn:
+              type: string
+            dob:
+              type: string
+              format: date
+            preferredLanguage:
+              type: string
+            attr1:
+              type: string
+            attr2:
+              type: string
+            attr3:
+              type: string
+            attr4:
+              type: string
+            attr5:
+              type: string
+            attr6:
+              type: string
+            attr7:
+              type: string
+            attr8:
+              type: string
+            attr9:
+              type: string
+            attr10:
+              type: string
+
+    AddAccountKycRequest:
+      type: object
+      properties:
+        requestId:
+          type: string
+        kycData:
+          type: object
+          properties:
+            kycType:
+              type: string
+            kycValue:
+              type: string
+            issueDate:
+              type: string
+              format: date
+            expiryDate:
+              type: string
+              format: date
+            isPrimary:
+              type: boolean
+            kycImageUrl:
+              type: string
+
+    AccountStatusChangeRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+        remarks:
+          type: string
+
+    AccountStatusChangeResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+        accountType:
+          type: string
+        previousStatus:
+          $ref: "#/components/schemas/AccountStatus"
+        newStatus:
+          $ref: "#/components/schemas/AccountStatus"
+        actionType:
+          type: string
+        performedBy:
+          type: string
+        performedAt:
+          type: string
+          format: date-time
+
+    AccountStatusApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            accountStatus:
+              $ref: "#/components/schemas/AccountStatusChangeResponse"
+
+    AccountStatusHistory:
+      type: object
+      properties:
+        historyId:
+          type: integer
+          format: int64
+        accountId:
+          type: string
+        accountType:
+          type: string
+        actionType:
+          type: string
+        previousStatus:
+          type: string
+        newStatus:
+          type: string
+        performedBy:
+          type: string
+        performedByType:
+          type: string
+        reason:
+          type: string
+        remarks:
+          type: string
+        performedAt:
+          type: string
+          format: date-time
+
+    AccountKycDetailsResponse:
+      type: object
+      properties:
+        account:
+          type: object
+          additionalProperties: true
+        kycDocuments:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        accountIdentifiers:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    Wallet:
+      type: object
+      properties:
+        walletId:
+          type: integer
+          format: int64
+        accountId:
+          type: string
+        currency:
+          type: string
+        walletType:
+          $ref: "#/components/schemas/WalletType"
+        status:
+          type: string
+        isDefault:
+          type: boolean
+        isLocked:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        remarks:
+          type: string
+
+    AccountWalletsResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+        wallets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Wallet"
+
+    WalletRestrictionRequest:
+      type: object
+      required: [walletId, restrictions]
+      properties:
+        walletId:
+          type: integer
+          format: int64
+        restrictions:
+          type: object
+          additionalProperties: true
+
+    WalletRestrictionResponse:
+      type: object
+      properties:
+        walletId:
+          type: integer
+          format: int64
+        restrictions:
+          type: object
+          additionalProperties: true
+        version:
+          type: integer
+          format: int64
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+
+    WalletRestrictionApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            restriction:
+              $ref: "#/components/schemas/WalletRestrictionResponse"
+
+    WalletRestrictionHistoryResponse:
+      type: object
+      properties:
+        historyId:
+          type: integer
+          format: int64
+        walletId:
+          type: integer
+          format: int64
+        version:
+          type: integer
+          format: int64
+        restrictions:
+          type: object
+          additionalProperties: true
+        actionType:
+          type: string
+        changedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Identifier:
+      type: object
+      required: [type, value]
+      properties:
+        type:
+          $ref: "#/components/schemas/IdentifierType"
+        value:
+          type: string
+
+    Authentication:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/AuthType"
+        value:
+          type: string
+
+    Party:
+      type: object
+      required: [accountType, identifier, walletType]
+      properties:
+        accountType:
+          $ref: "#/components/schemas/PaymentAccountType"
+        identifier:
+          $ref: "#/components/schemas/Identifier"
+        walletType:
+          $ref: "#/components/schemas/WalletType"
+        authentication:
+          $ref: "#/components/schemas/Authentication"
+
+    TransactionInfo:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: decimal
+          example: 10.00
+        currency:
+          type: string
+          example: USD
+        initiatedTransactionId:
+          type: string
+
+    CommonPaymentRequest:
+      type: object
+      required: [operationType, debitor, creditor, transaction]
+      properties:
+        operationType:
+          type: string
+          enum: [U2U, CASHIN, CASHOUT, MERCHANTPAY, BILLPAY]
+        requestGateway:
+          $ref: "#/components/schemas/RequestGateway"
+        preferredLang:
+          type: string
+        initiatedBy:
+          $ref: "#/components/schemas/InitiatedBy"
+        paymentReference:
+          type: string
+          maxLength: 100
+        comments:
+          type: string
+          maxLength: 300
+        debitor:
+          $ref: "#/components/schemas/Party"
+        creditor:
+          $ref: "#/components/schemas/Party"
+        transaction:
+          $ref: "#/components/schemas/TransactionInfo"
+        metadata:
+          type: object
+          additionalProperties: true
+        additionalInfo:
+          type: object
+          additionalProperties: true
+
+    BasePaymentResponse:
+      type: object
+      properties:
+        responseStatus:
+          $ref: "#/components/schemas/TransactionStatus"
+        operationType:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+        transactionId:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+
+    U2UPaymentResponse:
+      allOf:
+        - $ref: "#/components/schemas/BasePaymentResponse"
+        - type: object
+          properties:
+            totalAmount:
+              type: number
+              format: decimal
+            serviceCharge:
+              $ref: "#/components/schemas/ServiceChargeDetails"
+            discount:
+              $ref: "#/components/schemas/PricingAdjustmentDetails"
+            cashback:
+              $ref: "#/components/schemas/PricingAdjustmentDetails"
+
+    ServiceChargeDetails:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: decimal
+        payer:
+          type: string
+        currency:
+          type: string
+
+    PricingAdjustmentDetails:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: decimal
+        party:
+          type: string
+        payBy:
+          type: string
+        currency:
+          type: string
+
+    BillPayPaymentResponse:
+      allOf:
+        - $ref: "#/components/schemas/BasePaymentResponse"
+        - type: object
+          properties:
+            billStatus:
+              $ref: "#/components/schemas/BillPaymentStatus"
+
+    IntraWalletTransferRequest:
+      type: object
+      required: [party, sourceWalletType, targetWalletType, amount, sourceCurrency, targetCurrency]
+      properties:
+        requestGateway:
+          $ref: "#/components/schemas/RequestGateway"
+        preferredLang:
+          type: string
+        paymentReference:
+          type: string
+        comments:
+          type: string
+        party:
+          $ref: "#/components/schemas/Party"
+        sourceWalletType:
+          $ref: "#/components/schemas/WalletType"
+        targetWalletType:
+          $ref: "#/components/schemas/WalletType"
+        amount:
+          type: number
+          format: decimal
+        sourceCurrency:
+          type: string
+        targetCurrency:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        additionalInfo:
+          type: object
+          additionalProperties: true
+
+    IntraWalletTransferResponse:
+      type: object
+      properties:
+        responseStatus:
+          $ref: "#/components/schemas/TransactionStatus"
+        operationType:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+        transactionId:
+          type: string
+        sourceAmount:
+          type: number
+        sourceWalletType:
+          type: string
+        sourceCurrency:
+          type: string
+        targetAmount:
+          type: number
+        targetWalletType:
+          type: string
+        targetCurrency:
+          type: string
+        exchangeRate:
+          type: number
+        bonusToMainPercentage:
+          type: number
+
+    O2CPaymentRequest:
+      type: object
+      required: [operationType, channel, transaction]
+      properties:
+        operationType:
+          type: string
+          example: O2C
+        requestGateway:
+          $ref: "#/components/schemas/RequestGateway"
+        preferredLang:
+          type: string
+        paymentReference:
+          type: string
+        comments:
+          type: string
+        channel:
+          $ref: "#/components/schemas/Party"
+        transaction:
+          $ref: "#/components/schemas/TransactionInfo"
+        metadata:
+          type: object
+          additionalProperties: true
+        additionalInfo:
+          type: object
+          additionalProperties: true
+
+    ApprovalRequest:
+      type: object
+      required: [transactionId, status]
+      properties:
+        transactionId:
+          type: string
+        status:
+          type: string
+        comments:
+          type: string
+
+    StockInitiateRequest:
+      type: object
+      required: [operationType, transaction]
+      properties:
+        operationType:
+          type: string
+        paymentReference:
+          type: string
+        comments:
+          type: string
+        transaction:
+          $ref: "#/components/schemas/TransactionInfo"
+        metadata:
+          type: object
+          additionalProperties: true
+        additionalInfo:
+          type: object
+          additionalProperties: true
+
+    StockApprovalRequest:
+      type: object
+      required: [transactionId, status]
+      properties:
+        transactionId:
+          type: string
+        status:
+          type: string
+        errorCode:
+          type: string
+        comments:
+          type: string
+
+    StockReimbursementInitiateRequest:
+      type: object
+      required: [debitor, transactor, transaction]
+      properties:
+        paymentReference:
+          type: string
+        comments:
+          type: string
+        debitor:
+          $ref: "#/components/schemas/Party"
+        transactor:
+          $ref: "#/components/schemas/Party"
+        transaction:
+          $ref: "#/components/schemas/TransactionInfo"
+        metadata:
+          type: object
+          additionalProperties: true
+        additionalInfo:
+          type: object
+          additionalProperties: true
+
+    SettleTransactionRequest:
+      type: object
+      required: [traceId, settlementStatus]
+      properties:
+        traceId:
+          type: string
+        settlementStatus:
+          type: boolean
+        comments:
+          type: string
+        additionalInfo:
+          type: object
+          additionalProperties: true
+
+    SettleTransactionResponse:
+      type: object
+      properties:
+        responseStatus:
+          $ref: "#/components/schemas/TransactionStatus"
+        operationType:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+        transactionId:
+          type: string
+        transactionTraceId:
+          type: string
+        serviceCode:
+          type: string
+        transferStatus:
+          type: string
+
+    TransactionDetailResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        transferOn:
+          type: string
+        accountId:
+          type: string
+        serviceCode:
+          type: string
+        serviceName:
+          type: string
+        transferStatus:
+          type: string
+        status:
+          type: string
+        errorCode:
+          type: string
+        entryType:
+          type: string
+          enum: [DR, CR]
+        transactionAmount:
+          type: number
+        approvedAmount:
+          type: number
+        requestedAmount:
+          type: number
+        previousBalance:
+          type: number
+        postBalance:
+          type: number
+        paymentReference:
+          type: string
+        requestGateway:
+          type: string
+        traceId:
+          type: string
+        initiatedBy:
+          type: string
+        remarks:
+          type: string
+        debitor:
+          $ref: "#/components/schemas/TransactionPartyDetailResponse"
+        creditor:
+          $ref: "#/components/schemas/TransactionPartyDetailResponse"
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionEntryDetailResponse"
+        additionalInfo:
+          type: object
+          additionalProperties: true
+        responseTimestamp:
+          type: string
+          format: date-time
+
+    TransactionPartyDetailResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+        accountType:
+          type: string
+        accountName:
+          type: string
+        mobileNumber:
+          type: string
+        walletId:
+          type: integer
+          format: int64
+        walletType:
+          type: string
+        currency:
+          type: string
+        entryType:
+          type: string
+
+    TransactionEntryDetailResponse:
+      type: object
+      properties:
+        sequenceNumber:
+          type: integer
+          format: int64
+        accountId:
+          type: string
+        userType:
+          type: string
+        entryType:
+          type: string
+        walletId:
+          type: integer
+          format: int64
+        walletType:
+          type: string
+        currency:
+          type: string
+        serviceCode:
+          type: string
+        transferStatus:
+          type: string
+        transactionAmount:
+          type: number
+        approvedAmount:
+          type: number
+        previousBalance:
+          type: number
+        postBalance:
+          type: number
+
+    PaymentHistoryResponse:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+          format: int64
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentHistoryTransactionResponse"
+        traceId:
+          type: string
+        responseTimestamp:
+          type: string
+          format: date-time
+
+    PaymentHistoryTransactionResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        transferOn:
+          type: string
+        serviceCode:
+          type: string
+        serviceName:
+          type: string
+        status:
+          type: string
+        entryType:
+          type: string
+        transactionAmount:
+          type: number
+        previousBalance:
+          type: number
+        postBalance:
+          type: number
+        walletId:
+          type: integer
+          format: int64
+        walletType:
+          type: string
+        currency:
+          type: string
+        accountId:
+          type: string
+        accountType:
+          type: string
+        counterpartyAccountId:
+          type: string
+        counterpartyAccountType:
+          type: string
+        counterpartyName:
+          type: string
+        paymentReference:
+          type: string
+        requestGateway:
+          type: string
+        traceId:
+          type: string
+        initiatedBy:
+          type: string
+        remarks:
+          type: string
+        additionalInfo:
+          type: object
+          additionalProperties: true
+
+    CreatePricingRuleRequest:
+      type: object
+      required: [pricingName, serviceCode, ruleType, pricingType, payer, senderTagKey, receiverTagKey, currency, pricingConfig]
+      properties:
+        pricingName:
+          type: string
+        serviceCode:
+          type: string
+          enum: [U2U, CASHIN, CASHOUT, MERCHANTPAY, BILLPAY, O2C, INTRAWALLET, ACCOUNT_DELETION]
+        ruleType:
+          $ref: "#/components/schemas/PricingRuleType"
+        pricingType:
+          $ref: "#/components/schemas/PricingType"
+        payer:
+          $ref: "#/components/schemas/PricingPayer"
+        payBy:
+          $ref: "#/components/schemas/PricingPayBy"
+        payerSplit:
+          type: object
+          additionalProperties: true
+        senderTagKey:
+          type: string
+          example: ALLTAGS
+        receiverTagKey:
+          type: string
+          example: ALLTAGS
+        currency:
+          type: string
+          example: USD
+        pricingConfig:
+          $ref: "#/components/schemas/PricingConfig"
+        status:
+          $ref: "#/components/schemas/PricingStatus"
+        validFrom:
+          type: string
+          format: date-time
+        validTo:
+          type: string
+          format: date-time
+
+    PricingConfig:
+      type: object
+      properties:
+        basedOn:
+          type: string
+          example: TXNAMOUNT
+        charging_strategy:
+          type: string
+          example: FLAT
+        calc:
+          type: object
+          properties:
+            type:
+              type: string
+              example: FLAT
+            value:
+              type: number
+              format: decimal
+              example: 1.00
+      additionalProperties: true
+
+    UpdatePricingRuleRequest:
+      type: object
+      properties:
+        pricingName:
+          type: string
+        payer:
+          $ref: "#/components/schemas/PricingPayer"
+        payBy:
+          $ref: "#/components/schemas/PricingPayBy"
+        payerSplit:
+          type: object
+          additionalProperties: true
+        pricingConfig:
+          $ref: "#/components/schemas/PricingConfig"
+        status:
+          $ref: "#/components/schemas/PricingStatus"
+        validFrom:
+          type: string
+          format: date-time
+        validTo:
+          type: string
+          format: date-time
+
+    PricingRuleResponse:
+      allOf:
+        - $ref: "#/components/schemas/CreatePricingRuleRequest"
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+            createdBy:
+              type: string
+            updatedBy:
+              type: string
+
+    PricingRuleApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            pricing:
+              $ref: "#/components/schemas/PricingRuleResponse"
+
+    PricingComputationResponse:
+      type: object
+      properties:
+        senderTagKey:
+          type: string
+        receiverTagKey:
+          type: string
+        serviceChargeAffectedParty:
+          type: string
+        commissionAffectedParty:
+          type: string
+        discountAffectedParty:
+          type: string
+        cashbackAffectedParty:
+          type: string
+        serviceChargeAmount:
+          type: number
+        commissionAmount:
+          type: number
+        discountAmount:
+          type: number
+        cashbackAmount:
+          type: number
+        cashbackPayBy:
+          type: string
+        serviceChargeRules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PricingRuleDetails"
+        commissionRules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PricingRuleDetails"
+        discountRules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PricingRuleDetails"
+        cashbackRules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PricingRuleDetails"
+
+    PricingRuleDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        pricingName:
+          type: string
+        serviceCode:
+          type: string
+        ruleType:
+          $ref: "#/components/schemas/PricingRuleType"
+        pricingType:
+          $ref: "#/components/schemas/PricingType"
+        payer:
+          type: string
+        payBy:
+          type: string
+        senderTagKey:
+          type: string
+        receiverTagKey:
+          type: string
+        currency:
+          type: string
+        pricingConfig:
+          type: object
+          additionalProperties: true
+        calculatedAmount:
+          type: number
+
+    AddTagRequest:
+      type: object
+      required: [tagCode, tagName, category, tagType]
+      properties:
+        tagCode:
+          type: string
+        tagName:
+          type: string
+        category:
+          type: string
+        tagType:
+          type: string
+
+    TagResponse:
+      allOf:
+        - $ref: "#/components/schemas/AddTagRequest"
+        - type: object
+          properties:
+            tagId:
+              type: integer
+              format: int64
+            isDefault:
+              type: boolean
+            status:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    AccountTagResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        accountId:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        tagId:
+          type: integer
+          format: int64
+        tagCode:
+          type: string
+        tagName:
+          type: string
+        category:
+          type: string
+        isDefault:
+          type: boolean
+        tagType:
+          type: string
+        tagStatus:
+          type: string
+
+    UserTagResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        accountId:
+          type: string
+        tagId:
+          type: integer
+          format: int64
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+
+    TagAccountResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tagId:
+          type: integer
+          format: int64
+        accountId:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+
+    CategoryResponse:
+      type: object
+      properties:
+        categoryId:
+          type: integer
+          format: int64
+        categoryCode:
+          type: string
+        categoryName:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TagTypeResponse:
+      type: object
+      properties:
+        tagTypeId:
+          type: integer
+          format: int64
+        typeCode:
+          type: string
+        typeName:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateFxRateRequest:
+      type: object
+      required: [targetCurrency, usdRate, provider]
+      properties:
+        targetCurrency:
+          type: string
+          example: INR
+        usdRate:
+          type: number
+          format: decimal
+        rateType:
+          type: string
+          example: MID
+        provider:
+          type: string
+        validFrom:
+          type: string
+          format: date-time
+        field1:
+          type: string
+        field2:
+          type: string
+        field3:
+          type: string
+        field4:
+          type: string
+        field5:
+          type: string
+
+    FxRateResponse:
+      allOf:
+        - $ref: "#/components/schemas/CreateFxRateRequest"
+        - type: object
+          properties:
+            rateId:
+              type: integer
+              format: int64
+            versionNo:
+              type: integer
+              format: int64
+            isActive:
+              type: boolean
+            createdAt:
+              type: string
+              format: date-time
+            createdBy:
+              type: string
+
+    CashbackPayout:
+      type: object
+      description: Stored payout instruction created by cashback pricing rules and paid later as a separate transaction.
+      properties:
+        cashbackPayoutId:
+          type: integer
+          format: int64
+        originalTransactionId:
+          type: string
+        payoutTransactionId:
+          type: string
+        serviceCode:
+          type: string
+        beneficiaryAccountId:
+          type: string
+        beneficiaryParty:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        paymentSchedule:
+          type: string
+          description: Schedule marker that determines when payout should be paid.
+        payAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [PENDING, PAID, FAILED]
+        pricingRuleDetails:
+          type: string
+        failureReason:
+          type: string
+        createdOn:
+          type: string
+          format: date-time
+        modifiedOn:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int64

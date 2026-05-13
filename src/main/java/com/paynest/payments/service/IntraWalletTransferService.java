@@ -59,6 +59,7 @@ public class IntraWalletTransferService {
             AccountType.SUBSCRIBER,
             AccountType.AGENT,
             AccountType.MERCHANT,
+            AccountType.BUSINESS,
             AccountType.BILLER
     );
 

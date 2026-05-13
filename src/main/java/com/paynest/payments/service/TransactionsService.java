@@ -135,6 +135,96 @@ public class TransactionsService {
         );
     }
 
+    @Transactional
+    public void generateTransactionRecord(
+            String transactionId,
+            BigDecimal transactionValue,
+            String requestGateway,
+            String serviceCode,
+            String language,
+            AccountIdentifier debitorAccountIdentifier,
+            AccountIdentifier creditorAccountIdentifier,
+            String debitorAccountType,
+            String creditorAccountType,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            InitiatedBy initiatedBy,
+            String paymentReference,
+            String comments
+    ){
+        LocalDateTime currentDateTime = TenantTime.now();
+        Transactions transaction = new Transactions();
+        String currencyFactor = propertyReader.getPropertyValue("currency.factor");
+        BigDecimal txnAmount = transactionValue
+                .multiply(new BigDecimal(currencyFactor))
+                .setScale(2, RoundingMode.HALF_UP);
+        transaction.setTransactionId(transactionId);
+        transaction.setTransferOn(currentDateTime);
+        transaction.setTransactionValue(txnAmount);
+        transaction.setTransferStatus(Constants.TRANSACTION_INITIATED);
+        transaction.setRequestGateway(requestGateway);
+        transaction.setServiceCode(serviceCode);
+        transaction.setLanguage(language);
+        transaction.setTraceId(TraceContext.getTraceId());
+        if(initiatedBy == InitiatedBy.DEBITOR ){
+            transaction.setCreatedBy(debitorAccountIdentifier.getAccountId());
+            transaction.setModifiedBy(debitorAccountIdentifier.getAccountId());
+        } else if (initiatedBy == InitiatedBy.CREDITOR) {
+            transaction.setCreatedBy(creditorAccountIdentifier.getAccountId());
+            transaction.setModifiedBy(creditorAccountIdentifier.getAccountId());
+        }
+        transaction.setCreatedOn(currentDateTime);
+        transaction.setModifiedOn(currentDateTime);
+        transaction.setDebitorAccountId(debitorAccountIdentifier.getAccountId());
+        transaction.setCreditorAccountId(creditorAccountIdentifier.getAccountId());
+        transaction.setDebitorWalletType(resolveWalletType(debitorWallet));
+        transaction.setDebitorCurrency(resolveWalletCurrency(debitorWallet));
+        transaction.setCreditorWalletType(resolveWalletType(creditorWallet));
+        transaction.setCreditorCurrency(resolveWalletCurrency(creditorWallet));
+        transaction.setDebitorIdentifierValue(debitorAccountIdentifier.getIdentifierValue());
+        transaction.setDebitorIdentifierType(debitorAccountIdentifier.getIdentifierType());
+        transaction.setCreditorIdentifierType(creditorAccountIdentifier.getIdentifierType());
+        transaction.setCreditorIdentifierValue(creditorAccountIdentifier.getIdentifierValue());
+        transaction.setPaymentReference(normalizeOptionalText(paymentReference));
+        transaction.setComments(normalizeOptionalText(comments));
+        transactionsRepository.save(transaction);
+
+        TransactionDetails debitDetail = new TransactionDetails();
+        debitDetail.setId(new TransactionDetailsId(transactionId, 1L));
+        debitDetail.setAccountId(debitorAccountIdentifier.getAccountId());
+        debitDetail.setUserType(debitorAccountType);
+        debitDetail.setEntryType(Constants.TXN_TYPE_DR);
+        debitDetail.setTransactionType(Constants.TXN_DETAIL_TYPE_MONEY_PAID);
+        debitDetail.setTransactionValue(txnAmount);
+        debitDetail.setApprovedValue(txnAmount);
+        debitDetail.setTransferOn(currentDateTime);
+        debitDetail.setServiceCode(serviceCode);
+        debitDetail.setTransferStatus(Constants.TRANSACTION_INITIATED);
+        debitDetail.setIdentifierId(debitorAccountIdentifier.getIdentifierValue());
+        debitDetail.setWalletNumber(debitorWallet.getWalletId().toString());
+        debitDetail.setWalletType(resolveWalletType(debitorWallet));
+        debitDetail.setCurrency(resolveWalletCurrency(debitorWallet));
+        debitDetail.setSecondIdentifierId(creditorAccountIdentifier.getIdentifierValue());
+
+        TransactionDetails creditDetail = new TransactionDetails();
+        creditDetail.setId(new TransactionDetailsId(transactionId, 2L));
+        creditDetail.setAccountId(creditorAccountIdentifier.getAccountId());
+        creditDetail.setUserType(creditorAccountType);
+        creditDetail.setEntryType(Constants.TXN_TYPE_CR);
+        creditDetail.setTransactionType(Constants.TXN_DETAIL_TYPE_MONEY_RECEIVED);
+        creditDetail.setTransactionValue(txnAmount);
+        creditDetail.setApprovedValue(txnAmount);
+        creditDetail.setTransferOn(currentDateTime);
+        creditDetail.setServiceCode(serviceCode);
+        creditDetail.setTransferStatus(Constants.TRANSACTION_INITIATED);
+        creditDetail.setIdentifierId(creditorAccountIdentifier.getIdentifierValue());
+        creditDetail.setWalletNumber(creditorWallet.getWalletId().toString());
+        creditDetail.setWalletType(resolveWalletType(creditorWallet));
+        creditDetail.setCurrency(resolveWalletCurrency(creditorWallet));
+        creditDetail.setSecondIdentifierId(debitorAccountIdentifier.getIdentifierValue());
+        transactionDetailsRepository.saveAll(List.of(debitDetail, creditDetail));
+    }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void generateTransactionRecord(
             String transactionId,
@@ -378,6 +468,9 @@ public class TransactionsService {
         detail.setAccountId(accountId);
         detail.setUserType(userType);
         detail.setEntryType(entryType);
+        detail.setTransactionType(Constants.TXN_TYPE_DR.equalsIgnoreCase(entryType)
+                ? Constants.TXN_DETAIL_TYPE_MONEY_PAID
+                : Constants.TXN_DETAIL_TYPE_MONEY_RECEIVED);
         detail.setTransactionValue(transactionValue);
         detail.setApprovedValue(transactionValue);
         detail.setTransferOn(transferOn);
@@ -736,6 +829,15 @@ public class TransactionsService {
         }
 
         transactionsRepository.updateApproveOrRejectComments(txnId, comments);
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
 }

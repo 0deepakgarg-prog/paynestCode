@@ -3,12 +3,14 @@ package com.paynest.users.service;
 
 import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
+import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
 import com.paynest.users.dto.request.ChangePasswordRequest;
 import com.paynest.users.dto.request.ChangePinRequest;
 import com.paynest.users.entity.AccountAuth;
 import com.paynest.users.entity.AccountIdentifier;
 import com.paynest.exception.ApplicationException;
+import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.AccountAuthRepository;
 import com.paynest.users.repository.AccountIdentifierRepository;
 import com.paynest.config.security.JWTUtils;
@@ -27,6 +29,7 @@ public class PinService {
 
     private final AccountAuthRepository accountAuthRepository;
     private final AccountIdentifierRepository accountIdentifierRepository;
+    private final AccountRepository accountRepository;
 
     public void changePin(ChangePinRequest request, boolean validateJWT) {
 
@@ -37,6 +40,7 @@ public class PinService {
         if (accountIdentifier.isEmpty()) {
             throw new ApplicationException(ErrorCodes.IDENTIFIER_NOT_FOUND, "Account identifier not found");
         }
+        validateAccountCanChangeCredentials(accountIdentifier.get().getAccountId());
 
         if (validateJWT && !JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountIdentifier.get().getAccountId())) {
             throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
@@ -79,6 +83,7 @@ public class PinService {
         if (accountIdentifier.isEmpty()) {
             throw new ApplicationException(ErrorCodes.IDENTIFIER_NOT_FOUND, "Account identifier not found");
         }
+        validateAccountCanChangeCredentials(accountIdentifier.get().getAccountId());
 
         if (validateJwt && !JWTUtils.getCurrentAccountId().equalsIgnoreCase(accountIdentifier.get().getAccountId())) {
             throw new ApplicationException(ErrorCodes.INVALID_PRIVILEGES, "Token does not have necessary access");
@@ -102,6 +107,15 @@ public class PinService {
         auth.setStatus("ACTIVE");
         auth.setIsFirstTimeLogin(false);
         accountAuthRepository.save(auth);
+    }
+
+    private void validateAccountCanChangeCredentials(String accountId) {
+        accountRepository.findById(accountId)
+                .filter(account -> Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(account.getStatus()))
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCodes.INVALID_ACCOUNT_STATUS,
+                        "Only active accounts can change credentials"
+                ));
     }
 }
 

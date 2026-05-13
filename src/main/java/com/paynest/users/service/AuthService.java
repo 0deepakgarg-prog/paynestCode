@@ -55,7 +55,8 @@ public class AuthService {
         Account account = accountRepository.findById(identifier.getAccountId())
                 .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
 
-        if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+        if (!Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(account.getStatus())
+                && !Constants.ACCOUNT_STATUS_SUSPENDED.equalsIgnoreCase(account.getStatus())) {
             throw new ApplicationException(ErrorCodes.ACCOUNT_INACTIVE, "Account is not active");
         }
 
@@ -124,7 +125,7 @@ public class AuthService {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ApplicationException(ErrorCodes.INVALID_ACCOUNT, "Account not found"));
 
-        if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+        if (!Constants.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(account.getStatus())) {
             throw new ApplicationException(ErrorCodes.ACCOUNT_INACTIVE, "Account is not active");
         }
 
