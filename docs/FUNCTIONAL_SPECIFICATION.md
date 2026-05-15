@@ -254,6 +254,49 @@ Payment history APIs provide filtered history by account, date range, service/pa
 
 Receipt download renders a transaction receipt as PDF using transaction and party data, with optional language and account context.
 
+## QR Payments
+
+QR payments are exposed through `/api/v1/qr`. The QR module does not move money directly. It validates a signed QR payload, resolves the creditor, enriches payment metadata, and delegates the final debit/credit to the existing `U2U` or `MERCHANTPAY` payment services.
+
+### Static QR
+
+Static QR is reusable. It encodes creditor identity, account type, wallet type, operation type, currency, and a payload signature. It does not create a `qr_payment_intent` row.
+
+The authenticated-account endpoint `/api/v1/qr/my-static` creates a static QR for the caller:
+
+- Subscriber accounts generate `U2U` QR payloads.
+- Merchant accounts generate `MERCHANTPAY` QR payloads.
+- The QR is generated on request from current account identifiers and is not fetched from persisted QR storage.
+- The payer supplies the amount during `/api/v1/qr/pay`.
+
+### Dynamic QR
+
+Dynamic QR is single-use and amount-bound. `/api/v1/qr/generate` with `qrType = DYNAMIC` creates a `qr_payment_intent` row with:
+
+- QR intent ID.
+- Operation type: `U2U` or `MERCHANTPAY`.
+- Creditor identifier, account type, and wallet type.
+- Currency and amount.
+- Expiry timestamp.
+- Status, initially `ACTIVE`.
+
+When `/api/v1/qr/pay` succeeds for a dynamic QR:
+
+1. The QR intent is validated as active and unexpired.
+2. The payment request is delegated to `U2U` or `MERCHANTPAY`.
+3. The created transaction is persisted with `transactions.payment_via_qr = true`.
+4. The QR intent is updated to `PAID` and linked to the final transaction ID.
+
+Expired intents are marked `EXPIRED` during validation. Already paid intents are rejected.
+
+### QR security
+
+QR payloads are signed with HMAC-SHA256 using `paynest.qr.signing-secret`. Scan and pay reject tampered payloads. Dynamic QR payloads resolve through the persisted intent, so the persisted amount and currency are authoritative.
+
+### QR accounting
+
+QR payments use the same wallet, pricing, transaction detail, wallet ledger, and receipt behavior as normal payments. The only additional transaction indicator is `payment_via_qr`, which allows transaction history and reporting to identify payments initiated from QR.
+
 ## FX Rates
 
 FX rates are stored per tenant. A rate has target currency, USD rate, rate type, provider, validity timestamp, active/version data, and extension fields. Intra-wallet transfer uses FX rates when source and target currencies differ.

@@ -135,6 +135,40 @@ public class TransactionsService {
         );
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void generateTransactionRecord(
+            String transactionId,
+            BigDecimal transactionValue,
+            String requestGateway,
+            String serviceCode,
+            String language,
+            AccountIdentifier debitorAccountIdentifier,
+            AccountIdentifier creditorAccountIdentifier,
+            String debitorAccountType,
+            String creditorAccountType,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            InitiatedBy initiatedBy,
+            boolean paymentViaQr
+    ) {
+        generateTransactionRecord(
+                transactionId,
+                transactionValue,
+                transactionValue,
+                requestGateway,
+                serviceCode,
+                language,
+                debitorAccountIdentifier,
+                creditorAccountIdentifier,
+                debitorAccountType,
+                creditorAccountType,
+                debitorWallet,
+                creditorWallet,
+                initiatedBy,
+                paymentViaQr
+        );
+    }
+
     @Transactional
     public void generateTransactionRecord(
             String transactionId,
@@ -151,6 +185,43 @@ public class TransactionsService {
             InitiatedBy initiatedBy,
             String paymentReference,
             String comments
+    ){
+        generateTransactionRecord(
+                transactionId,
+                transactionValue,
+                requestGateway,
+                serviceCode,
+                language,
+                debitorAccountIdentifier,
+                creditorAccountIdentifier,
+                debitorAccountType,
+                creditorAccountType,
+                debitorWallet,
+                creditorWallet,
+                initiatedBy,
+                paymentReference,
+                comments,
+                false
+        );
+    }
+
+    @Transactional
+    public void generateTransactionRecord(
+            String transactionId,
+            BigDecimal transactionValue,
+            String requestGateway,
+            String serviceCode,
+            String language,
+            AccountIdentifier debitorAccountIdentifier,
+            AccountIdentifier creditorAccountIdentifier,
+            String debitorAccountType,
+            String creditorAccountType,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            InitiatedBy initiatedBy,
+            String paymentReference,
+            String comments,
+            boolean paymentViaQr
     ){
         LocalDateTime currentDateTime = TenantTime.now();
         Transactions transaction = new Transactions();
@@ -187,6 +258,7 @@ public class TransactionsService {
         transaction.setCreditorIdentifierValue(creditorAccountIdentifier.getIdentifierValue());
         transaction.setPaymentReference(normalizeOptionalText(paymentReference));
         transaction.setComments(normalizeOptionalText(comments));
+        transaction.setPaymentViaQr(paymentViaQr);
         transactionsRepository.save(transaction);
 
         TransactionDetails debitDetail = new TransactionDetails();
@@ -241,6 +313,41 @@ public class TransactionsService {
             Wallet creditorWallet,
             InitiatedBy initiatedBy
     ) {
+        generateTransactionRecord(
+                transactionId,
+                debitorTransactionValue,
+                creditorTransactionValue,
+                requestGateway,
+                serviceCode,
+                language,
+                debitorAccountIdentifier,
+                creditorAccountIdentifier,
+                debitorAccountType,
+                creditorAccountType,
+                debitorWallet,
+                creditorWallet,
+                initiatedBy,
+                false
+        );
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void generateTransactionRecord(
+            String transactionId,
+            BigDecimal debitorTransactionValue,
+            BigDecimal creditorTransactionValue,
+            String requestGateway,
+            String serviceCode,
+            String language,
+            AccountIdentifier debitorAccountIdentifier,
+            AccountIdentifier creditorAccountIdentifier,
+            String debitorAccountType,
+            String creditorAccountType,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            InitiatedBy initiatedBy,
+            boolean paymentViaQr
+    ) {
         LocalDateTime currentDateTime = TenantTime.now();
         Transactions transaction = new Transactions();
         String currencyFactor = propertyReader.getPropertyValue("currency.factor");
@@ -277,6 +384,7 @@ public class TransactionsService {
         transaction.setDebitorIdentifierType(debitorAccountIdentifier.getIdentifierType());
         transaction.setCreditorIdentifierType(creditorAccountIdentifier.getIdentifierType());
         transaction.setCreditorIdentifierValue(creditorAccountIdentifier.getIdentifierValue());
+        transaction.setPaymentViaQr(paymentViaQr);
         transactionsRepository.save(transaction);
 
         TransactionDetails debitDetail = new TransactionDetails();
@@ -829,6 +937,14 @@ public class TransactionsService {
         }
 
         transactionsRepository.updateApproveOrRejectComments(txnId, comments);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markPaymentViaQr(String transactionId) {
+        if (transactionId == null || transactionId.isBlank()) {
+            return;
+        }
+        transactionsRepository.markPaymentViaQr(transactionId);
     }
 
     private String normalizeOptionalText(String value) {

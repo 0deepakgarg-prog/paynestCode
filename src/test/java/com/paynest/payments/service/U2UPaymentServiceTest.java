@@ -39,6 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -87,6 +88,7 @@ class U2UPaymentServiceTest {
     @Test
     void processPayment_shouldUseWalletMatchingCurrencyAndWalletType() {
         U2UPaymentRequest request = validRequest();
+        request.setMetadata(Map.of("paymentViaQr", true));
         AccountIdentifier debitorIdentifier = identifier("acc-1", "9999999999", "MOBILE", 10L);
         AccountIdentifier creditorIdentifier = identifier("acc-2", "8888888888", "MOBILE", 20L);
         Account debitorAccount = account("acc-1", "SUBSCRIBER");
@@ -138,7 +140,8 @@ class U2UPaymentServiceTest {
                     eq(creditorWallet),
                     eq(InitiatedBy.DEBITOR),
                     eq(request.getPaymentReference()),
-                    eq(request.getComments())
+                    eq(request.getComments()),
+                    eq(true)
             );
             verify(balanceService).transferWalletAmount(
                     debitorWallet,

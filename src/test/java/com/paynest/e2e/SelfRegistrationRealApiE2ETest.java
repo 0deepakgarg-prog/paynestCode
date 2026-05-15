@@ -8,6 +8,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -34,6 +35,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -203,6 +205,10 @@ class SelfRegistrationRealApiE2ETest {
         ensureEnumeration("ACCOUNT_STATUS", "SUSPENDED", "SUSPENDED", "Temporarily suspended");
         ensureAccountStatusHistoryTable();
         ensureSubscriberRole();
+       // ensurePasscodeTable();
+        ensureHoldingWallets();
+       // ensureQrPaymentSchema();
+        ensureRegisteredToUnregisteredServiceCatalog();
         //  cleanupMobileNumber(mobileNumber);
         log.info("E2E setup completed for mobileNumber={}", mobileNumber);
     }
@@ -1716,6 +1722,547 @@ class SelfRegistrationRealApiE2ETest {
         );
         assertAvailableWalletBalanceSumIsZero("after suspended account blocked operations");
     }
+
+    @Test
+    @Order(10)
+    void registeredToUnregisteredAndCashoutByCode_shouldWorkForUsdAndInr() {
+        String initiatingNetAdminToken = createNetworkAdminAndLogin("r2uinit");
+        String approvingNetAdminToken = createNetworkAdminAndLogin("r2uapprove");
+
+        performRegisteredToUnregisteredAndCashoutByCodeJourney(
+                initiatingNetAdminToken,
+                approvingNetAdminToken,
+                "USD",
+                "r2uusd",
+                1000,
+                "1000.00",
+                "300.00",
+                new BigDecimal("120.00"),
+                new BigDecimal("35.00")
+        );
+        performRegisteredToUnregisteredAndCashoutByCodeJourney(
+                initiatingNetAdminToken,
+                approvingNetAdminToken,
+                "INR",
+                "r2uinr",
+                1010,
+                "10000.00",
+                "3000.00",
+                new BigDecimal("1200.00"),
+                new BigDecimal("350.00")
+        );
+    }
+
+    @Test
+    @Order(11)
+    void qrStaticGenerationAndPayment_shouldSupportSubscriberAndMerchantQrPayments() {
+        disablePricingRulesForQrE2E();
+        String networkAdminAccessToken = createNetworkAdminAndLogin("qrcode");
+        String approvingNetworkAdminAccessToken = createNetworkAdminAndLogin("qrcodeapprove");
+        String networkAdminAccountId = jwtService.getClaims(networkAdminAccessToken).getSubject();
+        String approvingNetworkAdminAccountId = jwtService.getClaims(approvingNetworkAdminAccessToken).getSubject();
+        String suffix = uniqueSuffix();
+
+        String stockTransactionId = postJson(
+                "networkadmin initiates USD stock for QR payments",
+                "/api/v1/pay/stockInitiate",
+                networkAdminAccessToken,
+                stockInitiateRequest("req-e2e-qr-stock-" + suffix, "USD", "1000.00")
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("PENDING"))
+                .body("operationType", equalTo("STOCK"))
+                .body("code", equalTo("STOCK_INITIATED"))
+                .body("transactionId", notNullValue())
+                .body("currency", equalTo("USD"))
+                .extract()
+                .path("transactionId");
+
+        postJson(
+                "different networkadmin approves USD stock for QR payments",
+                "/api/v1/pay/stockStatusUpdate",
+                approvingNetworkAdminAccessToken,
+                stockApprovalRequest(stockTransactionId, "APPROVED", null, "approved QR stock")
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("STOCK"))
+                .body("code", equalTo("STOCK_APPROVED"))
+                .body("transactionId", equalTo(stockTransactionId))
+                .body("currency", equalTo("USD"));
+        assertApprovedStockTransaction(
+                stockTransactionId,
+                networkAdminAccountId,
+                approvingNetworkAdminAccountId,
+                "USD"
+        );
+
+        BusinessUser agent = createBusinessUserChangePasswordAndLogin(
+                networkAdminAccessToken,
+                "AGENT",
+                "AGENT",
+                "qragent"
+        );
+        BusinessUser merchant = createBusinessUserChangePasswordAndLogin(
+                networkAdminAccessToken,
+                "MERCHANT",
+                "MERCHANT",
+                "qrmerchant"
+        );
+        SubscriberUser payer = createSubscriberChangePinAndLogin(980);
+        SubscriberUser receiver = createSubscriberChangePinAndLogin(981);
+
+        performApprovedO2CTransaction(
+                networkAdminAccessToken,
+                approvingNetworkAdminAccessToken,
+                agent,
+                "100.00",
+                "USD"
+        );
+        performCashInFromAgent(agent, payer, new BigDecimal("100.00"));
+        assertMainUsdAvailableBalanceFromEnquiry(payer, new BigDecimal("100.00"));
+
+        String receiverQrPayload = getJson(
+                "receiver subscriber generates static QR",
+                "/api/v1/qr/my-static?currency=USD&walletType=MAIN",
+                receiver.accessToken()
+        ).then()
+                .statusCode(200)
+                .body("qrType", equalTo("STATIC"))
+                .body("operationType", equalTo("U2U"))
+                .body("payload", notNullValue())
+                .body("qrImageBase64", notNullValue())
+                .extract()
+                .path("payload");
+
+        postJson(
+                "scan receiver subscriber static QR",
+                "/api/v1/qr/scan",
+                payer.accessToken(),
+                qrScanRequest(receiverQrPayload)
+        ).then()
+                .statusCode(200)
+                .body("qrType", equalTo("STATIC"))
+                .body("operationType", equalTo("U2U"))
+                .body("creditorAccountType", equalTo("SUBSCRIBER"))
+                .body("creditorIdentifierValue", equalTo(receiver.mobile()))
+                .body("currency", equalTo("USD"));
+
+        BigDecimal u2uQrAmount = new BigDecimal("5.00");
+        String u2uQrTransactionId = postJson(
+                "payer pays subscriber using static QR",
+                "/api/v1/qr/pay",
+                payer.accessToken(),
+                qrPayRequest(receiverQrPayload, payer, u2uQrAmount)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("U2U"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+
+        assertApprovedFinancialTransferTransaction(
+                u2uQrTransactionId,
+                "U2U",
+                payer.accountId(),
+                receiver.accountId(),
+                u2uQrAmount
+        );
+        assertPaymentViaQr(u2uQrTransactionId);
+
+        String merchantQrPayload = getJson(
+                "merchant generates static QR",
+                "/api/v1/qr/my-static?currency=USD&walletType=MAIN",
+                merchant.accessToken()
+        ).then()
+                .statusCode(200)
+                .body("qrType", equalTo("STATIC"))
+                .body("operationType", equalTo("MERCHANTPAY"))
+                .body("payload", notNullValue())
+                .body("qrImageBase64", notNullValue())
+                .extract()
+                .path("payload");
+
+        postJson(
+                "scan merchant static QR",
+                "/api/v1/qr/scan",
+                payer.accessToken(),
+                qrScanRequest(merchantQrPayload)
+        ).then()
+                .statusCode(200)
+                .body("qrType", equalTo("STATIC"))
+                .body("operationType", equalTo("MERCHANTPAY"))
+                .body("creditorAccountType", equalTo("MERCHANT"))
+                .body("creditorIdentifierValue", equalTo(merchant.loginId()))
+                .body("currency", equalTo("USD"));
+
+        BigDecimal merchantQrAmount = new BigDecimal("7.50");
+        String merchantQrTransactionId = postJson(
+                "payer pays merchant using static QR",
+                "/api/v1/qr/pay",
+                payer.accessToken(),
+                qrPayRequest(merchantQrPayload, payer, merchantQrAmount)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("MERCHANTPAY"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+
+        assertApprovedFinancialTransferTransaction(
+                merchantQrTransactionId,
+                "MERCHANTPAY",
+                payer.accountId(),
+                merchant.accountId(),
+                merchantQrAmount
+        );
+        assertPaymentViaQr(merchantQrTransactionId);
+
+        assertMainUsdAvailableBalanceFromEnquiry(payer, new BigDecimal("87.50"));
+        assertMainUsdAvailableBalanceFromEnquiry(receiver, new BigDecimal("5.00"));
+        assertMainUsdAvailableBalanceFromEnquiry(merchant, new BigDecimal("7.50"));
+        assertAvailableWalletBalanceSumIsZero("after QR static subscriber and merchant payments");
+    }
+
+    @Test
+    @Order(12)
+    void qrDynamicGenerationAndPayment_shouldCreateIntentAndSupportSubscriberAndMerchantForUsdAndInr() {
+        disablePricingRulesForQrE2E();
+        String networkAdminAccessToken = createNetworkAdminAndLogin("qrdyn");
+        String approvingNetworkAdminAccessToken = createNetworkAdminAndLogin("qrdynapprove");
+        String suffix = uniqueSuffix();
+
+        approveStock(
+                networkAdminAccessToken,
+                approvingNetworkAdminAccessToken,
+                "req-e2e-qr-dynamic-stock-usd-" + suffix,
+                "USD",
+                "1000.00"
+        );
+        approveStock(
+                networkAdminAccessToken,
+                approvingNetworkAdminAccessToken,
+                "req-e2e-qr-dynamic-stock-inr-" + suffix,
+                "INR",
+                "10000.00"
+        );
+
+        BusinessUser agent = createBusinessUserChangePasswordAndLogin(
+                networkAdminAccessToken,
+                "AGENT",
+                "AGENT",
+                "qrdynagent"
+        );
+        BusinessUser merchant = createBusinessUserChangePasswordAndLogin(
+                networkAdminAccessToken,
+                "MERCHANT",
+                "MERCHANT",
+                "qrdynmerchant"
+        );
+        SubscriberUser payer = createSubscriberChangePinAndLogin(982);
+        SubscriberUser receiver = createSubscriberChangePinAndLogin(983);
+
+        performApprovedO2CTransaction(
+                networkAdminAccessToken,
+                approvingNetworkAdminAccessToken,
+                agent,
+                "100.00",
+                "USD"
+        );
+        performApprovedO2CTransaction(
+                networkAdminAccessToken,
+                approvingNetworkAdminAccessToken,
+                agent,
+                "1000.00",
+                "INR"
+        );
+        performCashInFromAgent(agent, payer, new BigDecimal("100.00"), "USD");
+        performCashInFromAgent(agent, payer, new BigDecimal("1000.00"), "INR");
+
+        performDynamicQrPaymentScenario(
+                "USD subscriber dynamic QR",
+                receiver.accessToken(),
+                dynamicSubscriberQrGenerateRequest(receiver, "USD", new BigDecimal("5.00")),
+                payer,
+                receiver.accountId(),
+                "U2U",
+                "SUBSCRIBER",
+                receiver.mobile(),
+                "USD",
+                new BigDecimal("5.00")
+        );
+        performDynamicQrPaymentScenario(
+                "USD merchant dynamic QR",
+                merchant.accessToken(),
+                dynamicMerchantQrGenerateRequest(merchant, "USD", new BigDecimal("7.50")),
+                payer,
+                merchant.accountId(),
+                "MERCHANTPAY",
+                "MERCHANT",
+                merchant.loginId(),
+                "USD",
+                new BigDecimal("7.50")
+        );
+        performDynamicQrPaymentScenario(
+                "INR subscriber dynamic QR",
+                receiver.accessToken(),
+                dynamicSubscriberQrGenerateRequest(receiver, "INR", new BigDecimal("50.00")),
+                payer,
+                receiver.accountId(),
+                "U2U",
+                "SUBSCRIBER",
+                receiver.mobile(),
+                "INR",
+                new BigDecimal("50.00")
+        );
+        performDynamicQrPaymentScenario(
+                "INR merchant dynamic QR",
+                merchant.accessToken(),
+                dynamicMerchantQrGenerateRequest(merchant, "INR", new BigDecimal("75.00")),
+                payer,
+                merchant.accountId(),
+                "MERCHANTPAY",
+                "MERCHANT",
+                merchant.loginId(),
+                "INR",
+                new BigDecimal("75.00")
+        );
+
+        assertMainCurrencyBalanceFromEnquiry(payer, "USD", new BigDecimal("87.50"));
+        assertMainCurrencyBalanceFromEnquiry(receiver, "USD", new BigDecimal("5.00"));
+        assertMainCurrencyBalanceFromEnquiry(merchant, "USD", new BigDecimal("7.50"));
+        assertMainCurrencyBalanceFromEnquiry(payer, "INR", new BigDecimal("875.00"));
+        assertMainCurrencyBalanceFromEnquiry(receiver, "INR", new BigDecimal("50.00"));
+        assertMainCurrencyBalanceFromEnquiry(merchant, "INR", new BigDecimal("75.00"));
+        assertAvailableWalletBalanceSumIsZero("after QR dynamic subscriber and merchant payments for USD and INR");
+    }
+
+    private void performDynamicQrPaymentScenario(
+            String scenario,
+            String creditorAccessToken,
+            String generateRequest,
+            SubscriberUser payer,
+            String creditorAccountId,
+            String operationType,
+            String creditorAccountType,
+            String creditorIdentifierValue,
+            String currency,
+            BigDecimal amount
+    ) {
+        Response generateResponse = postJson(
+                scenario + " generate",
+                "/api/v1/qr/generate",
+                creditorAccessToken,
+                generateRequest
+        );
+        String payload = generateResponse.then()
+                .statusCode(200)
+                .body("qrType", equalTo("DYNAMIC"))
+                .body("operationType", equalTo(operationType))
+                .body("qrIntentId", notNullValue())
+                .body("payload", notNullValue())
+                .body("qrImageBase64", notNullValue())
+                .body("expiresAt", notNullValue())
+                .extract()
+                .path("payload");
+        String qrIntentId = generateResponse.then().extract().path("qrIntentId");
+        assertActiveQrIntent(qrIntentId, operationType, currency, amount);
+
+        postJson(
+                scenario + " scan",
+                "/api/v1/qr/scan",
+                payer.accessToken(),
+                qrScanRequest(payload)
+        ).then()
+                .statusCode(200)
+                .body("qrType", equalTo("DYNAMIC"))
+                .body("qrIntentId", equalTo(qrIntentId))
+                .body("operationType", equalTo(operationType))
+                .body("creditorAccountType", equalTo(creditorAccountType))
+                .body("creditorIdentifierValue", equalTo(creditorIdentifierValue))
+                .body("currency", equalTo(currency))
+                .body("amount", comparesEqualTo(amount.floatValue()));
+
+        String transactionId = postJson(
+                scenario + " pay",
+                "/api/v1/qr/pay",
+                payer.accessToken(),
+                qrPayRequest(payload, payer, amount, currency)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo(operationType))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+
+        assertApprovedFinancialTransferTransaction(
+                transactionId,
+                operationType,
+                payer.accountId(),
+                creditorAccountId,
+                amount,
+                currency
+        );
+        assertPaymentViaQr(transactionId);
+        assertPaidQrIntent(qrIntentId, transactionId, operationType, currency, amount);
+    }
+
+    private void performRegisteredToUnregisteredAndCashoutByCodeJourney(
+            String initiatingNetAdminToken,
+            String approvingNetAdminToken,
+            String currency,
+            String scenarioPrefix,
+            int subscriberIndex,
+            String stockAmount,
+            String o2cAmount,
+            BigDecimal cashInAmount,
+            BigDecimal transferAmount
+    ) {
+        BusinessUser agent = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "AGENT",
+                "AGENT",
+                scenarioPrefix + "agent"
+        );
+        approveStock(
+                initiatingNetAdminToken,
+                approvingNetAdminToken,
+                "req-e2e-" + scenarioPrefix + "-stock-" + uniqueSuffix(),
+                currency,
+                stockAmount
+        );
+        performApprovedO2CTransaction(
+                initiatingNetAdminToken,
+                approvingNetAdminToken,
+                agent,
+                o2cAmount,
+                currency
+        );
+
+        SubscriberUser subscriber = createSubscriberChangePinAndLogin(subscriberIndex);
+        performCashInFromAgent(agent, subscriber, cashInAmount, currency);
+
+        BigDecimal agentBalanceAfterCashIn = new BigDecimal(o2cAmount).subtract(cashInAmount);
+        assertMainCurrencyBalanceFromEnquiry(agent, currency, agentBalanceAfterCashIn);
+        assertMainCurrencyBalanceFromEnquiry(subscriber, currency, cashInAmount);
+
+        String receiverMsisdn = mobileNumber("790", uniqueSuffix());
+        BigDecimal holdingBalanceBefore = readWalletAvailableDisplayBalance("SYS0001", "HOLDING", currency);
+        String registeredToUnregisteredTransactionId = postJson(
+                "registered subscriber to unregistered receiver " + currency,
+                "/api/v1/pay/REGISTERED_TO_UNREGISTERED",
+                subscriber.accessToken(),
+                registeredToUnregisteredRequest(subscriber, receiverMsisdn, transferAmount, currency)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("R2U"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("currency", equalTo(currency))
+                .body("receiverMsisdn", equalTo(receiverMsisdn))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+
+        assertApprovedFinancialTransferTransaction(
+                registeredToUnregisteredTransactionId,
+                "R2U",
+                subscriber.accountId(),
+                "SYS0001",
+                transferAmount,
+                currency
+        );
+        assertMainCurrencyBalanceFromEnquiry(subscriber, currency, cashInAmount.subtract(transferAmount));
+        assertBigDecimalEquals(
+                holdingBalanceBefore.add(transferAmount),
+                readWalletAvailableDisplayBalance("SYS0001", "HOLDING", currency),
+                "SYS0001 " + currency + " holding wallet after R2U"
+        );
+
+        Map<String, Object> passcodeRecord = readPasscodeRecord(registeredToUnregisteredTransactionId);
+        String passcode = String.valueOf(passcodeRecord.get("passcode"));
+        assertTrue(passcode.matches("\\d{10}"), "Expected 10 digit passcode");
+        assertEquals("PENDING", passcodeRecord.get("status"));
+        assertEquals(receiverMsisdn, passcodeRecord.get("unregistered_msisdn"));
+        assertEquals("Unreg", passcodeRecord.get("first_name"));
+        assertEquals("Receiver", passcodeRecord.get("last_name"));
+        assertEquals("KYC-" + receiverMsisdn, passcodeRecord.get("kyc_document_id"));
+        assertBigDecimalEquals(
+                transferAmount.multiply(new BigDecimal("100.00")),
+                toBigDecimal(passcodeRecord.get("amount")),
+                "passcode stored amount"
+        );
+
+        Response passcodeDetailsResponse = postJson(
+                "passcode enquiry " + currency,
+                "/api/v1/passcode/details",
+                agent.accessToken(),
+                passcodeDetailsRequest(passcode)
+        );
+        passcodeDetailsResponse.then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("message", equalTo("Passcode details fetched successfully"))
+                .body("passcodeDetails.passcode", equalTo(passcode))
+                .body("passcodeDetails.status", equalTo("PENDING"))
+                .body("passcodeDetails.transactionId", equalTo(registeredToUnregisteredTransactionId))
+                .body("passcodeDetails.currency", equalTo(currency))
+                .body("passcodeDetails.sender.accountId", equalTo(subscriber.accountId()))
+                .body("passcodeDetails.sender.msisdn", equalTo(subscriber.mobile()))
+                .body("passcodeDetails.receiver.msisdn", equalTo(receiverMsisdn))
+                .body("passcodeDetails.receiver.firstName", equalTo("Unreg"))
+                .body("passcodeDetails.receiver.lastName", equalTo("Receiver"))
+                .body("passcodeDetails.receiver.kycDocumentId", equalTo("KYC-" + receiverMsisdn));
+        assertBigDecimalEquals(
+                transferAmount,
+                toBigDecimal(passcodeDetailsResponse.jsonPath().get("passcodeDetails.amount")),
+                "passcode enquiry amount"
+        );
+
+        String cashoutTransactionId = postJson(
+                "cashout by code " + currency,
+                "/api/v1/pay/CASHOUT_BY_CODE",
+                agent.accessToken(),
+                cashoutByCodeRequest(agent, receiverMsisdn, passcode)
+        ).then()
+                .statusCode(200)
+                .body("responseStatus", equalTo("SUCCESS"))
+                .body("operationType", equalTo("CASHOUT_BY_CODE"))
+                .body("code", equalTo("PAYMENT_SUCCESS"))
+                .body("currency", equalTo(currency))
+                .body("msisdn", equalTo(receiverMsisdn))
+                .body("transactionId", notNullValue())
+                .extract()
+                .path("transactionId");
+
+        assertApprovedFinancialTransferTransaction(
+                cashoutTransactionId,
+                "CASHOUT_BY_CODE",
+                "SYS0001",
+                agent.accountId(),
+                transferAmount,
+                currency
+        );
+        assertMainCurrencyBalanceFromEnquiry(agent, currency, agentBalanceAfterCashIn.add(transferAmount));
+        assertMainCurrencyBalanceFromEnquiry(subscriber, currency, cashInAmount.subtract(transferAmount));
+        assertBigDecimalEquals(
+                holdingBalanceBefore,
+                readWalletAvailableDisplayBalance("SYS0001", "HOLDING", currency),
+                "SYS0001 " + currency + " holding wallet after cashout by code"
+        );
+
+        Map<String, Object> redeemedPasscode = readPasscodeRecord(registeredToUnregisteredTransactionId);
+        assertEquals("REDEEMED", redeemedPasscode.get("status"));
+        assertEquals(cashoutTransactionId, redeemedPasscode.get("cashout_transaction_id"));
+    }
+
+
 
     private void suspendAccount(String adminAccessToken, String accountId, String reason) {
         postJson(
@@ -4352,6 +4899,104 @@ class SelfRegistrationRealApiE2ETest {
         );
     }
 
+    private String registeredToUnregisteredRequest(
+            SubscriberUser subscriber,
+            String receiverMsisdn,
+            BigDecimal amount,
+            String currency
+    ) {
+        return """
+                {
+                  "operationType": "R2U",
+                  "requestGateway": "MOBILE",
+                  "preferredLang": "en",
+                  "initiatedBy": "DEBITOR",
+                  "paymentReference": "e2e-r2u-%s-%s",
+                  "comments": "E2E registered subscriber to unregistered receiver",
+                  "debitor": {
+                    "accountType": "SUBSCRIBER",
+                    "walletType": "MAIN",
+                    "identifier": {
+                      "type": "MOBILE",
+                      "value": "%s"
+                    },
+                    "authentication": {
+                      "type": "PIN",
+                      "value": "%s"
+                    }
+                  },
+                  "receiverMsisdn": "%s",
+                  "receiverFirstName": "Unreg",
+                  "receiverLastName": "Receiver",
+                  "receiverKycDocumentId": "KYC-%s",
+                  "transaction": {
+                    "amount": %s,
+                    "currency": "%s"
+                  },
+                  "field1": "e2e-r2u",
+                  "field2": "%s",
+                  "metadata": {
+                    "scenario": "e2e-registered-to-unregistered"
+                  }
+                }
+                """.formatted(
+                subscriber.accountId(),
+                receiverMsisdn,
+                subscriber.mobile(),
+                subscriber.pin(),
+                receiverMsisdn,
+                receiverMsisdn,
+                amount.toPlainString(),
+                currency,
+                currency
+        );
+    }
+
+    private String cashoutByCodeRequest(BusinessUser agent, String msisdn, String passcode) {
+        return """
+                {
+                  "operationType": "CASHOUT_BY_CODE",
+                  "requestGateway": "MOBILE",
+                  "preferredLang": "en",
+                  "initiatedBy": "CREDITOR",
+                  "paymentReference": "e2e-cashout-code-%s-%s",
+                  "comments": "E2E cashout by code",
+                  "agent": {
+                    "accountType": "AGENT",
+                    "walletType": "MAIN",
+                    "identifier": {
+                      "type": "MOBILE",
+                      "value": "%s"
+                    },
+                    "authentication": {
+                      "type": "PASSWORD",
+                      "value": "%s"
+                    }
+                  },
+                  "msisdn": "%s",
+                  "passcode": "%s",
+                  "metadata": {
+                    "scenario": "e2e-cashout-by-code"
+                  }
+                }
+                """.formatted(
+                agent.accountId(),
+                msisdn,
+                agent.mobile(),
+                agent.password(),
+                msisdn,
+                passcode
+        );
+    }
+
+    private String passcodeDetailsRequest(String passcode) {
+        return """
+                {
+                  "passcode": "%s"
+                }
+                """.formatted(passcode);
+    }
+
     private String u2uRequest(U2UParticipant sender, U2UParticipant receiver, BigDecimal amount) {
         return u2uRequest(sender, receiver, amount, "USD");
     }
@@ -4409,6 +5054,91 @@ class SelfRegistrationRealApiE2ETest {
 
     private String merchantPaymentRequest(SubscriberUser subscriber, BusinessUser merchant, BigDecimal amount) {
         return merchantPaymentRequest(subscriber, merchant, amount, "USD");
+    }
+
+    private String qrScanRequest(String payload) {
+        return """
+                {
+                  "payload": %s
+                }
+                """.formatted(JSONObject.quote(payload));
+    }
+
+    private String qrPayRequest(String payload, SubscriberUser payer, BigDecimal amount) {
+        return qrPayRequest(payload, payer, amount, "USD");
+    }
+
+    private String qrPayRequest(String payload, SubscriberUser payer, BigDecimal amount, String currency) {
+        return """
+                {
+                  "payload": %s,
+                  "requestGateway": "MOBILE",
+                  "preferredLang": "en",
+                  "initiatedBy": "DEBITOR",
+                  "debitor": {
+                    "accountType": "SUBSCRIBER",
+                    "walletType": "MAIN",
+                    "identifier": {
+                      "type": "MOBILE",
+                      "value": "%s"
+                    },
+                    "authentication": {
+                      "type": "PIN",
+                      "value": "%s"
+                    }
+                  },
+                  "amount": %s,
+                  "currency": "%s",
+                  "paymentReference": "e2e-qr-pay-%s",
+                  "comments": "E2E QR payment",
+                  "metadata": {
+                    "scenario": "e2e-qr-payment"
+                  }
+                }
+                """.formatted(
+                JSONObject.quote(payload),
+                payer.mobile(),
+                payer.pin(),
+                amount.toPlainString(),
+                currency,
+                payer.accountId()
+        );
+    }
+
+    private String dynamicSubscriberQrGenerateRequest(SubscriberUser receiver, String currency, BigDecimal amount) {
+        return """
+                {
+                  "qrType": "DYNAMIC",
+                  "operationType": "U2U",
+                  "creditor": {
+                    "identifierType": "MOBILE",
+                    "identifierValue": "%s",
+                    "accountType": "SUBSCRIBER",
+                    "walletType": "MAIN"
+                  },
+                  "currency": "%s",
+                  "amount": %s,
+                  "expiresInMinutes": 30
+                }
+                """.formatted(receiver.mobile(), currency, amount.toPlainString());
+    }
+
+    private String dynamicMerchantQrGenerateRequest(BusinessUser merchant, String currency, BigDecimal amount) {
+        return """
+                {
+                  "qrType": "DYNAMIC",
+                  "operationType": "MERCHANTPAY",
+                  "creditor": {
+                    "identifierType": "LOGINID",
+                    "identifierValue": "%s",
+                    "accountType": "MERCHANT",
+                    "walletType": "MAIN"
+                  },
+                  "currency": "%s",
+                  "amount": %s,
+                  "expiresInMinutes": 30
+                }
+                """.formatted(merchant.loginId(), currency, amount.toPlainString());
     }
 
     private String merchantPaymentRequest(SubscriberUser subscriber, BusinessUser merchant, BigDecimal amount, String currency) {
@@ -4829,6 +5559,74 @@ class SelfRegistrationRealApiE2ETest {
         assertBalanceMovementDetail(details.get(1), operationType, expectedStatus, "CR", currency, transactionValue, creditorExpectedDelta);
     }
 
+    private void assertPaymentViaQr(String transactionId) {
+        Boolean paymentViaQr = jdbcTemplate.queryForObject("""
+                SELECT payment_via_qr
+                FROM %s
+                WHERE transaction_id = ?
+                """.formatted(tenantTable("transactions")), Boolean.class, transactionId);
+        assertEquals(Boolean.TRUE, paymentViaQr, "Expected transaction to be marked as QR payment");
+    }
+
+    private void assertActiveQrIntent(
+            String qrIntentId,
+            String operationType,
+            String currency,
+            BigDecimal amount
+    ) {
+        assertQrIntent(qrIntentId, "ACTIVE", null, operationType, currency, amount);
+    }
+
+    private void assertPaidQrIntent(
+            String qrIntentId,
+            String transactionId,
+            String operationType,
+            String currency,
+            BigDecimal amount
+    ) {
+        assertQrIntent(qrIntentId, "PAID", transactionId, operationType, currency, amount);
+    }
+
+    private void assertQrIntent(
+            String qrIntentId,
+            String expectedStatus,
+            String expectedTransactionId,
+            String operationType,
+            String currency,
+            BigDecimal amount
+    ) {
+        Map<String, Object> intent = jdbcTemplate.queryForMap("""
+                SELECT qr_intent_id,
+                       operation_type,
+                       currency,
+                       amount,
+                       status,
+                       transaction_id
+                FROM %s
+                WHERE qr_intent_id = ?
+                """.formatted(tenantTable("qr_payment_intent")), qrIntentId);
+
+        assertEquals(qrIntentId, intent.get("qr_intent_id"));
+        assertEquals(operationType, intent.get("operation_type"));
+        assertEquals(currency, intent.get("currency"));
+        assertBigDecimalEquals(amount, toBigDecimal(intent.get("amount")), "QR intent amount");
+        assertEquals(expectedStatus, intent.get("status"));
+        assertEquals(expectedTransactionId, intent.get("transaction_id"));
+    }
+
+    private void disablePricingRulesForQrE2E() {
+        if (!tableExists(TENANT_SCHEMA, "pricing_rules")) {
+            return;
+        }
+
+        jdbcTemplate.update("""
+                UPDATE %s
+                SET status = 'INACTIVE',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE service_code IN ('U2U', 'P2P', 'MERCHANTPAY', 'MERCHPAY')
+                """.formatted(tenantTable("pricing_rules")));
+    }
+
     private void assertApprovedBalanceMovementDetail(
             Map<String, Object> detail,
             String operationType,
@@ -5045,6 +5843,42 @@ class SelfRegistrationRealApiE2ETest {
         );
         assertEquals(1, updated, "Expected to seed " + walletType + " " + currency + " wallet for " + accountId);
         seededAvailableBalanceOffset = seededAvailableBalanceOffset.add(storedAmount.subtract(previousStoredAmount));
+    }
+
+    private BigDecimal readWalletAvailableDisplayBalance(String accountId, String walletType, String currency) {
+        BigDecimal storedBalance = jdbcTemplate.queryForObject("""
+                        SELECT wb.available_balance
+                        FROM %s wb
+                        JOIN %s w ON w.wallet_id = wb.wallet_id
+                        WHERE w.account_id = ?
+                          AND w.wallet_type = ?
+                          AND w.currency = ?
+                        """.formatted(tenantTable("wallet_balance"), tenantTable("wallet")),
+                BigDecimal.class,
+                accountId,
+                walletType,
+                currency
+        );
+        return storedBalance.divide(new BigDecimal("100.00"));
+    }
+
+    private Map<String, Object> readPasscodeRecord(String transactionId) {
+        return jdbcTemplate.queryForMap("""
+                SELECT transaction_id,
+                       cashout_transaction_id,
+                       amount,
+                       currency,
+                       unregistered_msisdn,
+                       first_name,
+                       last_name,
+                       kyc_document_id,
+                       passcode,
+                       status,
+                       field1,
+                       field2
+                FROM %s
+                WHERE transaction_id = ?
+                """.formatted(tenantTable("passcode")), transactionId);
     }
 
     private void assertMainCurrencyBalanceFromEnquiry(
@@ -5647,6 +6481,153 @@ class SelfRegistrationRealApiE2ETest {
                 )
                 """.formatted(tenantTable("roles"), tenantTable("roles")));
         log.info("E2E ensure subscriber role completed");
+    }
+
+    private void ensurePasscodeTable() {
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    passcode_id BIGSERIAL PRIMARY KEY,
+                    transaction_id VARCHAR(30) NOT NULL,
+                    cashout_transaction_id VARCHAR(30),
+                    amount NUMERIC(19, 2) NOT NULL,
+                    currency VARCHAR(10) NOT NULL,
+                    unregistered_msisdn VARCHAR(30) NOT NULL,
+                    first_name VARCHAR(100),
+                    last_name VARCHAR(100),
+                    kyc_document_id VARCHAR(100),
+                    sender_msisdn VARCHAR(30),
+                    sender_account_id VARCHAR(30) NOT NULL,
+                    passcode VARCHAR(10) NOT NULL UNIQUE,
+                    status VARCHAR(20) NOT NULL,
+                    created_on TIMESTAMP NOT NULL,
+                    modified_on TIMESTAMP NOT NULL,
+                    redeemed_on TIMESTAMP,
+                    field1 VARCHAR(250),
+                    field2 VARCHAR(250),
+                    field3 VARCHAR(250),
+                    field4 VARCHAR(250),
+                    field5 VARCHAR(250),
+                    version BIGINT
+                )
+                """.formatted(tenantTable("passcode")));
+        jdbcTemplate.execute("""
+                ALTER TABLE %s
+                    DROP COLUMN IF EXISTS holding_account_id,
+                    DROP COLUMN IF EXISTS holding_wallet_id,
+                    ADD COLUMN IF NOT EXISTS first_name VARCHAR(100),
+                    ADD COLUMN IF NOT EXISTS last_name VARCHAR(100),
+                    ADD COLUMN IF NOT EXISTS kyc_document_id VARCHAR(100),
+                    ADD COLUMN IF NOT EXISTS field1 VARCHAR(250),
+                    ADD COLUMN IF NOT EXISTS field2 VARCHAR(250),
+                    ADD COLUMN IF NOT EXISTS field3 VARCHAR(250),
+                    ADD COLUMN IF NOT EXISTS field4 VARCHAR(250),
+                    ADD COLUMN IF NOT EXISTS field5 VARCHAR(250)
+                """.formatted(tenantTable("passcode")));
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_passcode_lookup
+                ON %s(passcode, unregistered_msisdn, status)
+                """.formatted(tenantTable("passcode")));
+    }
+
+    private void ensureQrPaymentSchema() {
+        jdbcTemplate.execute("""
+                ALTER TABLE %s
+                    ADD COLUMN IF NOT EXISTS payment_via_qr BOOLEAN NOT NULL DEFAULT FALSE
+                """.formatted(tenantTable("transactions")));
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    qr_intent_id VARCHAR(40) PRIMARY KEY,
+                    operation_type VARCHAR(20) NOT NULL,
+                    creditor_identifier_type VARCHAR(30) NOT NULL,
+                    creditor_identifier_value VARCHAR(30) NOT NULL,
+                    creditor_account_type VARCHAR(30) NOT NULL,
+                    creditor_wallet_type VARCHAR(50) NOT NULL,
+                    currency VARCHAR(10) NOT NULL,
+                    amount NUMERIC(19, 2),
+                    status VARCHAR(20) NOT NULL,
+                    expires_at TIMESTAMP NOT NULL,
+                    transaction_id VARCHAR(30),
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP,
+                    version BIGINT
+                )
+                """.formatted(tenantTable("qr_payment_intent")));
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_qr_payment_intent_status_expiry
+                ON %s(status, expires_at)
+                """.formatted(tenantTable("qr_payment_intent")));
+    }
+
+    private void ensureHoldingWallets() {
+        ensureHoldingWallet(90000000050L, "USD", "Holding wallet for unregistered USD transfers");
+        ensureHoldingWallet(90000000051L, "INR", "Holding wallet for unregistered INR transfers");
+        ensureHoldingWallet(90000000052L, "EUR", "Holding wallet for unregistered EUR transfers");
+    }
+
+    private void ensureHoldingWallet(Long walletId, String currency, String remarks) {
+        jdbcTemplate.update("""
+                INSERT INTO %s (
+                    wallet_id,
+                    account_id,
+                    currency,
+                    wallet_type,
+                    status,
+                    is_default,
+                    is_locked,
+                    created_at,
+                    updated_at,
+                    remarks
+                )
+                VALUES (?, 'SYS0001', ?, 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, ?)
+                ON CONFLICT (wallet_id) DO UPDATE
+                SET account_id = EXCLUDED.account_id,
+                    currency = EXCLUDED.currency,
+                    wallet_type = EXCLUDED.wallet_type,
+                    status = 'ACTIVE',
+                    is_default = FALSE,
+                    is_locked = FALSE,
+                    updated_at = CURRENT_TIMESTAMP,
+                    remarks = EXCLUDED.remarks
+                """.formatted(tenantTable("wallet")), walletId, currency, remarks);
+        jdbcTemplate.update("""
+                INSERT INTO %s (
+                    wallet_id,
+                    available_balance,
+                    frozen_balance,
+                    fic_balance,
+                    version,
+                    updated_at
+                )
+                VALUES (?, 0, 0, 0, 0, CURRENT_TIMESTAMP)
+                ON CONFLICT (wallet_id) DO NOTHING
+                """.formatted(tenantTable("wallet_balance")), walletId);
+    }
+
+    private void ensureRegisteredToUnregisteredServiceCatalog() {
+        jdbcTemplate.update("""
+                INSERT INTO %s (
+                    service_code,
+                    service_name,
+                    description,
+                    service_category,
+                    transaction_type,
+                    is_financial,
+                    is_active,
+                    display_order
+                )
+                VALUES
+                    ('R2U', 'Registered to Unregistered Transfer', 'Subscriber transfer to unregistered receiver holding wallet', 'PAYMENT', 'TRANSFER', TRUE, TRUE, 90),
+                    ('CASHOUT_BY_CODE', 'Cashout by Code', 'Agent cashout using unregistered receiver passcode', 'CASH', 'TRANSFER', TRUE, TRUE, 91)
+                ON CONFLICT (service_code) DO UPDATE
+                SET service_name = EXCLUDED.service_name,
+                    description = EXCLUDED.description,
+                    service_category = EXCLUDED.service_category,
+                    transaction_type = EXCLUDED.transaction_type,
+                    is_financial = EXCLUDED.is_financial,
+                    is_active = TRUE,
+                    display_order = EXCLUDED.display_order,
+                    updated_at = CURRENT_TIMESTAMP
+                """.formatted(tenantTable("service_catalog")));
     }
 
     private String tenantTable(String tableName) {

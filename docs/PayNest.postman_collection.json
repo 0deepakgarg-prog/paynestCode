@@ -1,0 +1,418 @@
+{
+  "info": {
+    "name": "PayNest API",
+    "description": "Postman collection for PayNest account, authentication, wallet, payment, QR, pricing, tag, FX, transaction history, and receipt APIs. Set baseUrl, tenantId, accessToken, and sample identifiers before running secured requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "tenantId", "value": "e2etest" },
+    { "key": "accessToken", "value": "" },
+    { "key": "subscriberMobile", "value": "9999999999" },
+    { "key": "subscriberPin", "value": "2468" },
+    { "key": "receiverMobile", "value": "8888888888" },
+    { "key": "merchantLoginId", "value": "merchant-login" },
+    { "key": "accountId", "value": "ACC0000000001" },
+    { "key": "walletId", "value": "1" },
+    { "key": "transactionId", "value": "" },
+    { "key": "qrPayload", "value": "" },
+    { "key": "qrIntentId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{accessToken}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"req-login-001\",\n  \"user\": {\n    \"identifierType\": \"MOBILE\",\n    \"identifierValue\": \"{{subscriberMobile}}\",\n    \"authType\": \"PIN\",\n    \"authValue\": \"{{subscriberPin}}\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json.accessToken || json.token || (json.data && json.data.accessToken);",
+                  "if (token) pm.collectionVariables.set('accessToken', token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Challenge Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/challenge-token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Self Registration - Generate OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"req-self-otp-001\",\n  \"user\": {\n    \"mobileNumber\": \"{{subscriberMobile}}\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/account/register/selfGenOtp"
+          }
+        },
+        {
+          "name": "Self Registration - With OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"req-self-register-001\",\n  \"user\": {\n    \"mobileNumber\": \"{{subscriberMobile}}\",\n    \"otp\": \"000000\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/account/register/selfWithOtp"
+          }
+        },
+        {
+          "name": "Register User By Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"req-register-user-001\",\n  \"user\": {\n    \"accountType\": \"MERCHANT\",\n    \"role\": \"MERCHANT\",\n    \"mobileNumber\": \"7777777777\",\n    \"loginId\": \"{{merchantLoginId}}\",\n    \"firstName\": \"Demo\",\n    \"lastName\": \"Merchant\",\n    \"email\": \"merchant@example.com\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/account/registerUser"
+          }
+        },
+        {
+          "name": "Get Account Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/account/getAccountDetails/{{accountId}}"
+          }
+        },
+        {
+          "name": "Suspend Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Compliance hold\",\n  \"remarks\": \"Manual suspension from Postman\"\n}" },
+            "url": "{{baseUrl}}/api/v1/account/{{accountId}}/suspend"
+          }
+        },
+        {
+          "name": "Resume Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Review completed\",\n  \"remarks\": \"Manual resume from Postman\"\n}" },
+            "url": "{{baseUrl}}/api/v1/account/{{accountId}}/resume"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wallets",
+      "item": [
+        {
+          "name": "Get Account Wallets",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/wallet/getAccountWallets/{{accountId}}"
+          }
+        },
+        {
+          "name": "Add Wallet Restriction",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"walletId\": {{walletId}},\n  \"restrictions\": {\n    \"blockedServices\": [\"CASHOUT\"]\n  }\n}" },
+            "url": "{{baseUrl}}/api/v1/wallet/restrictions"
+          }
+        },
+        {
+          "name": "Get Wallet Restriction",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/wallet/restrictions/{{walletId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "U2U Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"operationType\": \"U2U\",\n  \"requestGateway\": \"MOBILE\",\n  \"preferredLang\": \"en\",\n  \"initiatedBy\": \"DEBITOR\",\n  \"debitor\": {\n    \"accountType\": \"SUBSCRIBER\",\n    \"walletType\": \"MAIN\",\n    \"identifier\": { \"type\": \"MOBILE\", \"value\": \"{{subscriberMobile}}\" },\n    \"authentication\": { \"type\": \"PIN\", \"value\": \"{{subscriberPin}}\" }\n  },\n  \"creditor\": {\n    \"accountType\": \"SUBSCRIBER\",\n    \"walletType\": \"MAIN\",\n    \"identifier\": { \"type\": \"MOBILE\", \"value\": \"{{receiverMobile}}\" }\n  },\n  \"transaction\": { \"amount\": 5.00, \"currency\": \"USD\" },\n  \"paymentReference\": \"postman-u2u\",\n  \"comments\": \"Postman U2U\"\n}" },
+            "url": "{{baseUrl}}/api/v1/pay/U2U"
+          }
+        },
+        {
+          "name": "MerchantPay Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"operationType\": \"MERCHANTPAY\",\n  \"requestGateway\": \"MOBILE\",\n  \"preferredLang\": \"en\",\n  \"initiatedBy\": \"DEBITOR\",\n  \"debitor\": {\n    \"accountType\": \"SUBSCRIBER\",\n    \"walletType\": \"MAIN\",\n    \"identifier\": { \"type\": \"MOBILE\", \"value\": \"{{subscriberMobile}}\" },\n    \"authentication\": { \"type\": \"PIN\", \"value\": \"{{subscriberPin}}\" }\n  },\n  \"creditor\": {\n    \"accountType\": \"MERCHANT\",\n    \"walletType\": \"MAIN\",\n    \"identifier\": { \"type\": \"LOGINID\", \"value\": \"{{merchantLoginId}}\" }\n  },\n  \"transaction\": { \"amount\": 7.50, \"currency\": \"USD\" },\n  \"paymentReference\": \"postman-merchantpay\",\n  \"comments\": \"Postman merchant payment\"\n}" },
+            "url": "{{baseUrl}}/api/v1/pay/MERCHANTPAY"
+          }
+        },
+        {
+          "name": "Cash In",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"operationType\": \"CASHIN\",\n  \"requestGateway\": \"MOBILE\",\n  \"preferredLang\": \"en\",\n  \"initiatedBy\": \"CREDITOR\",\n  \"debitor\": {\n    \"accountType\": \"AGENT\",\n    \"walletType\": \"MAIN\",\n    \"identifier\": { \"type\": \"MOBILE\", \"value\": \"7000000000\" },\n    \"authentication\": { \"type\": \"PASSWORD\", \"value\": \"Business@123\" }\n  },\n  \"creditor\": {\n    \"accountType\": \"SUBSCRIBER\",\n    \"walletType\": \"MAIN\",\n    \"identifier\": { \"type\": \"MOBILE\", \"value\": \"{{subscriberMobile}}\" }\n  },\n  \"transaction\": { \"amount\": 100.00, \"currency\": \"USD\" }\n}" },
+            "url": "{{baseUrl}}/api/v1/pay/CASHIN"
+          }
+        }
+      ]
+    },
+    {
+      "name": "QR Payments",
+      "item": [
+        {
+          "name": "Generate My Static QR",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/qr/my-static?currency=USD&walletType=MAIN"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.payload) pm.collectionVariables.set('qrPayload', json.payload);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate Dynamic Subscriber QR",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"qrType\": \"DYNAMIC\",\n  \"operationType\": \"U2U\",\n  \"creditor\": {\n    \"identifierType\": \"MOBILE\",\n    \"identifierValue\": \"{{receiverMobile}}\",\n    \"accountType\": \"SUBSCRIBER\",\n    \"walletType\": \"MAIN\"\n  },\n  \"currency\": \"USD\",\n  \"amount\": 5.00,\n  \"expiresInMinutes\": 30\n}" },
+            "url": "{{baseUrl}}/api/v1/qr/generate"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.payload) pm.collectionVariables.set('qrPayload', json.payload);",
+                  "if (json.qrIntentId) pm.collectionVariables.set('qrIntentId', json.qrIntentId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate Dynamic Merchant QR",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"qrType\": \"DYNAMIC\",\n  \"operationType\": \"MERCHANTPAY\",\n  \"creditor\": {\n    \"identifierType\": \"LOGINID\",\n    \"identifierValue\": \"{{merchantLoginId}}\",\n    \"accountType\": \"MERCHANT\",\n    \"walletType\": \"MAIN\"\n  },\n  \"currency\": \"INR\",\n  \"amount\": 75.00,\n  \"expiresInMinutes\": 30\n}" },
+            "url": "{{baseUrl}}/api/v1/qr/generate"
+          }
+        },
+        {
+          "name": "Scan QR",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"payload\": {{qrPayload}}\n}" },
+            "url": "{{baseUrl}}/api/v1/qr/scan"
+          }
+        },
+        {
+          "name": "Pay QR",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"payload\": {{qrPayload}},\n  \"requestGateway\": \"MOBILE\",\n  \"preferredLang\": \"en\",\n  \"initiatedBy\": \"DEBITOR\",\n  \"debitor\": {\n    \"accountType\": \"SUBSCRIBER\",\n    \"walletType\": \"MAIN\",\n    \"identifier\": { \"type\": \"MOBILE\", \"value\": \"{{subscriberMobile}}\" },\n    \"authentication\": { \"type\": \"PIN\", \"value\": \"{{subscriberPin}}\" }\n  },\n  \"amount\": 5.00,\n  \"currency\": \"USD\",\n  \"paymentReference\": \"postman-qr-pay\",\n  \"comments\": \"Postman QR payment\"\n}" },
+            "url": "{{baseUrl}}/api/v1/qr/pay"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.transactionId) pm.collectionVariables.set('transactionId', json.transactionId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transactions and Receipts",
+      "item": [
+        {
+          "name": "Transaction Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/transaction/{{accountId}}/{{transactionId}}"
+          }
+        },
+        {
+          "name": "Payment History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/payment/history?accountId={{accountId}}&offset=0&limit=20&order=DESC"
+          }
+        },
+        {
+          "name": "Download Receipt",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/download/receipt?transactionId={{transactionId}}&language=en&accountId={{accountId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Administration",
+      "item": [
+        {
+          "name": "Create Pricing Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"serviceCode\": \"U2U\",\n  \"currency\": \"USD\",\n  \"accountType\": \"SUBSCRIBER\",\n  \"status\": \"ACTIVE\"\n}" },
+            "url": "{{baseUrl}}/api/v1/pricing"
+          }
+        },
+        {
+          "name": "Get Pricing Rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/pricing"
+          }
+        },
+        {
+          "name": "Create FX Rate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"targetCurrency\": \"INR\",\n  \"usdRate\": 80.00,\n  \"rateType\": \"MID\",\n  \"provider\": \"POSTMAN\"\n}" },
+            "url": "{{baseUrl}}/api/v1/fx-rates"
+          }
+        },
+        {
+          "name": "Get Tags",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/tags"
+          }
+        }
+      ]
+    }
+  ]
+}

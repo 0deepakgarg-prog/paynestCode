@@ -560,7 +560,8 @@ public class U2UPaymentService {
                 creditorWallet,
                 request.getInitiatedBy(),
                 request.getPaymentReference(),
-                request.getComments()
+                request.getComments(),
+                isPaymentViaQr(request.getMetadata())
         );
 
         transactionsService.updateOptionalTransactionFields(
@@ -570,5 +571,14 @@ public class U2UPaymentService {
                 request.getPaymentReference(),
                 request.getComments()
         );
+    }
+
+    private boolean isPaymentViaQr(Map<String, Object> metadata) {
+        if (metadata == null) {
+            return false;
+        }
+
+        Object paymentViaQr = metadata.get("paymentViaQr");
+        return Boolean.TRUE.equals(paymentViaQr) || "true".equalsIgnoreCase(String.valueOf(paymentViaQr));
     }
 }

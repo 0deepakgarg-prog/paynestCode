@@ -5,6 +5,7 @@ import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
+import com.paynest.config.PropertyReader;
 import com.paynest.config.entity.Enumeration;
 import com.paynest.config.entity.SupportedLanguage;
 import com.paynest.config.repository.EnumerationRepository;
@@ -76,6 +77,7 @@ public class AccountService {
     private final UserTagRepository userTagRepository;
     private final AccountNotificationEndpointRepository accountNotificationEndpointRepository;
     private final AccountStatusHistoryRepository accountStatusHistoryRepository;
+    private final PropertyReader propertyReader;
 
     @Transactional
     public Account registerUser(RegistrationRequestWithOtp request) {
@@ -910,7 +912,10 @@ public class AccountService {
                 throw new ApplicationException(ErrorCodes.SYSTEM_WALLET_INACTIVE, "System wallet is not active");
             }
 
-            String txnId = IdGenerator.generateTransactionId(ACCOUNT_DELETE_TXN_PREFIX);
+            String txnId = IdGenerator.generateTransactionId(
+                    ACCOUNT_DELETE_TXN_PREFIX,
+                    getRequiredServerInstance()
+            );
             transactionsService.generateTransactionRecord(
                     txnId,
                     transferableAmount,
@@ -934,6 +939,14 @@ public class AccountService {
         identifier.setIdentifierValue(accountId);
         identifier.setStatus(Constants.ACCOUNT_STATUS_ACTIVE);
         return identifier;
+    }
+
+    private String getRequiredServerInstance() {
+        String serverInstance = propertyReader.getPropertyValue("server.instance");
+        if (serverInstance == null || serverInstance.isBlank()) {
+            throw new IllegalStateException("server.instance is not configured");
+        }
+        return serverInstance.trim();
     }
 
     private void deactivateSubscriberArtifacts(Account subscriber, List<Wallet> subscriberWallets) {

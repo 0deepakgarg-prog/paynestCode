@@ -273,10 +273,8 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.otp (
     updated_at TIMESTAMP
 );
 
-CREATE SEQUENCE IF NOT EXISTS $TenantSchema.wallet_wallet_id_seq START WITH 100000 INCREMENT BY 1;
-
 CREATE TABLE IF NOT EXISTS $TenantSchema.wallet (
-    wallet_id BIGINT PRIMARY KEY DEFAULT nextval('$TenantSchema.wallet_wallet_id_seq'),
+    wallet_id BIGINT PRIMARY KEY,
     account_id TEXT NOT NULL,
     currency VARCHAR(10) NOT NULL,
     wallet_type VARCHAR(50) NOT NULL,
@@ -288,6 +286,11 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.wallet (
     remarks TEXT,
     CONSTRAINT fk_wallet_account FOREIGN KEY (account_id) REFERENCES $TenantSchema.account(account_id)
 );
+
+CREATE SEQUENCE IF NOT EXISTS $TenantSchema.wallet_wallet_id_seq START WITH 10000000000 INCREMENT BY 1;
+
+ALTER TABLE $TenantSchema.wallet
+    ALTER COLUMN wallet_id SET DEFAULT nextval('$TenantSchema.wallet_wallet_id_seq');
 
 CREATE TABLE IF NOT EXISTS $TenantSchema.wallet_balance (
     wallet_id BIGINT PRIMARY KEY,
@@ -595,7 +598,8 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.transactions (
     debitor_identifier_value VARCHAR(30),
     creditor_identifier_type VARCHAR(30),
     creditor_identifier_value VARCHAR(30),
-    previous_status VARCHAR(5)
+    previous_status VARCHAR(5),
+    payment_via_qr BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS $TenantSchema.transaction_details (
@@ -640,7 +644,8 @@ ALTER TABLE $TenantSchema.transactions
     ADD COLUMN IF NOT EXISTS debitor_wallet_type VARCHAR(50),
     ADD COLUMN IF NOT EXISTS debitor_currency VARCHAR(10),
     ADD COLUMN IF NOT EXISTS creditor_wallet_type VARCHAR(50),
-    ADD COLUMN IF NOT EXISTS creditor_currency VARCHAR(10);
+    ADD COLUMN IF NOT EXISTS creditor_currency VARCHAR(10),
+    ADD COLUMN IF NOT EXISTS payment_via_qr BOOLEAN NOT NULL DEFAULT FALSE;
 
 ALTER TABLE $TenantSchema.transaction_details
     ADD COLUMN IF NOT EXISTS wallet_type VARCHAR(50),
@@ -717,6 +722,66 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.cashback_payout (
 
 CREATE INDEX IF NOT EXISTS idx_cashback_payout_due
     ON $TenantSchema.cashback_payout(status, pay_at);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.passcode (
+    passcode_id BIGSERIAL PRIMARY KEY,
+    transaction_id VARCHAR(30) NOT NULL,
+    cashout_transaction_id VARCHAR(30),
+    amount NUMERIC(19, 0) NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    unregistered_msisdn VARCHAR(30) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    kyc_document_id VARCHAR(100),
+    sender_msisdn VARCHAR(30),
+    sender_account_id VARCHAR(30) NOT NULL,
+    passcode VARCHAR(10) NOT NULL UNIQUE,
+    status VARCHAR(20) NOT NULL,
+    created_on TIMESTAMP NOT NULL,
+    modified_on TIMESTAMP NOT NULL,
+    redeemed_on TIMESTAMP,
+    field1 VARCHAR(250),
+    field2 VARCHAR(250),
+    field3 VARCHAR(250),
+    field4 VARCHAR(250),
+    field5 VARCHAR(250),
+    version BIGINT
+);
+
+ALTER TABLE $TenantSchema.passcode
+    DROP COLUMN IF EXISTS holding_account_id,
+    DROP COLUMN IF EXISTS holding_wallet_id,
+    ADD COLUMN IF NOT EXISTS first_name VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS last_name VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS kyc_document_id VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS field1 VARCHAR(250),
+    ADD COLUMN IF NOT EXISTS field2 VARCHAR(250),
+    ADD COLUMN IF NOT EXISTS field3 VARCHAR(250),
+    ADD COLUMN IF NOT EXISTS field4 VARCHAR(250),
+    ADD COLUMN IF NOT EXISTS field5 VARCHAR(250);
+
+CREATE INDEX IF NOT EXISTS idx_passcode_lookup
+    ON $TenantSchema.passcode(passcode, unregistered_msisdn, status);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.qr_payment_intent (
+    qr_intent_id VARCHAR(40) PRIMARY KEY,
+    operation_type VARCHAR(20) NOT NULL,
+    creditor_identifier_type VARCHAR(30) NOT NULL,
+    creditor_identifier_value VARCHAR(30) NOT NULL,
+    creditor_account_type VARCHAR(30) NOT NULL,
+    creditor_wallet_type VARCHAR(50) NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    amount NUMERIC(19, 2),
+    status VARCHAR(20) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    transaction_id VARCHAR(30),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    version BIGINT
+);
+
+CREATE INDEX IF NOT EXISTS idx_qr_payment_intent_status_expiry
+    ON $TenantSchema.qr_payment_intent(status, expires_at);
 
 CREATE TABLE IF NOT EXISTS $TenantSchema.audit_api_log (
     id BIGSERIAL PRIMARY KEY,
@@ -1085,7 +1150,10 @@ VALUES
     (90000000032, 'SYS0001', 'EUR', 'COMMDIS', 'ACTIVE', TRUE, FALSE, CURRENT_TIMESTAMP, NULL, 'Commission disbursement account for EUR Wallets'),
     (90000000040, 'SYS0001', 'USD', 'TAX', 'ACTIVE', TRUE, FALSE, CURRENT_TIMESTAMP, NULL, 'TAX account for USD Wallets'),
     (90000000041, 'SYS0001', 'INR', 'TAX', 'ACTIVE', TRUE, FALSE, CURRENT_TIMESTAMP, NULL, 'TAX account for INR Wallets'),
-    (90000000042, 'SYS0001', 'EUR', 'TAX', 'ACTIVE', TRUE, FALSE, CURRENT_TIMESTAMP, NULL, 'TAX account for EUR Wallets')
+    (90000000042, 'SYS0001', 'EUR', 'TAX', 'ACTIVE', TRUE, FALSE, CURRENT_TIMESTAMP, NULL, 'TAX account for EUR Wallets'),
+    (90000000050, 'SYS0001', 'USD', 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'HOLDING account for USD Wallets'),
+    (90000000051, 'SYS0001', 'INR', 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'HOLDING account for INR Wallets'),
+    (90000000052, 'SYS0001', 'EUR', 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'HOLDING account for EUR Wallets')
 ON CONFLICT (wallet_id) DO UPDATE
 SET account_id = EXCLUDED.account_id,
     currency = EXCLUDED.currency,
@@ -1095,6 +1163,15 @@ SET account_id = EXCLUDED.account_id,
     is_locked = FALSE,
     updated_at = CURRENT_TIMESTAMP,
     remarks = EXCLUDED.remarks;
+
+SELECT setval(
+    '$TenantSchema.wallet_wallet_id_seq',
+    GREATEST(
+        COALESCE((SELECT MAX(wallet_id) FROM $TenantSchema.wallet WHERE wallet_id < 90000000000), 9999999999) + 1,
+        10000000000
+    ),
+    false
+);
 
 INSERT INTO $TenantSchema.wallet_balance (
     wallet_id,
@@ -1119,7 +1196,10 @@ VALUES
     (90000000032, 0, 0, 0, 0, CURRENT_TIMESTAMP),
     (90000000040, 0, 0, 0, 0, CURRENT_TIMESTAMP),
     (90000000041, 0, 0, 0, 0, CURRENT_TIMESTAMP),
-    (90000000042, 0, 0, 0, 0, CURRENT_TIMESTAMP)
+    (90000000042, 0, 0, 0, 0, CURRENT_TIMESTAMP),
+    (90000000050, 0, 0, 0, 0, CURRENT_TIMESTAMP),
+    (90000000051, 0, 0, 0, 0, CURRENT_TIMESTAMP),
+    (90000000052, 0, 0, 0, 0, CURRENT_TIMESTAMP)
 ON CONFLICT (wallet_id) DO UPDATE
 SET updated_at = CURRENT_TIMESTAMP;
 
@@ -1202,7 +1282,9 @@ VALUES
     ('BILLPAY', 'Bill Payment', 'Bill payment', 'PAYMENT', 'PAYMENT', TRUE, TRUE, 5),
     ('O2C', 'Operator to Channel Transfer', 'Operator to channel wallet transfer', 'PAYMENT', 'TRANSFER', TRUE, TRUE, 6),
     ('ACCOUNT_DELETION', 'Account Deletion', 'Subscriber account deletion balance transfer', 'SYSTEM', 'TRANSFER', TRUE, TRUE, 7),
-    ('INTRAWALLET', 'Intra Wallet Transfer', 'Same account transfer between wallets of different currencies', 'PAYMENT', 'TRANSFER', TRUE, TRUE, 8)
+    ('INTRAWALLET', 'Intra Wallet Transfer', 'Same account transfer between wallets of different currencies', 'PAYMENT', 'TRANSFER', TRUE, TRUE, 8),
+    ('R2U', 'Registered to Unregistered Transfer', 'Subscriber transfer to unregistered receiver holding wallet', 'PAYMENT', 'TRANSFER', TRUE, TRUE, 9),
+    ('CASHOUT_BY_CODE', 'Cashout by Code', 'Agent cashout using unregistered receiver passcode', 'CASH', 'TRANSFER', TRUE, TRUE, 10)
 ON CONFLICT (service_code) DO UPDATE
 SET service_name = EXCLUDED.service_name,
     description = EXCLUDED.description,

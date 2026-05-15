@@ -182,5 +182,8 @@ public class Transactions {
     @Column(name = "previous_status", length = 5)
     private String previousStatus;
 
+    @Column(name = "payment_via_qr", nullable = false)
+    private Boolean paymentViaQr = false;
+
 }
 

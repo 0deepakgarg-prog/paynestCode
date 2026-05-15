@@ -480,7 +480,8 @@ public class MerchPayPaymentService {
                 creditorAccountType,
                 debitorWallet,
                 creditorWallet,
-                request.getInitiatedBy()
+                request.getInitiatedBy(),
+                isPaymentViaQr(request.getMetadata())
         );
 
         transactionsService.updateOptionalTransactionFields(
@@ -490,5 +491,14 @@ public class MerchPayPaymentService {
                 request.getPaymentReference(),
                 request.getComments()
         );
+    }
+
+    private boolean isPaymentViaQr(Map<String, Object> metadata) {
+        if (metadata == null) {
+            return false;
+        }
+
+        Object paymentViaQr = metadata.get("paymentViaQr");
+        return Boolean.TRUE.equals(paymentViaQr) || "true".equalsIgnoreCase(String.valueOf(paymentViaQr));
     }
 }

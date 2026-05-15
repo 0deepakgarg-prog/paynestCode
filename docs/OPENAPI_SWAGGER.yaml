@@ -13,6 +13,7 @@ tags:
   - name: Accounts
   - name: Wallets
   - name: Payments
+  - name: QR Payments
   - name: Transactions
   - name: Pricing
   - name: Tags
@@ -1051,6 +1052,133 @@ paths:
         default:
           $ref: "#/components/responses/Error"
 
+  /api/v1/qr/generate:
+    post:
+      tags: [QR Payments]
+      summary: Generate a static or dynamic QR payment payload
+      description: >
+        Static QR generation returns a signed reusable payload and image. Dynamic QR generation
+        additionally creates a row in `qr_payment_intent` and returns its `qrIntentId`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QrGenerateRequest"
+            examples:
+              dynamicU2U:
+                summary: Dynamic subscriber QR
+                value:
+                  qrType: DYNAMIC
+                  operationType: U2U
+                  creditor:
+                    identifierType: MOBILE
+                    identifierValue: "9999999999"
+                    accountType: SUBSCRIBER
+                    walletType: MAIN
+                  currency: USD
+                  amount: 5.00
+                  expiresInMinutes: 30
+              dynamicMerchant:
+                summary: Dynamic merchant QR
+                value:
+                  qrType: DYNAMIC
+                  operationType: MERCHANTPAY
+                  creditor:
+                    identifierType: LOGINID
+                    identifierValue: merchant-login
+                    accountType: MERCHANT
+                    walletType: MAIN
+                  currency: INR
+                  amount: 75.00
+                  expiresInMinutes: 30
+      responses:
+        "200":
+          description: QR generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QrGenerateResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/qr/my-static:
+    get:
+      tags: [QR Payments]
+      summary: Generate the authenticated account's reusable static QR
+      description: >
+        Returns a static signed QR payload for the current account. Subscriber accounts produce
+        `U2U` QR payloads; merchant accounts produce `MERCHANTPAY` QR payloads.
+      parameters:
+        - name: currency
+          in: query
+          required: true
+          schema:
+            type: string
+            example: USD
+        - name: walletType
+          in: query
+          required: false
+          schema:
+            type: string
+            default: MAIN
+            enum: [MAIN, BONUS, SALARY]
+      responses:
+        "200":
+          description: Static QR generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QrGenerateResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/qr/scan:
+    post:
+      tags: [QR Payments]
+      summary: Validate and preview a QR payload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QrScanRequest"
+      responses:
+        "200":
+          description: QR scan preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QrScanResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v1/qr/pay:
+    post:
+      tags: [QR Payments]
+      summary: Pay using a static or dynamic QR payload
+      description: >
+        Delegates to U2U or MERCHANTPAY based on the signed QR payload. The final transaction
+        is persisted with `payment_via_qr = true`. Dynamic QR intents are marked `PAID` and
+        linked to the transaction ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QrPayRequest"
+      responses:
+        "200":
+          description: Payment response from U2U or MERCHANTPAY
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/U2UPaymentResponse"
+                  - $ref: "#/components/schemas/MerchpayPaymentResponse"
+        default:
+          $ref: "#/components/responses/Error"
+
   /api/v1/download/receipt:
     get:
       tags: [Receipts]
@@ -1856,6 +1984,10 @@ components:
             cashback:
               $ref: "#/components/schemas/PricingAdjustmentDetails"
 
+    MerchpayPaymentResponse:
+      allOf:
+        - $ref: "#/components/schemas/BasePaymentResponse"
+
     ServiceChargeDetails:
       type: object
       properties:
@@ -2635,6 +2767,155 @@ components:
               format: date-time
             createdBy:
               type: string
+
+    QrCreditor:
+      type: object
+      required: [identifierType, identifierValue, accountType, walletType]
+      properties:
+        identifierType:
+          type: string
+          enum: [ACCOUNT_ID, MOBILE, MSISDN, LOGINID]
+        identifierValue:
+          type: string
+          example: merchant-login
+        accountType:
+          type: string
+          enum: [SUBSCRIBER, MERCHANT]
+        walletType:
+          type: string
+          enum: [MAIN, BONUS, SALARY]
+
+    QrGenerateRequest:
+      type: object
+      required: [qrType, operationType, creditor, currency]
+      properties:
+        qrType:
+          type: string
+          enum: [STATIC, DYNAMIC]
+        operationType:
+          type: string
+          enum: [U2U, MERCHANTPAY]
+        creditor:
+          $ref: "#/components/schemas/QrCreditor"
+        currency:
+          type: string
+          example: USD
+        amount:
+          type: number
+          format: decimal
+          description: Required for DYNAMIC QR. For STATIC QR, payer supplies amount during pay.
+        expiresInMinutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          description: Dynamic QR expiry. Defaults to 15 minutes when omitted or invalid.
+
+    QrGenerateResponse:
+      type: object
+      properties:
+        qrType:
+          type: string
+          enum: [STATIC, DYNAMIC]
+        qrIntentId:
+          type: string
+          nullable: true
+          description: Present for DYNAMIC QR only.
+        operationType:
+          type: string
+          enum: [U2U, MERCHANTPAY]
+        payload:
+          type: string
+          description: Signed JSON payload to render or submit for scan/pay.
+        qrImageBase64:
+          type: string
+          description: Base64-encoded PNG QR image.
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    QrScanRequest:
+      type: object
+      properties:
+        payload:
+          type: string
+        qrIntentId:
+          type: string
+          description: Optional dynamic QR intent lookup when payload is not supplied.
+
+    QrScanResponse:
+      type: object
+      properties:
+        qrType:
+          type: string
+          enum: [STATIC, DYNAMIC]
+        qrIntentId:
+          type: string
+          nullable: true
+        operationType:
+          type: string
+          enum: [U2U, MERCHANTPAY]
+        creditorIdentifierType:
+          type: string
+        creditorIdentifierValue:
+          type: string
+        creditorAccountType:
+          type: string
+        creditorWalletType:
+          type: string
+        currency:
+          type: string
+        amount:
+          type: number
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    QrPayRequest:
+      type: object
+      required: [requestGateway, debitor]
+      properties:
+        payload:
+          type: string
+          description: Signed QR payload. Required unless qrIntentId is supplied.
+        qrIntentId:
+          type: string
+          description: Dynamic QR intent ID. Optional when payload is supplied.
+        requestGateway:
+          type: string
+          enum: [MOBILE, WEB]
+        preferredLang:
+          type: string
+          example: en
+        initiatedBy:
+          type: string
+          enum: [DEBITOR, CREDITOR]
+          default: DEBITOR
+        debitor:
+          $ref: "#/components/schemas/Party"
+        amount:
+          type: number
+          format: decimal
+          description: Required for STATIC QR. Ignored for DYNAMIC QR because the intent amount is authoritative.
+        currency:
+          type: string
+          description: Optional override for STATIC QR.
+        authentication:
+          $ref: "#/components/schemas/Authentication"
+        paymentReference:
+          type: string
+          maxLength: 100
+        comments:
+          type: string
+          maxLength: 300
+        metadata:
+          type: object
+          additionalProperties: true
+        additionalInfo:
+          type: object
+          additionalProperties: true
 
     CashbackPayout:
       type: object

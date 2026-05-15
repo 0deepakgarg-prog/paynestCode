@@ -11,10 +11,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.paynest.config.PropertyReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 @Slf4j
 public class IdGenerator {
@@ -134,7 +136,36 @@ public class IdGenerator {
     }
 
     public static String generateTransactionId(String prefix) {
-        return generateTransactionId(prefix, "A");
+        return generateTransactionId(prefix, getServerInstanceFromProperties());
+    }
+
+    private static String getServerInstanceFromProperties() {
+        String serverInstance = System.getProperty("server.instance");
+        if (serverInstance == null || serverInstance.isBlank()) {
+            serverInstance = System.getenv("SERVER_INSTANCE");
+        }
+        if (serverInstance == null || serverInstance.isBlank()) {
+            serverInstance = readServerInstanceFromApplicationProperties();
+        }
+        if (serverInstance == null || serverInstance.isBlank()) {
+            throw new IllegalStateException("server.instance is not configured");
+        }
+        return serverInstance.trim();
+    }
+
+    private static String readServerInstanceFromApplicationProperties() {
+        try (InputStream inputStream = IdGenerator.class
+                .getClassLoader()
+                .getResourceAsStream("application.properties")) {
+            if (inputStream == null) {
+                return null;
+            }
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            return properties.getProperty("server.instance");
+        } catch (IOException ex) {
+            throw new IllegalStateException("Unable to read server.instance from application.properties", ex);
+        }
     }
 }
 

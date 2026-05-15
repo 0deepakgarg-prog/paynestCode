@@ -92,7 +92,7 @@ public class StockService {
             Wallet bankWallet = getWallet(systemAccount.getAccountId(), currency, BANK_WALLET_TYPE, "BANK");
             Wallet mainWallet = getWallet(systemAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "MAIN");
 
-            String transactionId = IdGenerator.generateTransactionId("ST");
+            String transactionId = IdGenerator.generateTransactionId("ST", getRequiredServerInstance());
 
             AccountIdentifier debtorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
             AccountIdentifier creditorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
@@ -153,7 +153,7 @@ public class StockService {
             Wallet debtorWallet = getWallet(debtorAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "DEBTOR");
             Wallet creditorWallet = getWallet(systemAccount.getAccountId(), currency, MAIN_WALLET_TYPE, "CREDITOR");
 
-            String transactionId = IdGenerator.generateTransactionId("SR");
+            String transactionId = IdGenerator.generateTransactionId("SR", getRequiredServerInstance());
             AccountIdentifier creditorIdentifier = buildAccountIdentifier(systemAccount.getAccountId());
 
             transactionsService.generateTransactionRecord(
@@ -314,6 +314,14 @@ public class StockService {
         } finally {
             log.info("Exiting StockService.updateStockTransactionStatus. traceId={}", TraceContext.getTraceId());
         }
+    }
+
+    private String getRequiredServerInstance() {
+        String serverInstance = propertyReader.getPropertyValue("server.instance");
+        if (serverInstance == null || serverInstance.isBlank()) {
+            throw new IllegalStateException("server.instance is not configured");
+        }
+        return serverInstance.trim();
     }
 
     public BasePaymentResponse updateStockReimbursementTransactionStatus(StockApprovalRequest request) {

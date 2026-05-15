@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/fx-rates").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/passcode/details").hasRole("AGENT")
                         .requestMatchers(HttpMethod.POST, "/api/v1/wallet/restrictions").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")

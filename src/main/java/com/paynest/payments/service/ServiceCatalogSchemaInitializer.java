@@ -96,7 +96,9 @@ public class ServiceCatalogSchemaInitializer {
                     ('CASHOUT', 'Cash Out', 'Cash withdrawal from wallet', 'CASH', 'DEBIT', 40),
                     ('BILLPAY', 'Bill Payment', 'Bill payment transaction', 'PAYMENT', 'BILL', 50),
                     ('O2C', 'Operator to Channel Transfer', 'Operator wallet transfer to channel account', 'PAYMENT', 'TRANSFER', 60),
-                    ('ACCOUNT_DELETION', 'Account Deletion', 'Balance movement during account deletion', 'SYSTEM', 'TRANSFER', 70)
+                    ('ACCOUNT_DELETION', 'Account Deletion', 'Balance movement during account deletion', 'SYSTEM', 'TRANSFER', 70),
+                    ('R2U', 'Registered to Unregistered Transfer', 'Subscriber transfer to unregistered receiver holding wallet', 'PAYMENT', 'TRANSFER', 80),
+                    ('CASHOUT_BY_CODE', 'Cashout by Code', 'Agent cashout using unregistered receiver passcode', 'CASH', 'TRANSFER', 90)
                 ON CONFLICT (service_code) DO NOTHING
                 """.formatted(schemaName);
     }

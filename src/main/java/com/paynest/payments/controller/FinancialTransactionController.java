@@ -7,6 +7,8 @@ import com.paynest.payments.dto.BillPayPaymentRequest;
 import com.paynest.payments.dto.BillPayPaymentResponse;
 import com.paynest.payments.dto.CashInPaymentRequest;
 import com.paynest.payments.dto.CashInPaymentResponse;
+import com.paynest.payments.dto.CashoutByCodeRequest;
+import com.paynest.payments.dto.CashoutByCodeResponse;
 import com.paynest.payments.dto.CashOutPaymentRequest;
 import com.paynest.payments.dto.CashOutPaymentResponse;
 import com.paynest.payments.dto.IntraWalletTransferRequest;
@@ -15,6 +17,8 @@ import com.paynest.payments.dto.MerchpayPaymentRequest;
 import com.paynest.payments.dto.MerchpayPaymentResponse;
 import com.paynest.payments.dto.O2CApprovalRequest;
 import com.paynest.payments.dto.O2CPaymentRequest;
+import com.paynest.payments.dto.RegisteredToUnregisteredPaymentRequest;
+import com.paynest.payments.dto.RegisteredToUnregisteredPaymentResponse;
 import com.paynest.payments.dto.StockApprovalRequest;
 import com.paynest.payments.dto.StockInitiateRequest;
 import com.paynest.payments.dto.StockReimbursementInitiateRequest;
@@ -25,10 +29,12 @@ import com.paynest.payments.dto.U2UPaymentRequest;
 import com.paynest.payments.dto.U2UPaymentResponse;
 import com.paynest.payments.service.BillPayPaymentService;
 import com.paynest.payments.service.CashInPaymentService;
+import com.paynest.payments.service.CashoutByCodeService;
 import com.paynest.payments.service.CashOutPaymentService;
 import com.paynest.payments.service.IntraWalletTransferService;
 import com.paynest.payments.service.MerchPayPaymentService;
 import com.paynest.payments.service.O2CPaymentService;
+import com.paynest.payments.service.RegisteredToUnregisteredPaymentService;
 import com.paynest.payments.service.StockService;
 import com.paynest.payments.service.U2UPaymentService;
 import jakarta.validation.Valid;
@@ -54,6 +60,8 @@ public class FinancialTransactionController {
     private final O2CPaymentService o2cPaymentService;
     private final PricingService pricingService;
     private final IntraWalletTransferService intraWalletTransferService;
+    private final RegisteredToUnregisteredPaymentService registeredToUnregisteredPaymentService;
+    private final CashoutByCodeService cashoutByCodeService;
 
     @PostMapping("/U2U")
     public ResponseEntity<U2UPaymentResponse> transferU2UMoney(
@@ -150,6 +158,23 @@ public class FinancialTransactionController {
             @Valid @RequestBody CashOutPaymentRequest request) {
         request.setOperationType("CASHOUT");
         CashOutPaymentResponse response = cashOutPaymentService.processPayment(request, true);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/REGISTERED_TO_UNREGISTERED")
+    public ResponseEntity<RegisteredToUnregisteredPaymentResponse> transferRegisteredToUnregistered(
+            @Valid @RequestBody RegisteredToUnregisteredPaymentRequest request) {
+        request.setOperationType("R2U");
+        RegisteredToUnregisteredPaymentResponse response =
+                registeredToUnregisteredPaymentService.processPayment(request, true);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/CASHOUT_BY_CODE")
+    public ResponseEntity<CashoutByCodeResponse> cashoutByCode(
+            @Valid @RequestBody CashoutByCodeRequest request) {
+        request.setOperationType("CASHOUT_BY_CODE");
+        CashoutByCodeResponse response = cashoutByCodeService.processCashout(request, true);
         return ResponseEntity.ok(response);
     }
 

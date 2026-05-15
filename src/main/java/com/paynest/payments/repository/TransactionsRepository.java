@@ -79,6 +79,16 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Stri
             """)
     int updateApproveOrRejectComments(String txnId, String comments);
 
+    @Modifying
+    @Transactional
+    @Query("""
+                UPDATE Transactions t
+                SET t.paymentViaQr = true,
+                    t.modifiedOn = CURRENT_TIMESTAMP
+                WHERE t.transactionId = :txnId
+            """)
+    int markPaymentViaQr(String txnId);
+
     @Query("""
                 SELECT COALESCE(SUM(t.transactionValue), 0)
                 FROM Transactions t

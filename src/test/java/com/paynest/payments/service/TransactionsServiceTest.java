@@ -95,6 +95,58 @@ class TransactionsServiceTest {
         assertEquals("USD", transaction.getDebitorCurrency());
         assertEquals("MAIN", transaction.getCreditorWalletType());
         assertEquals("USD", transaction.getCreditorCurrency());
+        assertEquals(false, transaction.getPaymentViaQr());
+    }
+
+    @Test
+    void markPaymentViaQr_shouldUpdateTransactionIndicator() {
+        TransactionsService transactionsService = new TransactionsService(
+                propertyReader,
+                transactionsRepository,
+                transactionDetailsRepository,
+                transactionNotificationEventPublisher
+        );
+
+        transactionsService.markPaymentViaQr("txn-qr-1");
+
+        verify(transactionsRepository).markPaymentViaQr("txn-qr-1");
+    }
+
+    @Test
+    void generateTransactionRecord_shouldPersistQrPaymentIndicatorWhenRequested() {
+        TransactionsService transactionsService = new TransactionsService(
+                propertyReader,
+                transactionsRepository,
+                transactionDetailsRepository,
+                transactionNotificationEventPublisher
+        );
+
+        AccountIdentifier debitorIdentifier = identifier("sub-1", "MOBILE", "7777777777");
+        AccountIdentifier creditorIdentifier = identifier("merchant-1", "LOGINID", "merchant-login");
+        Wallet debitorWallet = wallet(101L, "sub-1");
+        Wallet creditorWallet = wallet(202L, "merchant-1");
+
+        when(propertyReader.getPropertyValue("currency.factor")).thenReturn("100");
+
+        transactionsService.generateTransactionRecord(
+                "txn-qr-2",
+                new BigDecimal("10.50"),
+                "MOBILE",
+                "MERCHANTPAY",
+                "en",
+                debitorIdentifier,
+                creditorIdentifier,
+                "SUBSCRIBER",
+                "MERCHANT",
+                debitorWallet,
+                creditorWallet,
+                InitiatedBy.DEBITOR,
+                true
+        );
+
+        ArgumentCaptor<Transactions> transactionCaptor = ArgumentCaptor.forClass(Transactions.class);
+        verify(transactionsRepository).save(transactionCaptor.capture());
+        assertEquals(true, transactionCaptor.getValue().getPaymentViaQr());
     }
 
     private AccountIdentifier identifier(String accountId, String identifierType, String identifierValue) {

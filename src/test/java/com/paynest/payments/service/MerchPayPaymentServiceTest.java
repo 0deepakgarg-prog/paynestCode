@@ -39,6 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -87,6 +88,7 @@ class MerchPayPaymentServiceTest {
     @Test
     void processPayment_shouldTransferFromSubscriberToMerchant() {
         MerchpayPaymentRequest request = validRequest();
+        request.setMetadata(Map.of("paymentViaQr", true));
         AccountIdentifier debitorIdentifier = identifier("acc-1", "9999999999", "MOBILE", 10L);
         AccountIdentifier creditorIdentifier = identifier("mer-1", "merchant-login", "LOGINID", 20L);
         Account debitorAccount = account("acc-1", "SUBSCRIBER");
@@ -136,7 +138,8 @@ class MerchPayPaymentServiceTest {
                     eq("MERCHANT"),
                     eq(debitorWallet),
                     eq(creditorWallet),
-                    eq(InitiatedBy.DEBITOR)
+                    eq(InitiatedBy.DEBITOR),
+                    eq(true)
             );
             verify(balanceService).transferWalletAmount(
                     debitorWallet,

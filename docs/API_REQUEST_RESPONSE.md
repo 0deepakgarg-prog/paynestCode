@@ -68,6 +68,158 @@ Financial endpoints under `/api/v1/pay/**` and transaction endpoints under `/api
 | `DP` | Discount paid |
 | `DR` | Discount received |
 
+## QR Payment APIs
+
+QR APIs are exposed under `/api/v1/qr`. They support static reusable QR codes and dynamic single-use QR intents. QR payment execution delegates to the normal `U2U` or `MERCHANTPAY` services and marks the created transaction with `payment_via_qr = true`.
+
+### `POST /api/v1/qr/generate`
+
+Generates a static or dynamic QR payload and base64 PNG QR image.
+
+For `DYNAMIC` QR, the system creates a row in `qr_payment_intent` with status `ACTIVE`. For `STATIC` QR, no intent row is created.
+
+Request:
+
+| Field | Type | Required | Description | Possible values |
+| --- | --- | --- | --- | --- |
+| `qrType` | string | Yes | QR lifecycle type. | `STATIC`, `DYNAMIC` |
+| `operationType` | string | Yes | Payment service to execute when paid. | `U2U`, `MERCHANTPAY` |
+| `creditor.identifierType` | string | Yes | Creditor identifier type. | `MOBILE`, `MSISDN`, `LOGINID`, `ACCOUNT_ID` |
+| `creditor.identifierValue` | string | Yes | Creditor identifier value. | Mobile/login/account ID |
+| `creditor.accountType` | string | Yes | Creditor account type. | `SUBSCRIBER`, `MERCHANT` |
+| `creditor.walletType` | string | Yes | Creditor wallet type. | `MAIN`, `BONUS`, `SALARY` |
+| `currency` | string | Yes | Transaction currency. | `USD`, `INR`, configured currencies |
+| `amount` | number | Dynamic QR: yes | Fixed amount for dynamic QR. Static QR can omit it. | Positive decimal |
+| `expiresInMinutes` | integer | No | Dynamic QR expiry. Defaults to 15 minutes, capped at 1440. | `1` to `1440` |
+
+Example dynamic subscriber QR:
+
+```json
+{
+  "qrType": "DYNAMIC",
+  "operationType": "U2U",
+  "creditor": {
+    "identifierType": "MOBILE",
+    "identifierValue": "8888888888",
+    "accountType": "SUBSCRIBER",
+    "walletType": "MAIN"
+  },
+  "currency": "USD",
+  "amount": 5.00,
+  "expiresInMinutes": 30
+}
+```
+
+Example dynamic merchant QR:
+
+```json
+{
+  "qrType": "DYNAMIC",
+  "operationType": "MERCHANTPAY",
+  "creditor": {
+    "identifierType": "LOGINID",
+    "identifierValue": "merchant-login",
+    "accountType": "MERCHANT",
+    "walletType": "MAIN"
+  },
+  "currency": "INR",
+  "amount": 75.00,
+  "expiresInMinutes": 30
+}
+```
+
+Response:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `qrType` | string | `STATIC` or `DYNAMIC`. |
+| `qrIntentId` | string/null | Present for dynamic QR only. |
+| `operationType` | string | `U2U` or `MERCHANTPAY`. |
+| `payload` | string | Signed JSON payload used by scan/pay. |
+| `qrImageBase64` | string | Base64 PNG image content. |
+| `expiresAt` | datetime/null | Dynamic QR expiry timestamp. |
+
+### `GET /api/v1/qr/my-static`
+
+Generates the authenticated user's reusable static QR.
+
+Query parameters:
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `currency` | Yes | Currency to encode in the QR payload. |
+| `walletType` | No | Wallet type. Defaults to `MAIN`. |
+
+Behavior:
+
+- Subscriber users receive a static `U2U` QR.
+- Merchant users receive a static `MERCHANTPAY` QR.
+- No `qr_payment_intent` row is created because static QR is reusable.
+
+### `POST /api/v1/qr/scan`
+
+Validates a signed QR payload and returns a payment preview.
+
+Request:
+
+```json
+{
+  "payload": "<signed-payload>"
+}
+```
+
+Response fields include QR type, intent ID when dynamic, operation type, creditor identifier, creditor account type, wallet type, currency, amount, and expiry.
+
+### `POST /api/v1/qr/pay`
+
+Executes payment for a static or dynamic QR.
+
+Request:
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `payload` | string | Usually yes | Signed QR payload. |
+| `qrIntentId` | string | Optional | Dynamic intent ID lookup when payload is not supplied. |
+| `requestGateway` | string | Yes | Request source, for example `MOBILE`. |
+| `preferredLang` | string | No | Preferred language. |
+| `initiatedBy` | string | No | Defaults to `DEBITOR`. |
+| `debitor` | object | Yes | Paying party. |
+| `amount` | number | Static QR: yes | Amount supplied by payer for static QR. Dynamic QR uses the persisted intent amount. |
+| `currency` | string | Static QR: optional | Static QR currency override. |
+| `paymentReference` | string | No | Optional reference. |
+| `comments` | string | No | Optional comments. |
+| `metadata` | object | No | Caller metadata. QR service adds `paymentViaQr = true`. |
+| `additionalInfo` | object | No | Optional additional information. |
+
+Example:
+
+```json
+{
+  "payload": "<signed-payload>",
+  "requestGateway": "MOBILE",
+  "preferredLang": "en",
+  "initiatedBy": "DEBITOR",
+  "debitor": {
+    "accountType": "SUBSCRIBER",
+    "walletType": "MAIN",
+    "identifier": {
+      "type": "MOBILE",
+      "value": "9999999999"
+    },
+    "authentication": {
+      "type": "PIN",
+      "value": "2468"
+    }
+  },
+  "amount": 5.00,
+  "currency": "USD",
+  "paymentReference": "qr-pay-001",
+  "comments": "QR payment"
+}
+```
+
+Successful response is either `U2UPaymentResponse` or `MerchpayPaymentResponse`, depending on the QR payload operation type.
+
 ## Authentication APIs
 
 ### `POST /api/v1/auth/login`
