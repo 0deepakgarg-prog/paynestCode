@@ -1,5 +1,6 @@
 package com.paynest.payments.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.paynest.enums.RequestGateway;
 import com.paynest.payments.enums.InitiatedBy;
@@ -31,5 +32,16 @@ public class BillPayPaymentRequest implements BasePaymentRequest {
 
     private Map<String, Object> metadata;
 
-    private Map<String, Object> additionalInfo;
+    @JsonProperty("partner_data")
+    @JsonAlias("additionalInfo")
+    private Map<String, Object> partnerData;
+
+    @Override
+    public Map<String, Object> getAdditionalInfo() {
+        return partnerData;
+    }
+
+    public void setAdditionalInfo(Map<String, Object> additionalInfo) {
+        this.partnerData = additionalInfo;
+    }
 }

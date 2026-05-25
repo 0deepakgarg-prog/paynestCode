@@ -1,0 +1,21 @@
+[Unit]
+Description=PayNest Wallet Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=paynest
+Group=paynest
+WorkingDirectory=/opt/paynest/wallet
+Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=JAVA_OPTS=-Xms512m -Xmx1024m
+ExecStart=/bin/sh -c 'exec /usr/bin/java $JAVA_OPTS -jar /opt/paynest/wallet/paynest-wallet-1.0.0.jar'
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

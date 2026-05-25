@@ -497,6 +497,7 @@ public class QrPaymentService {
                 case LOGINID -> 0;
                 case MOBILE, MSISDN -> 1;
                 case ACCOUNT_ID -> 2;
+                case ACCOUNT_CODE -> 3;
             };
         }
         return switch (type) {
@@ -504,6 +505,7 @@ public class QrPaymentService {
             case MSISDN -> 1;
             case LOGINID -> 2;
             case ACCOUNT_ID -> 3;
+            case ACCOUNT_CODE -> 4;
         };
     }
 

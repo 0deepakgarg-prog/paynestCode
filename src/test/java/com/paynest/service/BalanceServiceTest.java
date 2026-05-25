@@ -13,6 +13,7 @@ import com.paynest.payments.repository.TransactionsRepository;
 import com.paynest.payments.repository.WalletLedgerRepository;
 import com.paynest.payments.repository.CashbackPayoutRepository;
 import com.paynest.payments.service.BalanceService;
+import com.paynest.payments.service.SuccessfulPaymentEventPublisher;
 import com.paynest.payments.validation.WalletRestrictionValidator;
 import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.pricing.dto.response.PricingComputationResponse;
@@ -78,6 +79,9 @@ class BalanceServiceTest {
     @Mock
     private TransactionNotificationEventPublisher transactionNotificationEventPublisher;
 
+    @Mock
+    private SuccessfulPaymentEventPublisher successfulPaymentEventPublisher;
+
     private BalanceService balanceService;
 
     @BeforeEach
@@ -95,7 +99,8 @@ class BalanceServiceTest {
                 transactionsService,
                 walletCacheService,
                 walletRestrictionValidator,
-                transactionNotificationEventPublisher
+                transactionNotificationEventPublisher,
+                successfulPaymentEventPublisher
         );
     }
 
@@ -232,11 +237,16 @@ class BalanceServiceTest {
         assertEquals(new BigDecimal("1000.00"), creditDetail.getPreviousBalance());
         assertEquals(new BigDecimal("2000.00"), creditDetail.getPostBalance());
         org.junit.jupiter.api.Assertions.assertTrue(transaction.getFeesDetails().contains("\"payer\":\"SENDER\""));
-        org.junit.jupiter.api.Assertions.assertTrue(transaction.getFeesDetails().contains("\"detailTableEntry\":false"));
+        org.junit.jupiter.api.Assertions.assertTrue(transaction.getFeesDetails().contains("\"detailTableEntry\":true"));
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<TransactionDetails>> detailsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(transactionDetailsRepository).saveAll(detailsCaptor.capture());
-        assertEquals(List.of(debitDetail, creditDetail), detailsCaptor.getValue());
+        verify(transactionDetailsRepository, org.mockito.Mockito.times(3)).saveAll(detailsCaptor.capture());
+        assertEquals(List.of(debitDetail, creditDetail), detailsCaptor.getAllValues().get(0));
+        List<TransactionDetails> serviceChargeDetails = detailsCaptor.getAllValues().get(1);
+        assertEquals("150", serviceChargeDetails.get(0).getAttr6Value());
+        assertEquals("150", serviceChargeDetails.get(1).getAttr6Value());
+        assertEquals("150", debitDetail.getAttr6Value());
+        assertEquals("150", creditDetail.getAttr6Value());
     }
 
     @Test
@@ -324,7 +334,11 @@ class BalanceServiceTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<TransactionDetails>> detailsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(transactionDetailsRepository, org.mockito.Mockito.times(3)).saveAll(detailsCaptor.capture());
+        verify(transactionDetailsRepository, org.mockito.Mockito.times(5)).saveAll(detailsCaptor.capture());
+        assertEquals("150", detailsCaptor.getAllValues().get(1).get(0).getAttr6Value());
+        assertEquals("150", detailsCaptor.getAllValues().get(1).get(1).getAttr6Value());
+        assertEquals("150;200", debitDetail.getAttr6Value());
+        assertEquals("150;200", creditDetail.getAttr6Value());
         ArgumentCaptor<com.paynest.payments.entity.CashbackPayout> payoutCaptor =
                 ArgumentCaptor.forClass(com.paynest.payments.entity.CashbackPayout.class);
         verify(cashbackPayoutRepository).save(payoutCaptor.capture());

@@ -124,12 +124,19 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
                                          ContentCachingResponseWrapper response,
                                          String responseBody, String requestBody,
                                          long durationMs) {
+        JsonNode requestJson = toJsonNode(requestBody);
+        JsonNode responseJson = toJsonNode(responseBody);
         AuditApiLog auditApiLog = new AuditApiLog();
         auditApiLog.setTraceId(TraceContext.getTraceId());
         auditApiLog.setTenantId(resolveAuditTenantId(request));
         auditApiLog.setHttpMethod(request.getMethod());
-        auditApiLog.setRequestBody(toJsonNode(requestBody));
-        auditApiLog.setResponseBody(toJsonNode(responseBody));
+        auditApiLog.setApiPath(request.getRequestURI());
+        auditApiLog.setAccountId(resolveAccountId());
+        auditApiLog.setServiceCode(readText(requestJson, "serviceCode"));
+        auditApiLog.setReferenceId(readText(requestJson, "referenceId"));
+        auditApiLog.setTransactionId(resolveTransactionId(responseJson));
+        auditApiLog.setRequestBody(requestJson);
+        auditApiLog.setResponseBody(responseJson);
         auditApiLog.setHttpStatus(response.getStatus());
         auditApiLog.setProcessingTimeMs(durationMs);
         return auditApiLog;
@@ -275,6 +282,28 @@ public class ApiAuditKafkaFilter extends OncePerRequestFilter {
             }
         }
         return objectMapper.valueToTree(value);
+    }
+
+    private String resolveTransactionId(JsonNode responseJson) {
+        String rootTransactionId = readText(responseJson, "transactionId");
+        if (rootTransactionId != null) {
+            return rootTransactionId;
+        }
+
+        JsonNode serviceExecution = responseJson == null ? null : responseJson.get("serviceExecution");
+        return readText(serviceExecution, "transactionId");
+    }
+
+    private String readText(JsonNode jsonNode, String fieldName) {
+        if (jsonNode == null || jsonNode.isNull() || fieldName == null || fieldName.isBlank()) {
+            return null;
+        }
+        JsonNode value = jsonNode.get(fieldName);
+        if (value == null || value.isNull()) {
+            return null;
+        }
+        String text = value.asText(null);
+        return text == null || text.isBlank() ? null : text;
     }
 }
 

@@ -9,7 +9,10 @@ import com.paynest.users.dto.request.RegistrationRequest;
 import com.paynest.users.dto.response.AccountKycDetailsResponse;
 import com.paynest.users.entity.Account;
 import com.paynest.users.entity.AccountAuth;
+import com.paynest.users.entity.AccountBillerInfo;
 import com.paynest.users.entity.AccountIdentifier;
+import com.paynest.users.entity.AccountMerchantInfo;
+import com.paynest.users.entity.AccountMerchantMcc;
 import com.paynest.users.entity.AuthChallenge;
 import com.paynest.config.entity.Enumeration;
 import com.paynest.config.entity.SupportedLanguage;
@@ -20,7 +23,10 @@ import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
 import com.paynest.exception.ApplicationException;
 import com.paynest.users.repository.AccountAuthRepository;
+import com.paynest.users.repository.AccountBillerInfoRepository;
 import com.paynest.users.repository.AccountIdentifierRepository;
+import com.paynest.users.repository.AccountMerchantInfoRepository;
+import com.paynest.users.repository.AccountMerchantMccRepository;
 import com.paynest.users.repository.AccountNotificationEndpointRepository;
 import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.repository.AccountStatusHistoryRepository;
@@ -55,6 +61,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -126,6 +133,15 @@ class AccountServiceTest {
     @Mock
     private AccountStatusHistoryRepository accountStatusHistoryRepository;
 
+    @Mock
+    private AccountBillerInfoRepository accountBillerInfoRepository;
+
+    @Mock
+    private AccountMerchantInfoRepository accountMerchantInfoRepository;
+
+    @Mock
+    private AccountMerchantMccRepository accountMerchantMccRepository;
+
     @InjectMocks
     private AccountService accountService;
 
@@ -176,7 +192,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void generateOtpForRegistration_shouldUseFixedOtpWhenTestingModeIsEnabled() {
+    void generateOtpForRegistration_shouldCreateSixDigitOtp() {
         RegistrationRequest request = registrationRequest("9999999999");
 
         when(accountRepository.findByMobileNumber("9999999999")).thenReturn(Optional.empty());
@@ -185,16 +201,13 @@ class AccountServiceTest {
                 "REGISTRATION",
                 "CREATED"
         )).thenReturn(Optional.empty());
-        when(enumerationRepository.findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
-                "SYSTEM_CONFIG",
-                "TESTING_MODE"
-        )).thenReturn(Optional.of(enumeration("SYSTEM_CONFIG", "TESTING_MODE", "true")));
 
         accountService.generateOtpForRegistration(request);
 
         ArgumentCaptor<Otp> otpCaptor = ArgumentCaptor.forClass(Otp.class);
         verify(otpRepository).save(otpCaptor.capture());
-        assertEquals(0, otpCaptor.getValue().getOtpValue());
+        org.junit.jupiter.api.Assertions.assertTrue(otpCaptor.getValue().getOtpValue() >= 100000);
+        org.junit.jupiter.api.Assertions.assertTrue(otpCaptor.getValue().getOtpValue() <= 999999);
     }
 
     @Test
@@ -212,6 +225,7 @@ class AccountServiceTest {
     @Test
     void registerAccountByRole_shouldCreateWalletsAndAuthArtifactsForNonAdminAccounts() {
         RegisterUserRequest request = registerUserRequest("merchant", "merchantLogin", "MERCHANT");
+        request.setMerchantInfo(merchantInfo("MERCHANT_001", List.of("5411", "5812")));
         Role role = new Role();
         role.setRoleId(7L);
         role.setRoleCode("MERCHANT");
@@ -222,6 +236,12 @@ class AccountServiceTest {
                 "merchantLogin",
                 "ACTIVE"
         )).thenReturn(Optional.empty());
+        when(accountMerchantInfoRepository.existsByMerchantCodeIgnoreCase("MERCHANT_001")).thenReturn(false);
+        when(accountMerchantInfoRepository.save(any(AccountMerchantInfo.class))).thenAnswer(invocation -> {
+            AccountMerchantInfo merchantInfo = invocation.getArgument(0);
+            merchantInfo.setMerchantInfoId(501L);
+            return merchantInfo;
+        });
         when(roleRepository.findByRoleCode("MERCHANT")).thenReturn(Optional.of(role));
         when(supportedLanguageRepository.findFirstByIsDefaultTrueAndIsActiveTrueOrderByDisplayOrderAscIdAsc())
                 .thenReturn(Optional.of(supportedLanguage("en", true)));
@@ -235,13 +255,18 @@ class AccountServiceTest {
                 ));
         when(walletRepository.getNextWalletId()).thenReturn(101L, 102L);
         Tag defaultTag = defaultTag(11L, "MERCHANT");
-        when(tagRepository.findByTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase("MERCHANT", "ACTIVE"))
+        when(tagRepository.findByCategoryIgnoreCaseAndTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase(
+                "MERCHANT",
+                "BASE",
+                "ACTIVE"
+        ))
                 .thenReturn(List.of(defaultTag));
         when(userTagRepository.findByAccountIdAndTagId(anyString(), eq(11L))).thenReturn(Optional.empty());
 
         Account account = accountService.registerAccountByRole(request);
 
         assertEquals("MERCHANT", account.getAccountType());
+        assertEquals("MERCHANT_001", account.getAccountCode());
         assertEquals("ACTIVE", account.getStatus());
         assertEquals("9999999999", account.getMobileNumber());
         assertEquals("en", account.getPreferredLang());
@@ -251,8 +276,13 @@ class AccountServiceTest {
         verify(walletRepository).saveAll(walletCaptor.capture());
         verify(walletBalanceRepository).saveAll(walletBalanceCaptor.capture());
         verify(userRoleRepository).save(any());
-        verify(accountIdentifierRepository, times(2)).save(any(AccountIdentifier.class));
+        ArgumentCaptor<AccountIdentifier> identifierCaptor = ArgumentCaptor.forClass(AccountIdentifier.class);
+        verify(accountIdentifierRepository, times(3)).save(identifierCaptor.capture());
         verify(accountAuthRepository).save(any());
+        ArgumentCaptor<AccountMerchantInfo> merchantInfoCaptor = ArgumentCaptor.forClass(AccountMerchantInfo.class);
+        verify(accountMerchantInfoRepository).save(merchantInfoCaptor.capture());
+        ArgumentCaptor<List<AccountMerchantMcc>> merchantMccCaptor = ArgumentCaptor.forClass(List.class);
+        verify(accountMerchantMccRepository).saveAll(merchantMccCaptor.capture());
         ArgumentCaptor<List<UserTag>> userTagCaptor = ArgumentCaptor.forClass(List.class);
         verify(userTagRepository).saveAll(userTagCaptor.capture());
 
@@ -265,6 +295,90 @@ class AccountServiceTest {
         assertEquals(1, userTagCaptor.getValue().size());
         assertEquals(11L, userTagCaptor.getValue().get(0).getTagId());
         assertEquals(account.getAccountId(), userTagCaptor.getValue().get(0).getAccountId());
+        assertEquals(account.getAccountId(), merchantInfoCaptor.getValue().getAccountId());
+        assertEquals("MERCHANT_001", merchantInfoCaptor.getValue().getMerchantCode());
+        AccountIdentifier accountCodeIdentifier = identifierCaptor.getAllValues()
+                .stream()
+                .filter(identifier -> "ACCOUNT_CODE".equals(identifier.getIdentifierType()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("MERCHANT_001", accountCodeIdentifier.getIdentifierValue());
+        assertEquals(2, merchantMccCaptor.getValue().size());
+        assertEquals(List.of("5411", "5812"), merchantMccCaptor.getValue().stream().map(AccountMerchantMcc::getMccCode).toList());
+    }
+
+    @Test
+    void registerAccountByRole_shouldPersistBillerInfoAndRejectDuplicateBillerCode() {
+        RegisterUserRequest request = registerUserRequest("biller", "billerLogin", "BILLER");
+        request.setBillerInfo(billerInfo("UTILITIES", "BILLER_001", "ELEC"));
+        Role role = new Role();
+        role.setRoleId(8L);
+        role.setRoleCode("BILLER");
+        Enumeration billerCategory = enumeration("BILLER_CATEGORY", "UTILITIES", "Utilities");
+        billerCategory.setId(101L);
+
+        when(accountRepository.findByMobileNumber("9999999999")).thenReturn(Optional.empty());
+        when(accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus(
+                "LOGINID",
+                "billerLogin",
+                "ACTIVE"
+        )).thenReturn(Optional.empty());
+        when(enumerationRepository.findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
+                "BILLER_CATEGORY",
+                "UTILITIES"
+        )).thenReturn(Optional.of(billerCategory));
+        when(enumerationRepository.existsByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndParentEnumIdAndIsActiveTrue(
+                "BILLER_SUB_CATEGORY",
+                "ELEC",
+                101L
+        )).thenReturn(true);
+        when(accountBillerInfoRepository.existsByBillerCodeIgnoreCase("BILLER_001")).thenReturn(false);
+        when(roleRepository.findByRoleCode("BILLER")).thenReturn(Optional.of(role));
+        when(supportedLanguageRepository.findFirstByIsDefaultTrueAndIsActiveTrueOrderByDisplayOrderAscIdAsc())
+                .thenReturn(Optional.of(supportedLanguage("en", true)));
+        when(enumerationRepository.findByEnumTypeAndIsActive("CURRENCY", true))
+                .thenReturn(List.of(enumeration("CURRENCY", "USD")));
+        when(enumerationRepository.findByEnumTypeAndIsActive("WALLET_TYPE", true))
+                .thenReturn(List.of(enumeration("WALLET_TYPE", "MAIN")));
+        when(walletRepository.getNextWalletId()).thenReturn(201L);
+        when(tagRepository.findByCategoryIgnoreCaseAndTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase(
+                "BILLER",
+                "BASE",
+                "ACTIVE"
+        )).thenReturn(List.of());
+
+        Account account = accountService.registerAccountByRole(request);
+
+        assertEquals("BILLER_001", account.getAccountCode());
+        ArgumentCaptor<AccountBillerInfo> billerInfoCaptor = ArgumentCaptor.forClass(AccountBillerInfo.class);
+        verify(accountBillerInfoRepository).save(billerInfoCaptor.capture());
+        ArgumentCaptor<AccountIdentifier> identifierCaptor = ArgumentCaptor.forClass(AccountIdentifier.class);
+        verify(accountIdentifierRepository, times(3)).save(identifierCaptor.capture());
+        assertEquals(account.getAccountId(), billerInfoCaptor.getValue().getAccountId());
+        assertEquals("UTILITIES", billerInfoCaptor.getValue().getBillerCategory());
+        assertEquals("BILLER_001", billerInfoCaptor.getValue().getBillerCode());
+        assertEquals("ELEC", billerInfoCaptor.getValue().getBillerSubCategory());
+        AccountIdentifier accountCodeIdentifier = identifierCaptor.getAllValues()
+                .stream()
+                .filter(identifier -> "ACCOUNT_CODE".equals(identifier.getIdentifierType()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("BILLER_001", accountCodeIdentifier.getIdentifierValue());
+
+        RegisterUserRequest duplicateRequest = registerUserRequest("biller", "billerLogin2", "BILLER");
+        duplicateRequest.setBillerInfo(billerInfo("UTILITIES", "BILLER_001", "ELEC"));
+        when(enumerationRepository.findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
+                "BILLER_CATEGORY",
+                "UTILITIES"
+        )).thenReturn(Optional.of(billerCategory));
+        when(accountBillerInfoRepository.existsByBillerCodeIgnoreCase("BILLER_001")).thenReturn(true);
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> accountService.registerAccountByRole(duplicateRequest)
+        );
+        assertEquals(ErrorCodes.INVALID_REQUEST, exception.getErrorCode());
+        assertEquals("billerCode already exists", exception.getErrorMessage());
     }
 
     @Test
@@ -289,7 +403,11 @@ class AccountServiceTest {
                 "SYSTEM_CONFIG",
                 "TESTING_MODE"
         )).thenReturn(Optional.of(enumeration("SYSTEM_CONFIG", "TESTING_MODE", "true")));
-        when(tagRepository.findByTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase("ADMIN", "ACTIVE"))
+        when(tagRepository.findByCategoryIgnoreCaseAndTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase(
+                "ADMIN",
+                "BASE",
+                "ACTIVE"
+        ))
                 .thenReturn(List.of());
 
         accountService.registerAccountByRole(request);
@@ -328,7 +446,11 @@ class AccountServiceTest {
                 "SYSTEM_CONFIG",
                 "TESTING_MODE"
         )).thenReturn(Optional.of(enumeration("SYSTEM_CONFIG", "TESTING_MODE", "true")));
-        when(tagRepository.findByTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase("SUBSCRIBER", "ACTIVE"))
+        when(tagRepository.findByCategoryIgnoreCaseAndTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase(
+                "SUBSCRIBER",
+                "BASE",
+                "ACTIVE"
+        ))
                 .thenReturn(List.of());
 
         accountService.registerUser(request);
@@ -338,6 +460,58 @@ class AccountServiceTest {
 
         AccountAuth accountAuth = accountAuthCaptor.getValue();
         assertEquals(IdGenerator.hashPin("0000", accountAuth.getAuthHash()), accountAuth.getAuthValue());
+    }
+
+    @Test
+    void registerUser_shouldAllowSubscriberWithoutAccountCode() {
+        RegistrationRequestWithOtp request = registrationRequestWithOtp("9999999999", "0000");
+        request.getUser().setAccountCode(null);
+        Otp otp = new Otp();
+        otp.setMobileNumber("9999999999");
+        otp.setReferenceType("REGISTRATION");
+        otp.setStatus("CREATED");
+        otp.setExpiresAt(TenantTime.now().plusMinutes(1));
+
+        Role role = new Role();
+        role.setRoleId(2L);
+        role.setRoleCode("SUBSCRIBER");
+
+        when(accountRepository.findByMobileNumber("9999999999")).thenReturn(Optional.empty());
+        when(otpRepository.findByOtpValueAndStatusOrderByCreatedAtDesc(0, "CREATED")).thenReturn(Optional.of(otp));
+        when(enumerationRepository.findByEnumTypeAndIsActive("CURRENCY", true))
+                .thenReturn(List.of(enumeration("CURRENCY", "USD")));
+        when(enumerationRepository.findByEnumTypeAndIsActive("WALLET_TYPE", true))
+                .thenReturn(List.of(enumeration("WALLET_TYPE", "MAIN")));
+        when(roleRepository.findByRoleCode("SUBSCRIBER")).thenReturn(Optional.of(role));
+        when(supportedLanguageRepository.findFirstByIsDefaultTrueAndIsActiveTrueOrderByDisplayOrderAscIdAsc())
+                .thenReturn(Optional.of(supportedLanguage("en", true)));
+        when(walletRepository.getNextWalletId()).thenReturn(101L);
+        when(enumerationRepository.findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
+                "SYSTEM_CONFIG",
+                "TESTING_MODE"
+        )).thenReturn(Optional.of(enumeration("SYSTEM_CONFIG", "TESTING_MODE", "true")));
+        when(tagRepository.findByCategoryIgnoreCaseAndTagTypeIgnoreCaseAndIsDefaultTrueAndStatusIgnoreCase(
+                "SUBSCRIBER",
+                "BASE",
+                "ACTIVE"
+        ))
+                .thenReturn(List.of());
+
+        accountService.registerUser(request);
+
+        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(accountCaptor.capture());
+        assertNull(accountCaptor.getValue().getAccountCode());
+
+        ArgumentCaptor<AccountIdentifier> identifierCaptor = ArgumentCaptor.forClass(AccountIdentifier.class);
+        verify(accountIdentifierRepository).save(identifierCaptor.capture());
+        assertEquals("MOBILE", identifierCaptor.getValue().getIdentifierType());
+        assertEquals("9999999999", identifierCaptor.getValue().getIdentifierValue());
+        verify(accountIdentifierRepository, never()).findByIdentifierTypeAndIdentifierValueAndStatus(
+                eq("ACCOUNT_CODE"),
+                anyString(),
+                eq("ACTIVE")
+        );
     }
 
     @Test
@@ -392,7 +566,7 @@ class AccountServiceTest {
         kycDocument.setDocumentType("PASSPORT");
 
         when(accountRepository.findById("acc-1")).thenReturn(Optional.of(account));
-        when(kycDocumentRepository.findByAccountIdAndIsActiveTrue("acc-1")).thenReturn(List.of(kycDocument));
+        when(kycDocumentRepository.findByAccountId("acc-1")).thenReturn(List.of(kycDocument));
 
         try (MockedStatic<JWTUtils> jwtUtils = org.mockito.Mockito.mockStatic(JWTUtils.class)) {
             jwtUtils.when(JWTUtils::getCurrentAccountId).thenReturn("acc-1");
@@ -564,6 +738,7 @@ class AccountServiceTest {
         RegistrationRequestWithOtp.UserData userData = new RegistrationRequestWithOtp.UserData();
         userData.setMobile(mobile);
         userData.setOtp(otp);
+        userData.setAccountCode("ACCT9999999999");
 
         RegistrationRequestWithOtp request = new RegistrationRequestWithOtp();
         request.setRequestId("req-1");
@@ -581,12 +756,28 @@ class AccountServiceTest {
         user.setAddress("Street 1");
         user.setGender("MALE");
         user.setLoginId(loginId);
+        user.setAccountCode("ACCT9999999999");
         user.setRole(roleCode);
 
         RegisterUserRequest request = new RegisterUserRequest();
         request.setRequestId("req-1");
         request.setUser(user);
         return request;
+    }
+
+    private RegisterUserRequest.BillerInfo billerInfo(String category, String code, String subCategory) {
+        RegisterUserRequest.BillerInfo billerInfo = new RegisterUserRequest.BillerInfo();
+        billerInfo.setBillerCategory(category);
+        billerInfo.setBillerCode(code);
+        billerInfo.setBillerSubCategory(subCategory);
+        return billerInfo;
+    }
+
+    private RegisterUserRequest.MerchantInfo merchantInfo(String merchantCode, List<String> mccCodes) {
+        RegisterUserRequest.MerchantInfo merchantInfo = new RegisterUserRequest.MerchantInfo();
+        merchantInfo.setMerchantCode(merchantCode);
+        merchantInfo.setMccCodes(mccCodes);
+        return merchantInfo;
     }
 
     private Enumeration enumeration(String type, String code) {

@@ -1,0 +1,10 @@
+- route:
+    id: sample-health-route
+    from:
+      uri: "timer:paynest-integrator-health?period={{health.period:60000}}"
+      steps:
+        - setBody:
+            simple: "PayNest integrator is running at ${date:now:yyyy-MM-dd'T'HH:mm:ssXXX}"
+        - log:
+            loggingLevel: INFO
+            message: "${body}"

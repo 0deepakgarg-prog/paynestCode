@@ -46,6 +46,8 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/v1/bill/subscriber/enquiry").hasRole("SUBSCRIBER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/bill/agent/enquiry").hasRole("AGENT")
                         .requestMatchers(HttpMethod.POST, "/api/v1/fx-rates").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/passcode/details").hasRole("AGENT")
                         .requestMatchers(HttpMethod.POST, "/api/v1/wallet/restrictions").hasRole("ADMIN")
@@ -54,6 +56,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/account/*/suspend").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/account/*/resume").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/account/*/status-history").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/documents/**", "/api/v1/document-categories/**", "/api/v1/document-types/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/accounts/*/documents").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/internal/settletxn").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",

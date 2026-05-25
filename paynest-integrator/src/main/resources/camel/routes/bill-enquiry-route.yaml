@@ -1,0 +1,38 @@
+- route:
+    id: bill-enquiry-http-route
+    from:
+      uri: "platform-http:/bill/enquiry?httpMethodRestrict=POST"
+      steps:
+        - log:
+            loggingLevel: INFO
+            message: "Bill enquiry request received by Camel: ${body}"
+        - choice:
+            when:
+              - simple: "${jsonpath('$.tenant_id')} == 'tenant_e2etest' && ${jsonpath('$.biller_code')} == 'biller1'"
+                steps:
+                  - choice:
+                      when:
+                        - simple: "${jsonpath('$.partner_data.flowid')} == 'flow1'"
+                          steps:
+                            - to:
+                                uri: "direct:bill-enquiry-flow1"
+                      otherwise:
+                        steps:
+                          - setHeader:
+                              name: CamelHttpResponseCode
+                              constant: 400
+                          - setHeader:
+                              name: Content-Type
+                              constant: application/json
+                          - setBody:
+                              constant: '{"status":"FAILED","code":"BILL_ENQUIRY_FLOW_NOT_FOUND","message":"No bill enquiry flow matched the requested flow id"}'
+            otherwise:
+              steps:
+                - setHeader:
+                    name: CamelHttpResponseCode
+                    constant: 400
+                - setHeader:
+                    name: Content-Type
+                    constant: application/json
+                - setBody:
+                    constant: '{"status":"FAILED","code":"BILL_ENQUIRY_ROUTE_NOT_FOUND","message":"No bill enquiry flow matched the requested tenant and biller"}'

@@ -10,4 +10,9 @@ import java.util.Optional;
 public interface ServiceCatalogRepository extends JpaRepository<ServiceCatalog, String> {
 
     Optional<ServiceCatalog> findFirstByServiceCodeIgnoreCaseAndIsActiveTrue(String serviceCode);
+
+    Optional<ServiceCatalog> findFirstByServiceCodeIgnoreCaseAndIsFinancialAndIsActiveTrue(
+            String serviceCode,
+            Boolean isFinancial
+    );
 }

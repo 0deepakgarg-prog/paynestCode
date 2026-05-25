@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +58,19 @@ public class AccountService {
     private static final String ENDPOINT_TYPE_MOBILE = "MOBILE";
     private static final String ENDPOINT_TYPE_EMAIL = "EMAIL";
     private static final String SUBSCRIBER_ROLE_CODE = "SUBSCRIBER";
+    private static final String ACCOUNT_TYPE_BILLER = "BILLER";
+    private static final String ACCOUNT_TYPE_MERCHANT = "MERCHANT";
+    private static final String BILLER_CATEGORY_ENUM_TYPE = "BILLER_CATEGORY";
+    private static final String BILLER_SUB_CATEGORY_ENUM_TYPE = "BILLER_SUB_CATEGORY";
+    private static final Set<String> BILLER_INFO_ACCOUNT_TYPES = Set.of("ADMIN", "AGENT", "MERCHANT", "BILLER");
+    private static final Set<String> MERCHANT_INFO_ACCOUNT_TYPES = Set.of("ADMIN", "AGENT", "MERCHANT", "BILLER");
+    private static final String IDENTIFIER_TYPE_ACCOUNT_CODE = IdentifierType.ACCOUNT_CODE.name();
+    private static final String IDENTIFIER_TYPE_MOBILE = IdentifierType.MOBILE.name();
+    private static final String IDENTIFIER_TYPE_LOGIN_ID = IdentifierType.LOGINID.name();
+    private static final Pattern ACCOUNT_CODE_PATTERN = Pattern.compile("^[A-Za-z0-9]{1,100}$");
+    private static final Pattern BILLER_CODE_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{1,100}$");
+    private static final Pattern MERCHANT_CODE_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{1,100}$");
+    private static final Pattern MCC_CODE_PATTERN = Pattern.compile("^[0-9]{4}$");
 
     private final AccountRepository accountRepository;
     private final EnumerationRepository enumerationRepository;
@@ -77,6 +91,9 @@ public class AccountService {
     private final UserTagRepository userTagRepository;
     private final AccountNotificationEndpointRepository accountNotificationEndpointRepository;
     private final AccountStatusHistoryRepository accountStatusHistoryRepository;
+    private final AccountBillerInfoRepository accountBillerInfoRepository;
+    private final AccountMerchantInfoRepository accountMerchantInfoRepository;
+    private final AccountMerchantMccRepository accountMerchantMccRepository;
     private final PropertyReader propertyReader;
 
     @Transactional
@@ -91,6 +108,10 @@ public class AccountService {
         Optional<Account> acc = accountRepository.findByMobileNumber(request.getUser().getMobile());
         if (acc.isPresent() && acc.get().getStatus().equals("ACTIVE")) {
             throw new ApplicationException(ErrorCodes.USER_EXISTS, "User already exists");
+        }
+        String accountCode = normalizeOptionalAccountCode(request.getUser().getAccountCode());
+        if (accountCode != null) {
+            validateAccountCodeIsAvailable(accountCode);
         }
         Optional<Otp> otpOpt = otpRepository.findByOtpValueAndStatusOrderByCreatedAtDesc(
                 Integer.parseInt(request.getUser().getOtp()),
@@ -125,6 +146,7 @@ public class AccountService {
 
         Account account = new Account();
         account.setAccountId(IdGenerator.generateAccountId());
+        account.setAccountCode(accountCode);
         account.setMobileNumber(request.getUser().getMobile());
         account.setAccountType("SUBSCRIBER");
         account.setPreferredLang(resolvePreferredLanguage(null));
@@ -236,19 +258,29 @@ public class AccountService {
         accountAuthRepository.save(accountAuth);
 
         //TODO : create auths for the user and send welcome notification.
-        AccountIdentifier accountIdentifier = new AccountIdentifier();
-        accountIdentifier.setAccountId(account.getAccountId());
-        accountIdentifier.setIdentifierType("MOBILE");
-        accountIdentifier.setIdentifierValue(request.getUser().getMobile());
-        accountIdentifier.setStatus("ACTIVE");
-        accountIdentifier.setAuthId(accountAuthId);
+        AccountIdentifier accountIdentifier = buildAccountIdentifier(
+                account.getAccountId(),
+                accountAuthId,
+                IDENTIFIER_TYPE_MOBILE,
+                request.getUser().getMobile()
+        );
         accountIdentifierRepository.save(accountIdentifier);
+        if (accountCode != null) {
+            AccountIdentifier accountCodeIdentifier = buildAccountIdentifier(
+                    account.getAccountId(),
+                    accountAuthId,
+                    IDENTIFIER_TYPE_ACCOUNT_CODE,
+                    accountCode
+            );
+            accountIdentifierRepository.save(accountCodeIdentifier);
+        }
         log.info(
-                "Self registration completed. tenantId={}, tenantSchema={}, accountId={}, authId={}, identifierType=MOBILE",
+                "Self registration completed. tenantId={}, tenantSchema={}, accountId={}, authId={}, identifiers={}",
                 TenantContext.getTenantId(),
                 TenantContext.getTenant(),
                 account.getAccountId(),
-                accountAuthId
+                accountAuthId,
+                accountCode != null ? "[MOBILE,ACCOUNT_CODE]" : "[MOBILE]"
         );
 
         return account;
@@ -292,6 +324,18 @@ public class AccountService {
             log.warn("RegisterUser validation failed. requestId={}, reason=mobile_missing", accountRequest.getRequestId());
             throw new ApplicationException(ErrorCodes.INVALID_MOBILE, "Mobile number is required");
         }
+        String accountCode = normalizeAndValidateAccountCode(requestedUser.getAccountCode());
+        RegisterUserRequest.BillerInfo billerInfo = validateAndNormalizeBillerInfo(
+                accountRequest.getBillerInfo(),
+                normalizedAccountType,
+                accountRequest.getRequestId()
+        );
+        RegisterUserRequest.MerchantInfo merchantInfo = validateAndNormalizeMerchantInfo(
+                accountRequest.getMerchantInfo(),
+                normalizedAccountType,
+                accountRequest.getRequestId()
+        );
+        String accountIdentifierCode = resolveAccountIdentifierCode(accountCode, billerInfo, merchantInfo);
 
         log.info("RegisterUser validation checkpoint. requestId={}, step=checking_existing_mobile, mobile={}",
                 accountRequest.getRequestId(), maskMobile(requestedUser.getMobileNumber()));
@@ -309,7 +353,7 @@ public class AccountService {
         log.info("RegisterUser validation checkpoint. requestId={}, step=checking_existing_login_id, loginId={}",
                 accountRequest.getRequestId(), requestedUser.getLoginId());
         Optional<AccountIdentifier> existingLoginId = accountIdentifierRepository.findByIdentifierTypeAndIdentifierValueAndStatus
-                ("LOGINID", requestedUser.getLoginId(), "ACTIVE");
+                (IDENTIFIER_TYPE_LOGIN_ID, requestedUser.getLoginId(), Constants.ACCOUNT_STATUS_ACTIVE);
         if (existingLoginId.isPresent()) {
             log.warn(
                     "RegisterUser validation failed. requestId={}, reason=active_login_id_exists, loginId={}, existingAccountId={}",
@@ -319,6 +363,7 @@ public class AccountService {
             );
             throw new ApplicationException(ErrorCodes.LOGIN_ID_EXISTS, "Login Id already exists");
         }
+        validateAccountCodeIsAvailable(accountIdentifierCode);
 
         log.info("RegisterUser validation checkpoint. requestId={}, step=checking_role, role={}",
                 accountRequest.getRequestId(), requestedUser.getRole());
@@ -345,6 +390,7 @@ public class AccountService {
 
         Account account = new Account();
         account.setAccountId(IdGenerator.generateAccountId());
+        account.setAccountCode(accountIdentifierCode);
         account.setAccountType(normalizedAccountType);
         account.setStatus("ACTIVE");
         account.setMobileNumber(requestedUser.getMobileNumber());
@@ -361,6 +407,8 @@ public class AccountService {
         account.setCreatedAt(TenantTime.now());
         // account.setCreatedBy(accountRequest.getCreatedBy()); TODO : check the logic for created BY
         accountRepository.save(account);
+        saveBillerInfoIfPresent(account.getAccountId(), billerInfo);
+        saveMerchantInfoIfPresent(account.getAccountId(), merchantInfo);
         syncAccountNotificationEndpoints(account);
         log.info(
                 "RegisterUser account persisted. requestId={}, accountId={}, accountType={}, preferredLang={}",
@@ -428,19 +476,24 @@ public class AccountService {
         accountAuth.setIsFirstTimeLogin(true);
         accountAuth.setFailedAttempts(0);
 
-        AccountIdentifier accountIdentifier = new AccountIdentifier();
-        accountIdentifier.setAccountId(account.getAccountId());
-        accountIdentifier.setIdentifierType("MOBILE");
-        accountIdentifier.setIdentifierValue(account.getMobileNumber());
-        accountIdentifier.setStatus("ACTIVE");
-        accountIdentifier.setAuthId(accountAuthId);
-
-        AccountIdentifier accountIdentifierLoginId = new AccountIdentifier();
-        accountIdentifierLoginId.setAccountId(account.getAccountId());
-        accountIdentifierLoginId.setIdentifierType("LOGINID");
-        accountIdentifierLoginId.setIdentifierValue(requestedUser.getLoginId());
-        accountIdentifierLoginId.setStatus("ACTIVE");
-        accountIdentifierLoginId.setAuthId(accountAuthId);
+        AccountIdentifier accountIdentifier = buildAccountIdentifier(
+                account.getAccountId(),
+                accountAuthId,
+                IDENTIFIER_TYPE_MOBILE,
+                account.getMobileNumber()
+        );
+        AccountIdentifier accountIdentifierLoginId = buildAccountIdentifier(
+                account.getAccountId(),
+                accountAuthId,
+                IDENTIFIER_TYPE_LOGIN_ID,
+                requestedUser.getLoginId()
+        );
+        AccountIdentifier accountCodeIdentifier = buildAccountIdentifier(
+                account.getAccountId(),
+                accountAuthId,
+                IDENTIFIER_TYPE_ACCOUNT_CODE,
+                accountIdentifierCode
+        );
 
         //TODO : think about adding email as identifier.
 
@@ -449,8 +502,9 @@ public class AccountService {
         accountAuthRepository.save(accountAuth);
         accountIdentifierRepository.save(accountIdentifier);
         accountIdentifierRepository.save(accountIdentifierLoginId);
+        accountIdentifierRepository.save(accountCodeIdentifier);
         log.info(
-                "RegisterUser auth and identifiers persisted. requestId={}, accountId={}, authId={}, identifiers=[MOBILE,LOGINID]",
+                "RegisterUser auth and identifiers persisted. requestId={}, accountId={}, authId={}, identifiers=[MOBILE,LOGINID,ACCOUNT_CODE]",
                 accountRequest.getRequestId(),
                 account.getAccountId(),
                 accountAuthId
@@ -501,6 +555,267 @@ public class AccountService {
                         || value.equalsIgnoreCase("y")
                         || value.equals("1"))
                 .orElse(false);
+    }
+
+    private String normalizeAndValidateAccountCode(String accountCode) {
+        if (accountCode == null || accountCode.isBlank()) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Account code is required");
+        }
+        String normalizedAccountCode = accountCode.trim();
+        if (!ACCOUNT_CODE_PATTERN.matcher(normalizedAccountCode).matches()) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_REQUEST,
+                    "Account code must be alphanumeric and must not exceed 100 characters"
+            );
+        }
+        return normalizedAccountCode;
+    }
+
+    private String normalizeOptionalAccountCode(String accountCode) {
+        if (accountCode == null || accountCode.isBlank()) {
+            return null;
+        }
+        return normalizeAndValidateAccountCode(accountCode);
+    }
+
+    private String resolveAccountIdentifierCode(
+            String accountCode,
+            RegisterUserRequest.BillerInfo billerInfo,
+            RegisterUserRequest.MerchantInfo merchantInfo
+    ) {
+        if (billerInfo != null) {
+            return billerInfo.getBillerCode();
+        }
+        if (merchantInfo != null) {
+            return merchantInfo.getMerchantCode();
+        }
+        return accountCode;
+    }
+
+    private void validateAccountCodeIsAvailable(String accountCode) {
+        Optional<AccountIdentifier> existingAccountCode = accountIdentifierRepository
+                .findByIdentifierTypeAndIdentifierValueAndStatus(
+                        IDENTIFIER_TYPE_ACCOUNT_CODE,
+                        accountCode,
+                        Constants.ACCOUNT_STATUS_ACTIVE
+                );
+        if (existingAccountCode.isPresent()) {
+            throw new ApplicationException(ErrorCodes.ACCOUNT_CODE_EXISTS, "Account code already exists");
+        }
+    }
+
+    private RegisterUserRequest.BillerInfo validateAndNormalizeBillerInfo(
+            RegisterUserRequest.BillerInfo billerInfo,
+            String normalizedAccountType,
+            String requestId
+    ) {
+        if (ACCOUNT_TYPE_BILLER.equals(normalizedAccountType) && billerInfo == null) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "billerInfo is required for BILLER accounts");
+        }
+
+        if (billerInfo == null) {
+            return null;
+        }
+
+        if (!BILLER_INFO_ACCOUNT_TYPES.contains(normalizedAccountType)) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_REQUEST,
+                    "billerInfo is supported only for ADMIN, AGENT, MERCHANT, and BILLER accounts"
+            );
+        }
+
+        String billerCategory = normalizeRequiredBillerText(
+                billerInfo.getBillerCategory(),
+                "billerCategory is required when billerInfo is provided"
+        );
+        String billerCode = normalizeRequiredBillerText(
+                billerInfo.getBillerCode(),
+                "billerCode is required when billerInfo is provided"
+        );
+
+        if (!BILLER_CODE_PATTERN.matcher(billerCode).matches()) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_REQUEST,
+                    "billerCode must be alphanumeric and may include underscore or hyphen, with a maximum length of 100"
+            );
+        }
+
+        Enumeration categoryEnumeration = enumerationRepository
+                .findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
+                        BILLER_CATEGORY_ENUM_TYPE,
+                        billerCategory
+                )
+                .orElse(null);
+        if (categoryEnumeration == null) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Invalid billerCategory");
+        }
+
+        if (accountBillerInfoRepository.existsByBillerCodeIgnoreCase(billerCode)) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "billerCode already exists");
+        }
+
+        billerInfo.setBillerCategory(billerCategory.toUpperCase(Locale.ROOT));
+        billerInfo.setBillerCode(billerCode);
+        if (billerInfo.getBillerSubCategory() != null) {
+            String billerSubCategory = trimToNull(billerInfo.getBillerSubCategory());
+            if (billerSubCategory != null && !enumerationRepository.existsByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndParentEnumIdAndIsActiveTrue(
+                    BILLER_SUB_CATEGORY_ENUM_TYPE,
+                    billerSubCategory,
+                    categoryEnumeration.getId()
+            )) {
+                throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Invalid billerSubCategory for billerCategory");
+            }
+            billerInfo.setBillerSubCategory(billerSubCategory == null ? null : billerSubCategory.toUpperCase(Locale.ROOT));
+        }
+
+        log.info(
+                "RegisterUser billerInfo validated. requestId={}, accountType={}, billerCode={}, billerCategory={}",
+                requestId,
+                normalizedAccountType,
+                billerInfo.getBillerCode(),
+                billerInfo.getBillerCategory()
+        );
+        return billerInfo;
+    }
+
+    private String normalizeRequiredBillerText(String value, String message) {
+        String normalized = trimToNull(value);
+        if (normalized == null) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, message);
+        }
+        return normalized;
+    }
+
+    private RegisterUserRequest.MerchantInfo validateAndNormalizeMerchantInfo(
+            RegisterUserRequest.MerchantInfo merchantInfo,
+            String normalizedAccountType,
+            String requestId
+    ) {
+        if (ACCOUNT_TYPE_MERCHANT.equals(normalizedAccountType) && merchantInfo == null) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "merchantInfo is required for MERCHANT accounts");
+        }
+
+        if (merchantInfo == null) {
+            return null;
+        }
+
+        if (!MERCHANT_INFO_ACCOUNT_TYPES.contains(normalizedAccountType)) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_REQUEST,
+                    "merchantInfo is supported only for ADMIN, AGENT, MERCHANT, and BILLER accounts"
+            );
+        }
+
+        String merchantCode = normalizeRequiredBillerText(
+                merchantInfo.getMerchantCode(),
+                "merchantCode is required when merchantInfo is provided"
+        );
+        if (!MERCHANT_CODE_PATTERN.matcher(merchantCode).matches()) {
+            throw new ApplicationException(
+                    ErrorCodes.INVALID_REQUEST,
+                    "merchantCode must be alphanumeric and may include underscore or hyphen, with a maximum length of 100"
+            );
+        }
+
+        if (accountMerchantInfoRepository.existsByMerchantCodeIgnoreCase(merchantCode)) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "merchantCode already exists");
+        }
+
+        List<String> mccCodes = merchantInfo.getMccCodes();
+        if (mccCodes == null || mccCodes.isEmpty()) {
+            throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "mccCodes is required when merchantInfo is provided");
+        }
+
+        LinkedHashSet<String> normalizedMccCodes = new LinkedHashSet<>();
+        for (String mccCode : mccCodes) {
+            String normalizedMccCode = trimToNull(mccCode);
+            if (normalizedMccCode == null || !MCC_CODE_PATTERN.matcher(normalizedMccCode).matches()) {
+                throw new ApplicationException(ErrorCodes.INVALID_REQUEST, "Each mccCode must be a 4 digit value");
+            }
+            normalizedMccCodes.add(normalizedMccCode);
+        }
+
+        merchantInfo.setMerchantCode(merchantCode);
+        merchantInfo.setMccCodes(new ArrayList<>(normalizedMccCodes));
+
+        log.info(
+                "RegisterUser merchantInfo validated. requestId={}, accountType={}, merchantCode={}, mccCount={}",
+                requestId,
+                normalizedAccountType,
+                merchantInfo.getMerchantCode(),
+                merchantInfo.getMccCodes().size()
+        );
+        return merchantInfo;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void saveBillerInfoIfPresent(String accountId, RegisterUserRequest.BillerInfo billerInfo) {
+        if (billerInfo == null) {
+            return;
+        }
+
+        String actorAccountId = trimToNull(currentAccountIdOrAnonymous());
+        if (actorAccountId == null) {
+            actorAccountId = "anonymous";
+        }
+
+        AccountBillerInfo accountBillerInfo = new AccountBillerInfo();
+        accountBillerInfo.setAccountId(accountId);
+        accountBillerInfo.setBillerCategory(billerInfo.getBillerCategory());
+        accountBillerInfo.setBillerCode(billerInfo.getBillerCode());
+        accountBillerInfo.setBillerSubCategory(billerInfo.getBillerSubCategory());
+        accountBillerInfo.setBillerConfig(billerInfo.getBillerConfig());
+        accountBillerInfo.setBillerSettings(billerInfo.getBillerSettings());
+        accountBillerInfo.setCreatedBy(actorAccountId);
+        accountBillerInfo.setModifiedBy(actorAccountId);
+        accountBillerInfoRepository.save(accountBillerInfo);
+    }
+
+    private void saveMerchantInfoIfPresent(String accountId, RegisterUserRequest.MerchantInfo merchantInfo) {
+        if (merchantInfo == null) {
+            return;
+        }
+
+        String actorAccountId = trimToNull(currentAccountIdOrAnonymous());
+        if (actorAccountId == null) {
+            actorAccountId = "anonymous";
+        }
+
+        AccountMerchantInfo accountMerchantInfo = new AccountMerchantInfo();
+        accountMerchantInfo.setAccountId(accountId);
+        accountMerchantInfo.setMerchantCode(merchantInfo.getMerchantCode());
+        accountMerchantInfo.setMerchantConfig(merchantInfo.getMerchantConfig());
+        accountMerchantInfo.setCreatedBy(actorAccountId);
+        accountMerchantInfo.setModifiedBy(actorAccountId);
+        accountMerchantInfo = accountMerchantInfoRepository.save(accountMerchantInfo);
+
+        List<AccountMerchantMcc> merchantMccs = new ArrayList<>();
+        for (String mccCode : merchantInfo.getMccCodes()) {
+            AccountMerchantMcc merchantMcc = new AccountMerchantMcc();
+            merchantMcc.setMerchantInfoId(accountMerchantInfo.getMerchantInfoId());
+            merchantMcc.setMccCode(mccCode);
+            merchantMcc.setCreatedBy(actorAccountId);
+            merchantMcc.setModifiedBy(actorAccountId);
+            merchantMccs.add(merchantMcc);
+        }
+        accountMerchantMccRepository.saveAll(merchantMccs);
+    }
+
+    private AccountIdentifier buildAccountIdentifier(String accountId, Long authId, String identifierType, String identifierValue) {
+        AccountIdentifier accountIdentifier = new AccountIdentifier();
+        accountIdentifier.setAccountId(accountId);
+        accountIdentifier.setIdentifierType(identifierType);
+        accountIdentifier.setIdentifierValue(identifierValue);
+        accountIdentifier.setStatus(Constants.ACCOUNT_STATUS_ACTIVE);
+        accountIdentifier.setAuthId(authId);
+        return accountIdentifier;
     }
 
     private String maskMobile(String mobileNumber) {

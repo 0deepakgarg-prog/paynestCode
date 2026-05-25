@@ -34,6 +34,21 @@ public class AuditApiLog {
     @Column(name = "http_method", length = 10)
     private String httpMethod;
 
+    @Column(name = "api_path", length = 255)
+    private String apiPath;
+
+    @Column(name = "account_id", length = 50)
+    private String accountId;
+
+    @Column(name = "service_code", length = 50)
+    private String serviceCode;
+
+    @Column(name = "reference_id", length = 100)
+    private String referenceId;
+
+    @Column(name = "transaction_id", length = 50)
+    private String transactionId;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "request_body", columnDefinition = "jsonb")
     private JsonNode requestBody;

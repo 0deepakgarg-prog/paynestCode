@@ -1,0 +1,12 @@
+- route:
+    id: sample-file-route
+    from:
+      uri: "file:./data/inbox?noop=true&include=.*\\.json"
+      steps:
+        - log:
+            loggingLevel: INFO
+            message: "Received file ${header.CamelFileName}"
+        - process:
+            ref: samplePaymentProcessor
+        - to:
+            uri: "file:./data/outbox"

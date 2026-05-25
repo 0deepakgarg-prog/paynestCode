@@ -18,6 +18,9 @@ public class Account {
     @Column(name = "account_type", nullable = false)
     private String accountType;
 
+    @Column(name = "account_code", length = 100)
+    private String accountCode;
+
     @Column(name = "first_name")
     private String firstName;
 

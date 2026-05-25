@@ -8,6 +8,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,10 +19,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,12 +44,16 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -97,9 +113,22 @@ class SelfRegistrationRealApiE2ETest {
     private static final String KYC_ISSUE_DATE = "2020-01-15";
     private static final String KYC_EXPIRY_DATE = "2030-01-15";
     private static final String KYC_IMAGE_URL = "https://example.com/e2e/passport.png";
+    private static final HttpServer BILL_ENQUIRY_STUB_SERVER = startBillEnquiryStubServer();
+    private static volatile String lastBillEnquiryIntegratorRequestBody;
+    private static volatile String lastGenericIntegratorRequestBody;
 
     static {
         //runDatabaseBootstrap();
+    }
+
+    @DynamicPropertySource
+    static void registerIntegratorProperties(DynamicPropertyRegistry registry) {
+        registry.add(
+                "app.integrator.base-url",
+                () -> "http://localhost:" + BILL_ENQUIRY_STUB_SERVER.getAddress().getPort()
+        );
+        registry.add("app.integrator.generic-services-path", () -> "/services/execute");
+        registry.add("app.integrator.generic-services-async-path", () -> "/services/execute/async");
     }
 
     @LocalServerPort
@@ -132,6 +161,9 @@ class SelfRegistrationRealApiE2ETest {
             String authType,
             String authValue
     ) {
+    }
+
+    private record RetainedDocument(String documentId, String categoryCode, String typeCode, boolean thumbnailAvailable) {
     }
 
     private static void runDatabaseBootstrap() {
@@ -205,10 +237,12 @@ class SelfRegistrationRealApiE2ETest {
         ensureEnumeration("ACCOUNT_STATUS", "SUSPENDED", "SUSPENDED", "Temporarily suspended");
         ensureAccountStatusHistoryTable();
         ensureSubscriberRole();
+        ensureBillerRole();
+        //ensureDocumentSchemaAndCatalogue();
        // ensurePasscodeTable();
         ensureHoldingWallets();
        // ensureQrPaymentSchema();
-        ensureRegisteredToUnregisteredServiceCatalog();
+        ensureE2EServiceCatalog();
         //  cleanupMobileNumber(mobileNumber);
         log.info("E2E setup completed for mobileNumber={}", mobileNumber);
     }
@@ -468,6 +502,7 @@ class SelfRegistrationRealApiE2ETest {
                 .body("wallets.balances.find { it.walletType == 'MAIN' && it.currency == 'USD' }", notNullValue())
                 .body("wallets.balances.find { it.walletType == 'MAIN' && it.currency == 'INR' }", notNullValue());
         assertInitialWalletBalances(walletResponse);
+        validateDocumentServiceJourney(accountId, accessToken);
 
         log.info("E2E self-registration flow completed successfully for accountId={} mobileNumber={}",
                 accountId,
@@ -523,12 +558,14 @@ class SelfRegistrationRealApiE2ETest {
 
         String networkAdminMobile = "800" + String.valueOf(System.currentTimeMillis()).substring(5);
         String networkAdminLoginId = NETWORK_ADMIN_LOGIN_PREFIX + System.currentTimeMillis();
+        String networkAdminAccountCode = networkAdminLoginId;
         String registerNetworkAdminRequest = """
                 {
                   "requestId": "req-e2e-networkadmin-register",
                   "user": {
                     "mobileNumber": "%s",
                     "accountType": "ADMIN",
+                    "accountCode": "%s",
                     "firstName": "Network",
                     "lastName": "Admin",
                     "email": "networkadmin.e2e@example.com",
@@ -543,7 +580,7 @@ class SelfRegistrationRealApiE2ETest {
                     "role": "NETWORKADMIN"
                   }
                 }
-                """.formatted(networkAdminMobile, networkAdminLoginId);
+                """.formatted(networkAdminMobile, networkAdminAccountCode, networkAdminLoginId);
 
         Response registerNetworkAdminResponse = postJson(
                 "create networkadmin using superadmin JWT",
@@ -651,6 +688,16 @@ class SelfRegistrationRealApiE2ETest {
                   AND r.role_code = 'NETWORKADMIN'
                 """.formatted(tenantTable("user_roles"), tenantTable("roles")), Integer.class, networkAdminAccountId);
         assertEquals(1, networkAdminRoleCount);
+        assertBusinessAccount(
+                networkAdminAccountId,
+                "ADMIN",
+                networkAdminMobile,
+                networkAdminLoginId,
+                "Network",
+                "Admin",
+                "networkadmin.e2e@example.com",
+                networkAdminAccountCode
+        );
 
         createBusinessUserChangePasswordAndLogin(
                 networkAdminAccessToken,
@@ -1531,7 +1578,7 @@ class SelfRegistrationRealApiE2ETest {
         usdServiceChargeTransactionIds.add(usdCashOutTxnId);
         inrServiceChargeTransactionIds.add(inrCashOutTxnId);
 
-        assertServiceChargeTransactionsHaveOnlyTransferDetails(serviceChargeOnlyTransactionIds);
+        assertServiceChargeTransactionsHaveTransferAndChargeDetails(serviceChargeOnlyTransactionIds);
         assertCommissionTransactionDetails(usdCashInTxnId, agents.get(0).accountId(), "USD", new BigDecimal("25.00"));
         assertCommissionTransactionDetails(inrCashInTxnId, agents.get(1).accountId(), "INR", new BigDecimal("250.00"));
         assertCommissionTransactionDetails(usdCashOutTxnId, subscribers.get(0).accountId(), "USD", new BigDecimal("25.00"));
@@ -2039,6 +2086,357 @@ class SelfRegistrationRealApiE2ETest {
         assertMainCurrencyBalanceFromEnquiry(receiver, "INR", new BigDecimal("50.00"));
         assertMainCurrencyBalanceFromEnquiry(merchant, "INR", new BigDecimal("75.00"));
         assertAvailableWalletBalanceSumIsZero("after QR dynamic subscriber and merchant payments for USD and INR");
+    }
+
+    @Test
+    @Order(13)
+    void billEnquiry_shouldRegisterBillerAndSubscriberThenSendSubscriberTokenRequestWithFlowId() throws Exception {
+        assumeTrue(
+                hasColumn(TENANT_SCHEMA, "account", "account_code"),
+                "tenant_e2etest.account must include account_code for real account-code registration E2E"
+        );
+        String suffix = uniqueSuffix();
+        String subscriberMobile = mobileNumber("790", suffix);
+        String subscriberAccountCode = "subscriber" + suffix;
+        String billerMobile = mobileNumber("830", suffix);
+        String billerLoginId = "biller1login" + suffix;
+        String billerCode = "BILLENQ" + suffix;
+        lastBillEnquiryIntegratorRequestBody = null;
+        deactivateActiveAccountCode(billerCode);
+
+        Response registerBillerResponse = postJson(
+                "register biller with biller code",
+                "/api/v1/account/registerUser",
+                """
+                        {
+                          "requestId": "req-e2e-biller1-register",
+                          "user": {
+                            "mobileNumber": "%s",
+                            "accountType": "BILLER",
+                            "accountCode": "%s",
+                            "firstName": "Bill",
+                            "lastName": "Enquiry",
+                            "email": "biller1.%s.e2e@example.com",
+                            "address": "300 PayNest Biller Street",
+                            "gender": "MALE",
+                            "dateOfBirth": "1992-07-21",
+                            "preferredLang": "en",
+                            "nationality": "USA",
+                            "ssn": "222-33-4444",
+                            "remarks": "E2E bill enquiry biller",
+                            "loginId": "%s",
+                            "role": "BILLER"
+                          },
+                          "billerInfo": {
+                            "billerCategory": "UTILITIES",
+                            "billerCode": "%s",
+                            "billerSubCategory": "ELEC",
+                            "billerConfig": {
+                              "source": "bill-enquiry-e2e"
+                            },
+                            "billerSettings": {
+                              "enabled": true
+                            }
+                          }
+                        }
+                        """.formatted(billerMobile, billerCode, suffix, billerLoginId, billerCode)
+        );
+        String billerAccountId = registerBillerResponse.then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("requestId", equalTo("req-e2e-biller1-register"))
+                .body("message", equalTo("User registered successfully"))
+                .body("accountId", notNullValue())
+                .extract()
+                .path("accountId");
+        Integer billerInfoCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + tenantTable("account_biller_info") + " WHERE account_id = ? AND biller_code = ?",
+                Integer.class,
+                billerAccountId,
+                billerCode
+        );
+        assertEquals(1, billerInfoCount);
+        Integer billerAccountCodeCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + tenantTable("account") + " WHERE account_id = ? AND account_code = ?",
+                Integer.class,
+                billerAccountId,
+                billerCode
+        );
+        assertEquals(1, billerAccountCodeCount);
+        Integer billerIdentifierCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + tenantTable("account_identifiers") + " WHERE account_id = ? AND identifier_type = 'ACCOUNT_CODE' AND identifier_value = ? AND status = 'ACTIVE'",
+                Integer.class,
+                billerAccountId,
+                billerCode
+        );
+        assertEquals(1, billerIdentifierCount);
+
+        postJson(
+                "generate subscriber registration OTP for bill enquiry",
+                "/api/v1/account/register/selfGenOtp",
+                """
+                        {
+                          "requestId": "req-e2e-billenquiry-subscriber-otp",
+                          "user": {
+                            "mobileNumber": "%s"
+                          }
+                        }
+                        """.formatted(subscriberMobile)
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("requestId", equalTo("req-e2e-billenquiry-subscriber-otp"));
+
+        String subscriberOtp = readLatestCreatedRegistrationOtp(subscriberMobile);
+        String subscriberAccountId = postJson(
+                "register subscriber for bill enquiry",
+                "/api/v1/account/register/selfWithOtp",
+                """
+                        {
+                          "requestId": "req-e2e-billenquiry-subscriber-register",
+                          "user": {
+                            "mobileNumber": "%s",
+                            "otp": "%s",
+                            "accountCode": "%s"
+                          }
+                        }
+                        """.formatted(subscriberMobile, subscriberOtp, subscriberAccountCode)
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("requestId", equalTo("req-e2e-billenquiry-subscriber-register"))
+                .body("message", equalTo("User registered successfully"))
+                .body("accountId", notNullValue())
+                .extract()
+                .path("accountId");
+
+        postJson(
+                "change subscriber default PIN for bill enquiry",
+                "/api/v1/account/pin/changeDefault",
+                """
+                        {
+                          "oldPin": "%s",
+                          "newPin": "%s",
+                          "identifierType": "MOBILE",
+                          "identifierValue": "%s"
+                        }
+                        """.formatted(DEFAULT_PIN, UPDATED_PIN, subscriberMobile)
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("message", equalTo("PIN changed successfully"));
+
+        String subscriberAccessToken = loginWithPin(
+                "req-e2e-billenquiry-subscriber-login",
+                subscriberMobile,
+                UPDATED_PIN,
+                subscriberAccountId,
+                "SUBSCRIBER"
+        );
+
+        postJson(
+                "subscriber bill enquiry with flow1 partner data",
+                "/api/v1/bill/subscriber/enquiry",
+                subscriberAccessToken,
+                """
+                        {
+                          "biller_code": "%s",
+                          "partner_data": {
+                            "flowid": "flow1"
+                          }
+                        }
+                        """.formatted(billerCode)
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("message", equalTo("Bill enquiry successful"))
+                .body("billEnquiry.responseStatus", equalTo("SUCCESS"))
+                .body("billEnquiry.partner_data.flowid", equalTo("flow1"));
+
+        JSONObject integratorRequest = new JSONObject(lastBillEnquiryIntegratorRequestBody);
+        assertEquals(billerCode, integratorRequest.getString("biller_code"));
+        assertEquals(TENANT_ID, integratorRequest.getString("tenant_id"));
+        assertEquals("flow1", integratorRequest.getJSONObject("partner_data").getString("flowid"));
+    }
+
+    @Test
+    @Order(14)
+    void genericIpsServices_shouldExecuteInternalAndThirdPartyFlowsAndApplyP2PServiceCharge() {
+        String suffix = uniqueSuffix();
+        String initiatingNetAdminToken = createNetworkAdminAndLogin("ipsinit");
+        String approvingNetAdminToken = createNetworkAdminAndLogin("ipsapprove");
+
+        approveStock(initiatingNetAdminToken, approvingNetAdminToken, "req-e2e-ips-stock-" + suffix, "USD", "1000.00");
+
+        BusinessUser agent = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "AGENT",
+                "AGENT",
+                "ipsagent"
+        );
+        BusinessUser merchant = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "MERCHANT",
+                "MERCHANT",
+                "ipsmerchant"
+        );
+        BusinessUser biller = createBusinessUserChangePasswordAndLogin(
+                initiatingNetAdminToken,
+                "BILLER",
+                "BILLER",
+                "ipsbiller"
+        );
+        SubscriberUser subscriber = createSubscriberChangePinAndLogin(1400);
+        SubscriberUser receiver = createSubscriberChangePinAndLogin(1401);
+
+        performApprovedO2CTransaction(initiatingNetAdminToken, approvingNetAdminToken, agent, "250.00");
+        performCashInFromAgent(agent, subscriber, new BigDecimal("150.00"), "USD");
+
+        String ipsP2pTxnId = executeGenericFinancialService(
+                "IPSP2P",
+                subscriberParticipant(subscriber),
+                subscriberParticipant(receiver),
+                new BigDecimal("10.00"),
+                "TS"
+        );
+        assertApprovedFinancialTransferTransaction(
+                ipsP2pTxnId,
+                "IPSP2P",
+                subscriber.accountId(),
+                receiver.accountId(),
+                new BigDecimal("10.00")
+        );
+
+        String ipsMerchantTxnId = executeGenericFinancialService(
+                "IPSMP",
+                subscriberParticipant(subscriber),
+                businessParticipant(merchant),
+                new BigDecimal("5.00"),
+                "TS"
+        );
+        assertApprovedFinancialTransferTransaction(
+                ipsMerchantTxnId,
+                "IPSMP",
+                subscriber.accountId(),
+                merchant.accountId(),
+                new BigDecimal("5.00")
+        );
+
+        String ipsCashInTxnId = executeGenericFinancialService(
+                "IPSCIN",
+                businessParticipant(agent),
+                subscriberParticipant(subscriber),
+                new BigDecimal("20.00"),
+                "TS"
+        );
+        assertApprovedFinancialTransferTransaction(
+                ipsCashInTxnId,
+                "IPSCIN",
+                agent.accountId(),
+                subscriber.accountId(),
+                new BigDecimal("20.00")
+        );
+
+        deactivateActiveAllTagsPricingRules(initiatingNetAdminToken, "IPSCIN", "COMMISSION");
+        deactivateActiveAllTagsPricingRules(initiatingNetAdminToken, "IPSCIN", "DISCOUNT");
+        deactivateActiveAllTagsServiceChargeRules(initiatingNetAdminToken, "IPSCIN");
+        createPricingRule(
+                initiatingNetAdminToken,
+                "IPSCIN",
+                "COMMISSION",
+                "ALLTAGS",
+                "ALLTAGS",
+                "ipscin-commission-" + suffix,
+                flatServiceChargeConfig("0.25")
+        );
+        String commissionedIpsCashInTxnId = executeGenericFinancialService(
+                "IPSCIN",
+                businessParticipant(agent),
+                subscriberParticipant(subscriber),
+                new BigDecimal("20.00"),
+                "TS"
+        );
+        assertCommissionTransactionDetails(commissionedIpsCashInTxnId, agent.accountId(), "USD", new BigDecimal("25.00"));
+
+        lastGenericIntegratorRequestBody = null;
+        String ipsBillPayTxnId = executeGenericFinancialService(
+                "IPSBP",
+                subscriberParticipant(subscriber),
+                businessParticipant(biller),
+                new BigDecimal("7.00"),
+                "TA"
+        );
+        assertFinancialTransferTransaction(
+                ipsBillPayTxnId,
+                "IPSBP",
+                "TA",
+                subscriber.accountId(),
+                biller.accountId(),
+                new BigDecimal("7.00")
+        );
+        try {
+            assertGenericIntegratorRequest("IPSBP", ipsBillPayTxnId, "FINANCIAL");
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
+        lastGenericIntegratorRequestBody = null;
+        String ipsBillPaySyncTxnId = executeGenericFinancialService(
+                "IPSBPSC",
+                subscriberParticipant(subscriber),
+                businessParticipant(biller),
+                new BigDecimal("4.00"),
+                "TS"
+        );
+        assertApprovedFinancialTransferTransaction(
+                ipsBillPaySyncTxnId,
+                "IPSBPSC",
+                subscriber.accountId(),
+                biller.accountId(),
+                new BigDecimal("4.00")
+        );
+        try {
+            assertGenericIntegratorRequest("IPSBPSC", ipsBillPaySyncTxnId, "FINANCIAL");
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
+        deactivateActiveAllTagsPricingRules(initiatingNetAdminToken, "IPSP2P", "DISCOUNT");
+        deactivateActiveAllTagsServiceChargeRules(initiatingNetAdminToken, "IPSP2P");
+        createDiscountRule(
+                initiatingNetAdminToken,
+                "IPSP2P",
+                "ALLTAGS",
+                "ALLTAGS",
+                "ipsp2p-discount-" + suffix,
+                flatServiceChargeConfig("0.50")
+        );
+        String discountedIpsP2pTxnId = executeGenericFinancialService(
+                "IPSP2P",
+                subscriberParticipant(subscriber),
+                subscriberParticipant(receiver),
+                new BigDecimal("10.00"),
+                "TS"
+        );
+        assertDiscountTransactionDetails(discountedIpsP2pTxnId, subscriber.accountId(), "USD", new BigDecimal("50.00"));
+
+        createServiceChargeRule(
+                initiatingNetAdminToken,
+                "IPSP2P",
+                "ALLTAGS",
+                "ALLTAGS",
+                "ipsp2p-percent-" + suffix,
+                percentServiceChargeConfig("20")
+        );
+
+        String chargedIpsP2pTxnId = executeGenericFinancialService(
+                "IPSP2P",
+                subscriberParticipant(subscriber),
+                subscriberParticipant(receiver),
+                new BigDecimal("10.00"),
+                "TS"
+        );
+        assertIpsP2PServiceChargeAndDiscountEntries(chargedIpsP2pTxnId, subscriber.accountId(), receiver.accountId());
     }
 
     private void performDynamicQrPaymentScenario(
@@ -2560,14 +2958,14 @@ class SelfRegistrationRealApiE2ETest {
         return balance;
     }
 
-    private void assertServiceChargeTransactionsHaveOnlyTransferDetails(List<String> transactionIds) {
+    private void assertServiceChargeTransactionsHaveTransferAndChargeDetails(List<String> transactionIds) {
         for (String transactionId : transactionIds) {
             Integer detailCount = jdbcTemplate.queryForObject("""
                     SELECT COUNT(*)
                     FROM %s
                     WHERE transaction_id = ?
                     """.formatted(tenantTable("transaction_details")), Integer.class, transactionId);
-            assertEquals(2, detailCount, "Service-charge transaction should not write four details rows: " + transactionId);
+            assertEquals(4, detailCount, "Service-charge transaction should write transfer and charge details rows: " + transactionId);
 
             Integer systemDetailCount = jdbcTemplate.queryForObject("""
                     SELECT COUNT(*)
@@ -2575,7 +2973,7 @@ class SelfRegistrationRealApiE2ETest {
                     WHERE transaction_id = ?
                       AND UPPER(account_id) = 'SYS0001'
                     """.formatted(tenantTable("transaction_details")), Integer.class, transactionId);
-            assertEquals(0, systemDetailCount, "Service-charge transaction should not write SYS0001 transaction details: " + transactionId);
+            assertEquals(1, systemDetailCount, "Service-charge transaction should write SYS0001 charge credit detail: " + transactionId);
 
             List<Map<String, Object>> primaryDetails = jdbcTemplate.queryForList("""
                     SELECT attr_6_name,
@@ -3522,12 +3920,14 @@ class SelfRegistrationRealApiE2ETest {
         String uniqueSuffix = uniqueSuffix();
         String networkAdminMobile = mobileNumber("800", uniqueSuffix);
         String networkAdminLoginId = NETWORK_ADMIN_LOGIN_PREFIX + scenarioPrefix + uniqueSuffix;
+        String networkAdminAccountCode = networkAdminLoginId;
         String registerNetworkAdminRequest = """
                 {
                   "requestId": "req-e2e-%s-networkadmin-register",
                   "user": {
                     "mobileNumber": "%s",
                     "accountType": "ADMIN",
+                    "accountCode": "%s",
                     "firstName": "Network",
                     "lastName": "Admin",
                     "email": "networkadmin.%s.e2e@example.com",
@@ -3542,7 +3942,7 @@ class SelfRegistrationRealApiE2ETest {
                     "role": "NETWORKADMIN"
                   }
                 }
-                """.formatted(scenarioPrefix, networkAdminMobile, scenarioPrefix, networkAdminLoginId);
+                """.formatted(scenarioPrefix, networkAdminMobile, networkAdminAccountCode, scenarioPrefix, networkAdminLoginId);
 
         Response registerNetworkAdminResponse = postJson(
                 "create networkadmin using superadmin JWT",
@@ -3600,7 +4000,8 @@ class SelfRegistrationRealApiE2ETest {
                 networkAdminLoginId,
                 "Network",
                 "Admin",
-                "networkadmin." + scenarioPrefix + ".e2e@example.com"
+                "networkadmin." + scenarioPrefix + ".e2e@example.com",
+                networkAdminAccountCode
         );
         return networkAdminAccessToken;
     }
@@ -4283,6 +4684,196 @@ class SelfRegistrationRealApiE2ETest {
                 .body("transferStatus", equalTo(settlementStatus ? "TS" : "TF"));
     }
 
+    private String executeGenericFinancialService(
+            String serviceCode,
+            U2UParticipant sender,
+            U2UParticipant receiver,
+            BigDecimal amount,
+            String expectedStatus
+    ) {
+        return postJson(
+                "generic financial " + serviceCode + " from " + sender.accountId() + " to " + receiver.accountId(),
+                "/api/v1/services/financial/execute",
+                sender.accessToken(),
+                genericFinancialServiceRequest(serviceCode, sender, receiver, amount, "USD")
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("serviceExecution.serviceCode", equalTo(serviceCode))
+                .body("serviceExecution.status", equalTo(expectedStatus))
+                .body("serviceExecution.currency", equalTo("USD"))
+                .body("serviceExecution.pricingInfo", nullValue())
+                .body("serviceExecution.transactionId", notNullValue())
+                .extract()
+                .path("serviceExecution.transactionId");
+    }
+
+    private String genericFinancialServiceRequest(
+            String serviceCode,
+            U2UParticipant sender,
+            U2UParticipant receiver,
+            BigDecimal amount,
+            String currency
+    ) {
+        return """
+                {
+                  "requestGateway": "MOBILE",
+                  "language": "en",
+                  "serviceCode": "%s",
+                  "referenceId": "e2e-generic-%s-%s",
+                  "debitor": {
+                    "accountType": "%s",
+                    "identifier": {
+                      "type": "MOBILE",
+                      "value": "%s"
+                    },
+                    "walletType": "MAIN",
+                    "authentication": {
+                      "type": "%s",
+                      "value": "%s"
+                    }
+                  },
+                  "creditor": {
+                    "accountType": "%s",
+                    "identifier": {
+                      "type": "MOBILE",
+                      "value": "%s"
+                    },
+                    "walletType": "MAIN"
+                  },
+                  "financialInfo": {
+                    "amount": %s,
+                    "currency": "%s"
+                  },
+                  "partner_data": {
+                    "flowId": "generic-%s",
+                    "partnerReference": "partner-ref-%s",
+                    "customerReference": "%s",
+                    "billerReference": "%s",
+                    "channel": "MOBILE",
+                    "remarks": "dummy partner data for %s"
+                  },
+                  "metadata": {
+                    "scenario": "e2e-generic-ips",
+                    "authType": "%s"
+                  },
+                  "additionalInfo": {
+                    "receiverMobile": "%s"
+                  }
+                }
+                """.formatted(
+                serviceCode,
+                serviceCode.toLowerCase(Locale.ROOT),
+                uniqueSuffix(),
+                sender.accountType(),
+                sender.mobile(),
+                sender.authType(),
+                sender.authValue(),
+                receiver.accountType(),
+                receiver.mobile(),
+                amount.toPlainString(),
+                currency,
+                serviceCode.toLowerCase(Locale.ROOT),
+                serviceCode.toLowerCase(Locale.ROOT),
+                sender.mobile(),
+                receiver.mobile(),
+                serviceCode,
+                sender.authType(),
+                receiver.mobile()
+        );
+    }
+
+    private void assertGenericIntegratorRequest(String serviceCode, String transactionId, String serviceType) throws JSONException {
+        assertTrue(lastGenericIntegratorRequestBody != null && !lastGenericIntegratorRequestBody.isBlank());
+        JSONObject integratorRequest = new JSONObject(lastGenericIntegratorRequestBody);
+        assertEquals(serviceCode, integratorRequest.getString("serviceCode"));
+        assertEquals(transactionId, integratorRequest.getString("transactionId"));
+        assertEquals(serviceType, integratorRequest.getString("serviceType"));
+        JSONObject partnerData = integratorRequest.getJSONObject("partner_data");
+        assertEquals("generic-" + serviceCode.toLowerCase(Locale.ROOT), partnerData.getString("flowId"));
+        assertEquals("partner-ref-" + serviceCode.toLowerCase(Locale.ROOT), partnerData.getString("partnerReference"));
+        assertEquals("MOBILE", partnerData.getString("channel"));
+    }
+
+    private void assertIpsP2PServiceChargeAndDiscountEntries(
+            String transactionId,
+            String senderAccountId,
+            String receiverAccountId
+    ) {
+        Map<String, Object> transaction = jdbcTemplate.queryForMap("""
+                SELECT transaction_id,
+                       service_code,
+                       transfer_status,
+                       transaction_value,
+                       fees_details
+                FROM %s
+                WHERE transaction_id = ?
+                """.formatted(tenantTable("transactions")), transactionId);
+
+        assertEquals(transactionId, transaction.get("transaction_id"));
+        assertEquals("IPSP2P", transaction.get("service_code"));
+        assertEquals("TS", transaction.get("transfer_status"));
+        assertBigDecimalEquals(new BigDecimal("1150.00"), toBigDecimal(transaction.get("transaction_value")), "IPSP2P value with discount and service charge");
+        assertTrue(String.valueOf(transaction.get("fees_details")).contains("\"serviceCharge\""));
+        assertTrue(String.valueOf(transaction.get("fees_details")).contains("\"discount\""));
+
+        List<Map<String, Object>> details = jdbcTemplate.queryForList("""
+                SELECT txn_sequence_number,
+                       account_id,
+                       entry_type,
+                       transaction_value,
+                       wallet_type,
+                       currency,
+                       attr_6_name,
+                       attr_6_value
+                FROM %s
+                WHERE transaction_id = ?
+                ORDER BY txn_sequence_number
+                """.formatted(tenantTable("transaction_details")), transactionId);
+        assertEquals(6, details.size());
+        assertEquals(senderAccountId, details.get(0).get("account_id"));
+        assertEquals(receiverAccountId, details.get(1).get("account_id"));
+        assertEquals("DR", details.get(0).get("entry_type"));
+        assertEquals("CR", details.get(1).get("entry_type"));
+        assertBigDecimalEquals(new BigDecimal("950.00"), toBigDecimal(details.get(0).get("transaction_value")), "IPSP2P debit net transfer amount");
+        assertBigDecimalEquals(new BigDecimal("950.00"), toBigDecimal(details.get(1).get("transaction_value")), "IPSP2P credit net transfer amount");
+        assertTrue(String.valueOf(details.get(0).get("attr_6_name")).contains("SERVICE_CHARGE"));
+        assertTrue(String.valueOf(details.get(0).get("attr_6_name")).contains("DISCOUNT"));
+        assertTrue(String.valueOf(details.get(1).get("attr_6_name")).contains("SERVICE_CHARGE"));
+        assertTrue(String.valueOf(details.get(1).get("attr_6_name")).contains("DISCOUNT"));
+
+        Map<String, Object> serviceChargeDebit = details.get(2);
+        assertEquals(senderAccountId, serviceChargeDebit.get("account_id"));
+        assertEquals("DR", serviceChargeDebit.get("entry_type"));
+        assertEquals("USD", serviceChargeDebit.get("currency"));
+        assertBigDecimalEquals(new BigDecimal("200.00"), toBigDecimal(serviceChargeDebit.get("transaction_value")), "IPSP2P service charge debit amount");
+        assertPricingAttr6(serviceChargeDebit, "service_charge", new BigDecimal("200.00"));
+
+        Map<String, Object> serviceChargeCredit = details.get(3);
+        assertEquals("SYS0001", String.valueOf(serviceChargeCredit.get("account_id")).toUpperCase(Locale.ROOT));
+        assertEquals("CR", serviceChargeCredit.get("entry_type"));
+        assertEquals("SC", serviceChargeCredit.get("wallet_type"));
+        assertEquals("USD", serviceChargeCredit.get("currency"));
+        assertBigDecimalEquals(new BigDecimal("200.00"), toBigDecimal(serviceChargeCredit.get("transaction_value")), "IPSP2P service charge credit amount");
+        assertPricingAttr6(serviceChargeCredit, "service_charge", new BigDecimal("200.00"));
+
+        Map<String, Object> discountDebit = details.get(4);
+        assertEquals("SYS0001", String.valueOf(discountDebit.get("account_id")).toUpperCase(Locale.ROOT));
+        assertEquals("DR", discountDebit.get("entry_type"));
+        assertEquals("COMMDIS", discountDebit.get("wallet_type"));
+        assertEquals("USD", discountDebit.get("currency"));
+        assertBigDecimalEquals(new BigDecimal("50.00"), toBigDecimal(discountDebit.get("transaction_value")), "IPSP2P discount debit amount");
+        assertPricingAttr6(discountDebit, "discount", new BigDecimal("50.00"));
+
+        Map<String, Object> discountCredit = details.get(5);
+        assertEquals(senderAccountId, discountCredit.get("account_id"));
+        assertEquals("CR", discountCredit.get("entry_type"));
+        assertEquals("MAIN", discountCredit.get("wallet_type"));
+        assertEquals("USD", discountCredit.get("currency"));
+        assertBigDecimalEquals(new BigDecimal("50.00"), toBigDecimal(discountCredit.get("transaction_value")), "IPSP2P discount credit amount");
+        assertPricingAttr6(discountCredit, "discount", new BigDecimal("50.00"));
+    }
+
     private String readLatestCreatedRegistrationOtp(String mobile) {
         Integer otpValue = jdbcTemplate.queryForObject("""
                 SELECT otp_value
@@ -4318,6 +4909,13 @@ class SelfRegistrationRealApiE2ETest {
         String updatedPassword = BUSINESS_USER_UPDATED_PASSWORD + accountType.charAt(0);
         String firstName = roleCode.substring(0, 1) + roleCode.substring(1).toLowerCase();
         String email = loginPrefix + ".e2e@example.com";
+        String accountCode = loginPrefix + uniqueSuffix;
+        String accountIdentifierCode = switch (accountType) {
+            case "MERCHANT" -> "MER" + uniqueSuffix;
+            case "BILLER" -> "BIL" + uniqueSuffix;
+            default -> accountCode;
+        };
+        String profileSection = businessProfileSection(accountType, uniqueSuffix);
 
         String registerRequest = """
                 {
@@ -4325,6 +4923,7 @@ class SelfRegistrationRealApiE2ETest {
                   "user": {
                     "mobileNumber": "%s",
                     "accountType": "%s",
+                    "accountCode": "%s",
                     "firstName": "%s",
                     "lastName": "User",
                     "email": "%s",
@@ -4337,17 +4936,19 @@ class SelfRegistrationRealApiE2ETest {
                     "remarks": "E2E %s user",
                     "loginId": "%s",
                     "role": "%s"
-                  }
+                  }%s
                 }
                 """.formatted(
                 loginPrefix,
                 mobile,
                 accountType,
+                accountCode,
                 firstName,
                 email,
                 accountType,
                 loginId,
-                roleCode
+                roleCode,
+                profileSection
         );
 
         Response registerResponse = postJson(
@@ -4417,8 +5018,68 @@ class SelfRegistrationRealApiE2ETest {
 
         assertJwt(accessToken, accountId, "PASSWORD", accountType);
         assertUserRole(accountId, roleCode);
-        assertBusinessAccount(accountId, accountType, mobile, loginId, firstName, "User", email);
+        assertBusinessAccount(accountId, accountType, mobile, loginId, firstName, "User", email, accountIdentifierCode);
+        assertBusinessProfile(accountId, accountType, uniqueSuffix);
         return new BusinessUser(accountId, accountType, mobile, loginId, accessToken, updatedPassword);
+    }
+
+    private String businessProfileSection(String accountType, String uniqueSuffix) {
+        if ("MERCHANT".equalsIgnoreCase(accountType)) {
+            return """
+                    ,
+                                      "merchantInfo": {
+                                        "merchantCode": "MER%s",
+                                        "mccCodes": ["5411", "5812"],
+                                        "merchantConfig": {
+                                          "source": "e2e"
+                                        }
+                                      }
+                    """.formatted(uniqueSuffix);
+        }
+        if ("BILLER".equalsIgnoreCase(accountType)) {
+            return """
+                    ,
+                                      "billerInfo": {
+                                        "billerCategory": "UTILITIES",
+                                        "billerCode": "BIL%s",
+                                        "billerSubCategory": "ELEC",
+                                        "billerConfig": {
+                                          "source": "e2e"
+                                        },
+                                        "billerSettings": {
+                                          "enabled": true
+                                        }
+                                      }
+                    """.formatted(uniqueSuffix);
+        }
+        return "";
+    }
+
+    private void assertBusinessProfile(String accountId, String accountType, String uniqueSuffix) {
+        if ("MERCHANT".equalsIgnoreCase(accountType)) {
+            Integer merchantCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM " + tenantTable("account_merchant_info") + " WHERE account_id = ? AND merchant_code = ?",
+                    Integer.class,
+                    accountId,
+                    "MER" + uniqueSuffix
+            );
+            assertEquals(1, merchantCount);
+            Integer mccCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM " + tenantTable("account_merchant_mcc") + " mcc JOIN " + tenantTable("account_merchant_info") + " mi ON mi.merchant_info_id = mcc.merchant_info_id WHERE mi.account_id = ? AND mcc.mcc_code IN ('5411', '5812')",
+                    Integer.class,
+                    accountId
+            );
+            assertEquals(2, mccCount);
+        }
+        if ("BILLER".equalsIgnoreCase(accountType)) {
+            Integer billerCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM " + tenantTable("account_biller_info") + " WHERE account_id = ? AND biller_code = ?",
+                    Integer.class,
+                    accountId,
+                    "BIL" + uniqueSuffix
+            );
+            assertEquals(1, billerCount);
+        }
     }
 
     private String loginWithPassword(
@@ -5663,7 +6324,7 @@ class SelfRegistrationRealApiE2ETest {
 
         BigDecimal previousFicBalance = toBigDecimal(detail.get("previous_fic_balance"));
         BigDecimal expectedPostFicBalance = previousFicBalance;
-        if ("BILLPAY".equals(operationType) && "TA".equals(expectedStatus) && "CR".equals(expectedEntryType)) {
+        if (isThirdPartyBillPayment(operationType) && "TA".equals(expectedStatus) && "CR".equals(expectedEntryType)) {
             expectedPostFicBalance = previousFicBalance.add(expectedAmount);
         }
         assertBigDecimalEquals(
@@ -5691,6 +6352,10 @@ class SelfRegistrationRealApiE2ETest {
                 toBigDecimal(detail.get("frozen_balance")),
                 operationType + " " + expectedEntryType + " wallet frozen balance"
         );
+    }
+
+    private boolean isThirdPartyBillPayment(String operationType) {
+        return "BILLPAY".equals(operationType) || "IPSBP".equals(operationType);
     }
 
     private void assertMainUsdBalanceFromEnquiry(BusinessUser user, BigDecimal expectedDisplayBalance) {
@@ -6009,11 +6674,13 @@ class SelfRegistrationRealApiE2ETest {
             String loginId,
             String firstName,
             String lastName,
-            String email
+            String email,
+            String accountCode
     ) {
         Map<String, Object> account = jdbcTemplate.queryForMap("""
                 SELECT account_id,
                        account_type,
+                       account_code,
                        mobile_number,
                        first_name,
                        last_name,
@@ -6025,6 +6692,7 @@ class SelfRegistrationRealApiE2ETest {
 
         assertEquals(accountId, account.get("account_id"));
         assertEquals(accountType, account.get("account_type"));
+        assertEquals(accountCode, account.get("account_code"));
         assertEquals(mobile, account.get("mobile_number"));
         assertEquals(firstName, account.get("first_name"));
         assertEquals(lastName, account.get("last_name"));
@@ -6041,14 +6709,18 @@ class SelfRegistrationRealApiE2ETest {
                 ORDER BY identifier_type
                 """.formatted(tenantTable("account_identifiers")), accountId);
 
-        assertEquals(2, identifiers.size());
+        assertEquals(3, identifiers.size());
+        Map<String, Object> accountCodeIdentifier = findIdentifier(identifiers, "ACCOUNT_CODE");
         Map<String, Object> loginIdentifier = findIdentifier(identifiers, "LOGINID");
         Map<String, Object> mobileIdentifier = findIdentifier(identifiers, "MOBILE");
 
+        assertEquals(accountCode, accountCodeIdentifier.get("identifier_value"));
+        assertEquals("ACTIVE", accountCodeIdentifier.get("status"));
         assertEquals(loginId, loginIdentifier.get("identifier_value"));
         assertEquals("ACTIVE", loginIdentifier.get("status"));
         assertEquals(mobile, mobileIdentifier.get("identifier_value"));
         assertEquals("ACTIVE", mobileIdentifier.get("status"));
+        assertEquals(loginIdentifier.get("auth_id"), accountCodeIdentifier.get("auth_id"));
         assertEquals(loginIdentifier.get("auth_id"), mobileIdentifier.get("auth_id"));
 
         Integer activeAuthCount = jdbcTemplate.queryForObject("""
@@ -6303,6 +6975,31 @@ class SelfRegistrationRealApiE2ETest {
         return response;
     }
 
+    private Response getBinary(String stepName, String path, String bearerToken, Object... pathParams) {
+        log.info("E2E binary request: step=\"{}\" method=GET path={} tenantId={} authorization=\"Bearer <{} chars>\" pathParams={}",
+                stepName,
+                path,
+                TENANT_ID,
+                bearerToken.length(),
+                List.of(pathParams)
+        );
+
+        Response response = given()
+                .header("X-Tenant-Id", TENANT_ID)
+                .header("Authorization", "Bearer " + bearerToken)
+                .when()
+                .get(path, pathParams);
+
+        log.info("E2E binary response: step=\"{}\" status={} timeMs={} contentType={} length={}",
+                stepName,
+                response.statusCode(),
+                response.time(),
+                response.contentType(),
+                response.asByteArray().length
+        );
+        return response;
+    }
+
     private void logResponse(String stepName, Response response) {
         log.info("E2E step response: step=\"{}\" status={} timeMs={} body={}",
                 stepName,
@@ -6483,6 +7180,59 @@ class SelfRegistrationRealApiE2ETest {
         log.info("E2E ensure subscriber role completed");
     }
 
+    private void ensureBillerRole() {
+        log.info("E2E ensure biller role");
+        jdbcTemplate.update("""
+                INSERT INTO %s (
+                    role_code,
+                    role_name,
+                    role_type,
+                    description,
+                    status,
+                    created_at
+                )
+                SELECT 'BILLER', 'Biller', 'BILLER', 'Default biller role', 'ACTIVE', CURRENT_TIMESTAMP
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM %s
+                    WHERE UPPER(role_code) = 'BILLER'
+                )
+                """.formatted(tenantTable("roles"), tenantTable("roles")));
+        log.info("E2E ensure biller role completed");
+    }
+
+    private void deactivateActiveAccountCode(String accountCode) {
+        List<String> accountIds = jdbcTemplate.queryForList("""
+                SELECT account_id
+                FROM %s
+                WHERE identifier_type = 'ACCOUNT_CODE'
+                  AND identifier_value = ?
+                  AND status = 'ACTIVE'
+                """.formatted(tenantTable("account_identifiers")), String.class, accountCode);
+
+        if (accountIds.isEmpty()) {
+            return;
+        }
+
+        jdbcTemplate.update("""
+                UPDATE %s
+                SET status = 'INACTIVE',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE identifier_type = 'ACCOUNT_CODE'
+                  AND identifier_value = ?
+                  AND status = 'ACTIVE'
+                """.formatted(tenantTable("account_identifiers")), accountCode);
+        jdbcTemplate.update("""
+                UPDATE %s
+                SET status = 'INACTIVE',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE account_id IN (%s)
+                """.formatted(
+                tenantTable("account"),
+                String.join(",", accountIds.stream().map(id -> "?").toList())
+        ), accountIds.toArray());
+    }
+
     private void ensurePasscodeTable() {
         jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS %s (
@@ -6558,6 +7308,158 @@ class SelfRegistrationRealApiE2ETest {
                 """.formatted(tenantTable("qr_payment_intent")));
     }
 
+    private void ensureDocumentSchemaAndCatalogue() {
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    category_id BIGSERIAL PRIMARY KEY,
+                    category_code VARCHAR(50) NOT NULL UNIQUE,
+                    category_name VARCHAR(100) NOT NULL,
+                    description VARCHAR(255),
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """.formatted(tenantTable("document_category")));
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    document_type_id BIGSERIAL PRIMARY KEY,
+                    category_id BIGINT NOT NULL REFERENCES %s(category_id),
+                    type_code VARCHAR(75) NOT NULL UNIQUE,
+                    type_name VARCHAR(150) NOT NULL,
+                    description VARCHAR(255),
+                    multiple_allowed BOOLEAN NOT NULL DEFAULT TRUE,
+                    verification_required BOOLEAN NOT NULL DEFAULT FALSE,
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """.formatted(tenantTable("document_type"), tenantTable("document_category")));
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    document_type_id BIGINT NOT NULL REFERENCES %s(document_type_id),
+                    entity_type VARCHAR(30) NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (document_type_id, entity_type)
+                )
+                """.formatted(tenantTable("document_type_entity"), tenantTable("document_type")));
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    document_id UUID PRIMARY KEY,
+                    tenant_id VARCHAR(100) NOT NULL,
+                    document_type_id BIGINT NOT NULL REFERENCES %s(document_type_id),
+                    document_name VARCHAR(255) NOT NULL,
+                    original_file_name VARCHAR(255) NOT NULL,
+                    content_type VARCHAR(150) NOT NULL,
+                    file_size_bytes BIGINT NOT NULL,
+                    checksum_sha256 VARCHAR(64),
+                    gridfs_bucket_name VARCHAR(100) NOT NULL DEFAULT 'fs',
+                    gridfs_file_id VARCHAR(64) NOT NULL UNIQUE,
+                    thumbnail_gridfs_file_id VARCHAR(64),
+                    thumbnail_content_type VARCHAR(150),
+                    thumbnail_size_bytes BIGINT,
+                    status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+                    uploaded_by VARCHAR(100) NOT NULL,
+                    uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    deleted_at TIMESTAMP
+                )
+                """.formatted(tenantTable("stored_document"), tenantTable("document_type")));
+        jdbcTemplate.execute("""
+                ALTER TABLE %s
+                    ADD COLUMN IF NOT EXISTS thumbnail_gridfs_file_id VARCHAR(64),
+                    ADD COLUMN IF NOT EXISTS thumbnail_content_type VARCHAR(150),
+                    ADD COLUMN IF NOT EXISTS thumbnail_size_bytes BIGINT
+                """.formatted(tenantTable("stored_document")));
+        jdbcTemplate.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS uk_stored_document_thumbnail_gridfs_file_id
+                ON %s (thumbnail_gridfs_file_id)
+                WHERE thumbnail_gridfs_file_id IS NOT NULL
+                """.formatted(tenantTable("stored_document")));
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS %s (
+                    document_reference_id BIGSERIAL PRIMARY KEY,
+                    document_id UUID NOT NULL REFERENCES %s(document_id),
+                    entity_type VARCHAR(30) NOT NULL,
+                    entity_id VARCHAR(100) NOT NULL,
+                    reference_role VARCHAR(30) NOT NULL DEFAULT 'OWNER',
+                    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (document_id, entity_type, entity_id, reference_role)
+                )
+                """.formatted(tenantTable("document_reference"), tenantTable("stored_document")));
+
+        jdbcTemplate.update("""
+                INSERT INTO %s (category_code, category_name, is_active)
+                VALUES
+                    ('IDENTITY', 'Identity Documents', TRUE),
+                    ('FINANCIAL', 'Financial Documents', TRUE),
+                    ('LEGAL', 'Legal Documents', TRUE),
+                    ('SUPPORTING', 'Supporting Documents', TRUE)
+                ON CONFLICT (category_code) DO UPDATE SET
+                    category_name = EXCLUDED.category_name,
+                    is_active = TRUE,
+                    updated_at = CURRENT_TIMESTAMP
+                """.formatted(tenantTable("document_category")));
+        jdbcTemplate.update("""
+                INSERT INTO %s (
+                    category_id,
+                    type_code,
+                    type_name,
+                    multiple_allowed,
+                    verification_required,
+                    is_active
+                )
+                SELECT category_id, 'SELFIE', 'Selfie', TRUE, TRUE, TRUE
+                FROM %s
+                WHERE category_code = 'IDENTITY'
+                ON CONFLICT (type_code) DO UPDATE SET
+                    category_id = EXCLUDED.category_id,
+                    type_name = EXCLUDED.type_name,
+                    verification_required = TRUE,
+                    is_active = TRUE,
+                    updated_at = CURRENT_TIMESTAMP
+                """.formatted(tenantTable("document_type"), tenantTable("document_category")));
+        jdbcTemplate.update("""
+                INSERT INTO %s (
+                    category_id,
+                    type_code,
+                    type_name,
+                    multiple_allowed,
+                    verification_required,
+                    is_active
+                )
+                SELECT category.category_id,
+                       seed.type_code,
+                       seed.type_name,
+                       TRUE,
+                       seed.verification_required,
+                       TRUE
+                FROM (
+                    VALUES
+                        ('IDENTITY', 'PASSPORT', 'Passport', TRUE),
+                        ('FINANCIAL', 'BANK_STATEMENT', 'Bank Statement', FALSE),
+                        ('LEGAL', 'CUSTOMER_CONSENT', 'Customer Consent', TRUE),
+                        ('SUPPORTING', 'SCREENSHOT', 'Screenshot', FALSE)
+                ) AS seed(category_code, type_code, type_name, verification_required)
+                JOIN %s category ON category.category_code = seed.category_code
+                ON CONFLICT (type_code) DO UPDATE SET
+                    category_id = EXCLUDED.category_id,
+                    type_name = EXCLUDED.type_name,
+                    verification_required = EXCLUDED.verification_required,
+                    is_active = TRUE,
+                    updated_at = CURRENT_TIMESTAMP
+                """.formatted(tenantTable("document_type"), tenantTable("document_category")));
+        jdbcTemplate.update("""
+                INSERT INTO %s (document_type_id, entity_type)
+                SELECT document_type_id, 'CUSTOMER'
+                FROM %s
+                WHERE type_code IN ('SELFIE', 'PASSPORT', 'BANK_STATEMENT', 'CUSTOMER_CONSENT', 'SCREENSHOT')
+                ON CONFLICT (document_type_id, entity_type) DO NOTHING
+                """.formatted(tenantTable("document_type_entity"), tenantTable("document_type")));
+    }
+
     private void ensureHoldingWallets() {
         ensureHoldingWallet(90000000050L, "USD", "Holding wallet for unregistered USD transfers");
         ensureHoldingWallet(90000000051L, "INR", "Holding wallet for unregistered INR transfers");
@@ -6603,7 +7505,7 @@ class SelfRegistrationRealApiE2ETest {
                 """.formatted(tenantTable("wallet_balance")), walletId);
     }
 
-    private void ensureRegisteredToUnregisteredServiceCatalog() {
+    private void ensureE2EServiceCatalog() {
         jdbcTemplate.update("""
                 INSERT INTO %s (
                     service_code,
@@ -6612,18 +7514,29 @@ class SelfRegistrationRealApiE2ETest {
                     service_category,
                     transaction_type,
                     is_financial,
+                    send_to_integrator,
+                    requires_confirmation,
+                    integrator_call_mode,
                     is_active,
                     display_order
                 )
                 VALUES
-                    ('R2U', 'Registered to Unregistered Transfer', 'Subscriber transfer to unregistered receiver holding wallet', 'PAYMENT', 'TRANSFER', TRUE, TRUE, 90),
-                    ('CASHOUT_BY_CODE', 'Cashout by Code', 'Agent cashout using unregistered receiver passcode', 'CASH', 'TRANSFER', TRUE, TRUE, 91)
+                    ('R2U', 'Registered to Unregistered Transfer', 'Subscriber transfer to unregistered receiver holding wallet', 'PAYMENT', 'TRANSFER', TRUE, FALSE, FALSE, 'SYNC', TRUE, 90),
+                    ('CASHOUT_BY_CODE', 'Cashout by Code', 'Agent cashout using unregistered receiver passcode', 'CASH', 'TRANSFER', TRUE, FALSE, FALSE, 'SYNC', TRUE, 91),
+                    ('IPSP2P', 'Internal P2P Transfer', 'Internal subscriber to subscriber transfer', 'PAYMENT', 'TRANSFER', TRUE, FALSE, FALSE, 'SYNC', TRUE, 100),
+                    ('IPSMP', 'Internal Subscriber Merchant Payment', 'Internal transfer from subscriber to merchant', 'PAYMENT', 'PAYMENT', TRUE, FALSE, FALSE, 'SYNC', TRUE, 110),
+                    ('IPSCIN', 'Internal Agent Cash In', 'Internal transfer from agent to subscriber', 'PAYMENT', 'CREDIT', TRUE, FALSE, FALSE, 'SYNC', TRUE, 120),
+                    ('IPSBP', 'Third Party Bill Payment', 'Bill payment for third party requiring integrator confirmation', 'PAYMENT', 'PAYMENT', TRUE, TRUE, TRUE, 'ASYNC', TRUE, 130),
+                    ('IPSBPSC', 'Third Party Bill Payment Sync', 'Synchronous third party bill payment', 'PAYMENT', 'PAYMENT', TRUE, TRUE, FALSE, 'SYNC', TRUE, 140)
                 ON CONFLICT (service_code) DO UPDATE
                 SET service_name = EXCLUDED.service_name,
                     description = EXCLUDED.description,
                     service_category = EXCLUDED.service_category,
                     transaction_type = EXCLUDED.transaction_type,
                     is_financial = EXCLUDED.is_financial,
+                    send_to_integrator = EXCLUDED.send_to_integrator,
+                    requires_confirmation = EXCLUDED.requires_confirmation,
+                    integrator_call_mode = EXCLUDED.integrator_call_mode,
                     is_active = TRUE,
                     display_order = EXCLUDED.display_order,
                     updated_at = CURRENT_TIMESTAMP
@@ -6632,5 +7545,299 @@ class SelfRegistrationRealApiE2ETest {
 
     private String tenantTable(String tableName) {
         return TENANT_SCHEMA + "." + tableName;
+    }
+
+    private void validateDocumentServiceJourney(String accountId, String accessToken) {
+        getJson(
+                "document categories requires authentication",
+                "/api/v1/document-categories",
+                accessToken
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("documentCategories.find { it.categoryCode == 'IDENTITY' }.categoryName", equalTo("Identity Documents"));
+
+        Response typesResponse = given()
+                .contentType(ContentType.JSON)
+                .header("X-Tenant-Id", TENANT_ID)
+                .header("Authorization", "Bearer " + accessToken)
+                .queryParam("entityType", "CUSTOMER")
+                .queryParam("categoryCode", "IDENTITY")
+                .when()
+                .get("/api/v1/document-types");
+        logResponse("list customer identity document types", typesResponse);
+        typesResponse.then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("documentTypes.find { it.typeCode == 'SELFIE' }.verificationRequired", equalTo(true))
+                .body("documentTypes.find { it.typeCode == 'SELFIE' }.entityTypes", org.hamcrest.Matchers.hasItem("CUSTOMER"));
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("X-Tenant-Id", TENANT_ID)
+                .when()
+                .get("/api/v1/document-categories")
+                .then()
+                .statusCode(401);
+
+        byte[] originalSelfie = createSelfiePng();
+        Response uploadResponse = given()
+                .header("X-Tenant-Id", TENANT_ID)
+                .header("Authorization", "Bearer " + accessToken)
+                .multiPart("entityType", "CUSTOMER")
+                .multiPart("entityId", accountId)
+                .multiPart("documentTypeCode", "SELFIE")
+                .multiPart("documentName", "Self Registration Selfie")
+                .multiPart("file", "selfie.png", originalSelfie, "image/png")
+                .when()
+                .post("/api/v1/documents");
+        logResponse("upload subscriber selfie document", uploadResponse);
+        String documentId = uploadResponse.then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("document.entityType", equalTo("CUSTOMER"))
+                .body("document.entityId", equalTo(accountId))
+                .body("document.documentTypeCode", equalTo("SELFIE"))
+                .body("document.contentType", equalTo("image/png"))
+                .body("document.thumbnailAvailable", equalTo(true))
+                .body("document.documentId", notNullValue())
+                .extract()
+                .path("document.documentId");
+
+        getJson(
+                "read uploaded document metadata",
+                "/api/v1/documents/{documentId}",
+                accessToken,
+                documentId
+        ).then()
+                .statusCode(200)
+                .body("document.documentId", equalTo(documentId))
+                .body("document.originalFileName", equalTo("selfie.png"))
+                .body("document.thumbnailAvailable", equalTo(true));
+
+        getJson(
+                "list customer documents by entity",
+                "/api/v1/documents/entity/CUSTOMER/{accountId}",
+                accessToken,
+                accountId
+        ).then()
+                .statusCode(200)
+                .body("documents.find { it.documentId == '" + documentId + "' }.documentTypeCode", equalTo("SELFIE"));
+
+        getJson(
+                "list account documents",
+                "/api/v1/accounts/{accountId}/documents",
+                accessToken,
+                accountId
+        ).then()
+                .statusCode(200)
+                .body("documents.find { it.documentId == '" + documentId + "' }.thumbnailAvailable", equalTo(true));
+
+        Response originalDownload = getBinary(
+                "download original selfie",
+                "/api/v1/documents/{documentId}/download",
+                accessToken,
+                documentId
+        );
+        originalDownload.then()
+                .statusCode(200)
+                .contentType("image/png");
+        assertArrayEquals(originalSelfie, originalDownload.asByteArray(), "Downloaded original file differs from upload");
+
+        Response thumbnailDownload = getBinary(
+                "download selfie thumbnail",
+                "/api/v1/documents/{documentId}/thumbnail",
+                accessToken,
+                documentId
+        );
+        thumbnailDownload.then()
+                .statusCode(200)
+                .contentType("image/jpeg");
+        BufferedImage thumbnail = readImage(thumbnailDownload.asByteArray());
+        assertNotNull(thumbnail, "Thumbnail response must be a decodable image");
+        assertTrue(thumbnail.getWidth() <= 320);
+        assertTrue(thumbnail.getHeight() <= 320);
+        assertTrue(thumbnail.getWidth() < 720 || thumbnail.getHeight() < 480);
+
+        deleteJson(
+                "delete uploaded selfie document",
+                "/api/v1/documents/{documentId}",
+                accessToken,
+                documentId
+        ).then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("documentId", equalTo(documentId));
+
+        getJson(
+                "deleted document is no longer available",
+                "/api/v1/documents/{documentId}",
+                accessToken,
+                documentId
+        ).then()
+                .statusCode(404)
+                .body("code", equalTo(ErrorCodes.DOCUMENT_NOT_FOUND));
+
+        getJson(
+                "deleted document disappears from list",
+                "/api/v1/accounts/{accountId}/documents",
+                accessToken,
+                accountId
+        ).then()
+                .statusCode(200)
+                .body("documents.find { it.documentId == '" + documentId + "' }", nullValue());
+
+        List<RetainedDocument> retainedDocuments = List.of(
+                uploadRetainedDocument(accountId, accessToken, "PASSPORT", "Retained Passport", "passport.png", createSelfiePng(), "image/png", "IDENTITY", true),
+                uploadRetainedDocument(accountId, accessToken, "BANK_STATEMENT", "Retained Bank Statement", "bank-statement.txt", "E2E monthly bank statement".getBytes(StandardCharsets.UTF_8), "text/plain", "FINANCIAL", false),
+                uploadRetainedDocument(accountId, accessToken, "CUSTOMER_CONSENT", "Retained Customer Consent", "consent.png", createSelfiePng(), "image/png", "LEGAL", true),
+                uploadRetainedDocument(accountId, accessToken, "SCREENSHOT", "Retained Screenshot", "screenshot.png", createSelfiePng(), "image/png", "SUPPORTING", false)
+        );
+
+        Response retainedList = getJson(
+                "list retained customer documents across categories",
+                "/api/v1/accounts/{accountId}/documents",
+                accessToken,
+                accountId
+        );
+        retainedList.then()
+                .statusCode(200)
+                .body("documents.find { it.documentTypeCode == 'PASSPORT' }.categoryCode", equalTo("IDENTITY"))
+                .body("documents.find { it.documentTypeCode == 'BANK_STATEMENT' }.categoryCode", equalTo("FINANCIAL"))
+                .body("documents.find { it.documentTypeCode == 'CUSTOMER_CONSENT' }.categoryCode", equalTo("LEGAL"))
+                .body("documents.find { it.documentTypeCode == 'SCREENSHOT' }.categoryCode", equalTo("SUPPORTING"));
+        for (RetainedDocument retainedDocument : retainedDocuments) {
+            retainedList.then()
+                    .body("documents.find { it.documentId == '" + retainedDocument.documentId() + "' }.categoryCode",
+                            equalTo(retainedDocument.categoryCode()))
+                    .body("documents.find { it.documentId == '" + retainedDocument.documentId() + "' }.thumbnailAvailable",
+                            equalTo(retainedDocument.thumbnailAvailable()));
+        }
+
+        getBinary(
+                "retained passport thumbnail remains available",
+                "/api/v1/documents/{documentId}/thumbnail",
+                accessToken,
+                retainedDocuments.get(0).documentId()
+        ).then()
+                .statusCode(200)
+                .contentType("image/jpeg");
+        getJson(
+                "retained screenshot has no thumbnail",
+                "/api/v1/documents/{documentId}/thumbnail",
+                accessToken,
+                retainedDocuments.get(3).documentId()
+        ).then()
+                .statusCode(404)
+                .body("code", equalTo(ErrorCodes.DOCUMENT_NOT_FOUND));
+    }
+
+    private RetainedDocument uploadRetainedDocument(
+            String accountId,
+            String accessToken,
+            String documentTypeCode,
+            String documentName,
+            String fileName,
+            byte[] content,
+            String contentType,
+            String expectedCategory,
+            boolean expectedThumbnail
+    ) {
+        Response response = given()
+                .header("X-Tenant-Id", TENANT_ID)
+                .header("Authorization", "Bearer " + accessToken)
+                .multiPart("entityType", "CUSTOMER")
+                .multiPart("entityId", accountId)
+                .multiPart("documentTypeCode", documentTypeCode)
+                .multiPart("documentName", documentName)
+                .multiPart("file", fileName, content, contentType)
+                .when()
+                .post("/api/v1/documents");
+        logResponse("upload retained document " + documentTypeCode, response);
+        String documentId = response.then()
+                .statusCode(200)
+                .body("document.categoryCode", equalTo(expectedCategory))
+                .body("document.documentTypeCode", equalTo(documentTypeCode))
+                .body("document.thumbnailAvailable", equalTo(expectedThumbnail))
+                .body("document.documentId", notNullValue())
+                .extract()
+                .path("document.documentId");
+        return new RetainedDocument(documentId, expectedCategory, documentTypeCode, expectedThumbnail);
+    }
+
+    private byte[] createSelfiePng() {
+        BufferedImage image = new BufferedImage(720, 480, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < image.getWidth(); x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+                int red = (x * 255) / image.getWidth();
+                int green = (y * 255) / image.getHeight();
+                int blue = (x + y) % 256;
+                image.setRGB(x, y, (red << 16) | (green << 8) | blue);
+            }
+        }
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            ImageIO.write(image, "png", output);
+            return output.toByteArray();
+        } catch (IOException ex) {
+            throw new AssertionError("Unable to create E2E selfie image", ex);
+        }
+    }
+
+    private BufferedImage readImage(byte[] content) {
+        try {
+            return ImageIO.read(new ByteArrayInputStream(content));
+        } catch (IOException ex) {
+            throw new AssertionError("Unable to read image response", ex);
+        }
+    }
+
+    private static HttpServer startBillEnquiryStubServer() {
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+            server.createContext("/bill/enquiry", SelfRegistrationRealApiE2ETest::handleBillEnquiryStubRequest);
+            server.createContext("/services/execute", SelfRegistrationRealApiE2ETest::handleGenericIntegratorStubRequest);
+            server.createContext("/services/execute/async", SelfRegistrationRealApiE2ETest::handleGenericIntegratorStubRequest);
+            server.start();
+            return server;
+        } catch (IOException ex) {
+            throw new ExceptionInInitializerError(ex);
+        }
+    }
+
+    private static void handleBillEnquiryStubRequest(HttpExchange exchange) throws IOException {
+        lastBillEnquiryIntegratorRequestBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        byte[] response = """
+                {
+                  "responseStatus": "SUCCESS",
+                  "partner_data": {
+                    "flowid": "flow1"
+                  }
+                }
+                """.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, response.length);
+        try (OutputStream responseBody = exchange.getResponseBody()) {
+            responseBody.write(response);
+        } finally {
+            exchange.close();
+        }
+    }
+
+    private static void handleGenericIntegratorStubRequest(HttpExchange exchange) throws IOException {
+        lastGenericIntegratorRequestBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        byte[] response = """
+                {
+                  "responseStatus": "SUCCESS",
+                  "code": "INTEGRATOR_ACCEPTED",
+                  "message": "Generic service accepted"
+                }
+                """.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, response.length);
+        try (OutputStream responseBody = exchange.getResponseBody()) {
+            responseBody.write(response);
+        } finally {
+            exchange.close();
+        }
     }
 }

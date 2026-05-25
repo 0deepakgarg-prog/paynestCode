@@ -16,9 +16,17 @@ public interface EnumerationRepository extends JpaRepository<Enumeration, Long> 
 
     List<Enumeration> findByEnumTypeAndIsActive(String type, boolean isActive);
 
+    List<Enumeration> findByEnumTypeIgnoreCaseAndIsActiveTrueOrderByDisplayOrderAscEnumValueAsc(String enumType);
+
     Optional<Enumeration> findByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(
             String enumType,
             String enumCode
+    );
+
+    boolean existsByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndParentEnumIdAndIsActiveTrue(
+            String enumType,
+            String enumCode,
+            Long parentEnumId
     );
 
     boolean existsByEnumTypeIgnoreCaseAndEnumCodeIgnoreCaseAndIsActiveTrue(

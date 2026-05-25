@@ -10,6 +10,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -19,6 +20,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AccountRegistrationE2ETest {
@@ -53,6 +55,7 @@ class AccountRegistrationE2ETest {
                   "user": {
                     "mobileNumber": "9876543210",
                     "accountType": "MERCHANT",
+                    "accountCode": "MER001",
                     "firstName": "John",
                     "lastName": "Doe",
                     "email": "john.doe@test.com",
@@ -64,6 +67,13 @@ class AccountRegistrationE2ETest {
                     "ssn": "123456789",
                     "remarks": "new user",
                     "loginId": "johnlogin01"
+                  },
+                  "merchantInfo": {
+                    "merchantCode": "MERCHANT_001",
+                    "mccCodes": ["5411", "5812"],
+                    "merchantConfig": {
+                      "settlementMode": "DAILY"
+                    }
                   }
                 }
                 """;
@@ -78,6 +88,20 @@ class AccountRegistrationE2ETest {
                 .statusCode(200)
                 .body("status", equalTo("SUCCESS"))
                 .body("accountId", equalTo("AC202602240001"));
+
+        ArgumentCaptor<RegisterUserRequest> requestCaptor = ArgumentCaptor.forClass(RegisterUserRequest.class);
+        verify(accountService).registerAccountByRole(requestCaptor.capture());
+        RegisterUserRequest capturedRequest = requestCaptor.getValue();
+        org.junit.jupiter.api.Assertions.assertNotNull(capturedRequest.getMerchantInfo());
+        org.junit.jupiter.api.Assertions.assertEquals("MERCHANT_001", capturedRequest.getMerchantInfo().getMerchantCode());
+        org.junit.jupiter.api.Assertions.assertEquals(
+                java.util.List.of("5411", "5812"),
+                capturedRequest.getMerchantInfo().getMccCodes()
+        );
+        org.junit.jupiter.api.Assertions.assertEquals(
+                "DAILY",
+                capturedRequest.getMerchantInfo().getMerchantConfig().get("settlementMode").asText()
+        );
     }
 
     @Test

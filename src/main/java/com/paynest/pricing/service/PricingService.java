@@ -234,23 +234,39 @@ public class PricingService {
                 request.getCreditor().getIdentifier().getValue()
         );
 
-        List<String> payerTagKeys = new ArrayList<>(resolveActiveTagKeys(payerIdentifier.getAccountId()));
-        List<String> payeeTagKeys = new ArrayList<>(resolveActiveTagKeys(payeeIdentifier.getAccountId()));
+        return calculatePricingAmountsForAccounts(
+                request.getOperationType(),
+                request.getTransaction().getCurrency(),
+                request.getTransaction().getAmount(),
+                payerIdentifier.getAccountId(),
+                payeeIdentifier.getAccountId()
+        );
+    }
+
+    public PricingComputationResponse calculatePricingAmountsForAccounts(
+            String serviceCode,
+            String currency,
+            BigDecimal txnAmount,
+            String payerAccountId,
+            String payeeAccountId
+    ) {
+        List<String> payerTagKeys = new ArrayList<>(resolveActiveTagKeys(payerAccountId));
+        List<String> payeeTagKeys = new ArrayList<>(resolveActiveTagKeys(payeeAccountId));
 
         log.info(
                 "Starting pricing calculation for operationType={}, payerAccountId={}, payeeAccountId={}, payerTags={}, payeeTags={}, txnAmount={}, currency={}",
-                request.getOperationType(),
-                payerIdentifier.getAccountId(),
-                payeeIdentifier.getAccountId(),
+                serviceCode,
+                payerAccountId,
+                payeeAccountId,
                 payerTagKeys,
                 payeeTagKeys,
-                request.getTransaction().getAmount(),
-                request.getTransaction().getCurrency()
+                txnAmount,
+                currency
         );
 
         List<PricingRule> campaignRules = pricingRuleRepository.findApplicableCampaignRules(
-                request.getOperationType(),
-                request.getTransaction().getCurrency(),
+                serviceCode,
+                currency,
                 TenantTime.now()
         );
 
@@ -269,13 +285,13 @@ public class PricingService {
             for (String payeeTagKey : payeeTagKeys) {
                 long combinationStartNanos = System.nanoTime();
                 PricingComputationResponse currentResponse = calculatePricingAmountsForRuleTypes(
-                        request.getOperationType(),
+                        serviceCode,
                         payerTagKey,
                         payeeTagKey,
-                        request.getTransaction().getCurrency(),
-                        request.getTransaction().getAmount(),
-                        payerIdentifier.getAccountId(),
-                        payeeIdentifier.getAccountId(),
+                        currency,
+                        txnAmount,
+                        payerAccountId,
+                        payeeAccountId,
                         SERVICE_CHARGE_RULE_TYPES
                 );
                 long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - combinationStartNanos);
@@ -319,23 +335,23 @@ public class PricingService {
             if (isCampaignServiceChargeSelection(selectedResponse)) {
                 applyMaximumComponentAmounts(
                         selectedResponse,
-                        request.getOperationType(),
+                        serviceCode,
                         payerTagKeys,
                         payeeTagKeys,
-                        request.getTransaction().getCurrency(),
-                        request.getTransaction().getAmount(),
-                        payerIdentifier.getAccountId(),
-                        payeeIdentifier.getAccountId()
+                        currency,
+                        txnAmount,
+                        payerAccountId,
+                        payeeAccountId
                 );
             } else {
                 PricingComputationResponse commissionResponse = calculatePricingAmountsForRuleTypes(
-                        request.getOperationType(),
+                        serviceCode,
                         selectedResponse.getSenderTagKey(),
                         selectedResponse.getReceiverTagKey(),
-                        request.getTransaction().getCurrency(),
-                        request.getTransaction().getAmount(),
-                        payerIdentifier.getAccountId(),
-                        payeeIdentifier.getAccountId(),
+                        currency,
+                        txnAmount,
+                        payerAccountId,
+                        payeeAccountId,
                         COMMISSION_RULE_TYPES
                 );
 
@@ -346,13 +362,13 @@ public class PricingService {
                 }
 
                 PricingComputationResponse discountResponse = calculatePricingAmountsForRuleTypes(
-                        request.getOperationType(),
+                        serviceCode,
                         selectedResponse.getSenderTagKey(),
                         selectedResponse.getReceiverTagKey(),
-                        request.getTransaction().getCurrency(),
-                        request.getTransaction().getAmount(),
-                        payerIdentifier.getAccountId(),
-                        payeeIdentifier.getAccountId(),
+                        currency,
+                        txnAmount,
+                        payerAccountId,
+                        payeeAccountId,
                         DISCOUNT_RULE_TYPES
                 );
 
@@ -363,13 +379,13 @@ public class PricingService {
                 }
 
                 PricingComputationResponse cashbackResponse = calculatePricingAmountsForRuleTypes(
-                        request.getOperationType(),
+                        serviceCode,
                         selectedResponse.getSenderTagKey(),
                         selectedResponse.getReceiverTagKey(),
-                        request.getTransaction().getCurrency(),
-                        request.getTransaction().getAmount(),
-                        payerIdentifier.getAccountId(),
-                        payeeIdentifier.getAccountId(),
+                        currency,
+                        txnAmount,
+                        payerAccountId,
+                        payeeAccountId,
                         CASHBACK_RULE_TYPES
                 );
 
@@ -395,35 +411,35 @@ public class PricingService {
         }
 
         PricingComputationResponse maxDiscountResponse = selectMaximumAmountCombination(
-                request.getOperationType(),
+                serviceCode,
                 payerTagKeys,
                 payeeTagKeys,
-                request.getTransaction().getCurrency(),
-                request.getTransaction().getAmount(),
-                payerIdentifier.getAccountId(),
-                payeeIdentifier.getAccountId(),
+                currency,
+                txnAmount,
+                payerAccountId,
+                payeeAccountId,
                 DISCOUNT_RULE_TYPES
         );
 
         PricingComputationResponse maxCommissionResponse = selectMaximumAmountCombination(
-                request.getOperationType(),
+                serviceCode,
                 payerTagKeys,
                 payeeTagKeys,
-                request.getTransaction().getCurrency(),
-                request.getTransaction().getAmount(),
-                payerIdentifier.getAccountId(),
-                payeeIdentifier.getAccountId(),
+                currency,
+                txnAmount,
+                payerAccountId,
+                payeeAccountId,
                 COMMISSION_RULE_TYPES
         );
 
         PricingComputationResponse maxCashbackResponse = selectMaximumAmountCombination(
-                request.getOperationType(),
+                serviceCode,
                 payerTagKeys,
                 payeeTagKeys,
-                request.getTransaction().getCurrency(),
-                request.getTransaction().getAmount(),
-                payerIdentifier.getAccountId(),
-                payeeIdentifier.getAccountId(),
+                currency,
+                txnAmount,
+                payerAccountId,
+                payeeAccountId,
                 CASHBACK_RULE_TYPES
         );
 
@@ -437,9 +453,9 @@ public class PricingService {
             PricingComputationResponse emptyResponse = new PricingComputationResponse();
             log.info(
                     "No pricing rules configured for operationType={}, payerAccountId={}, payeeAccountId={}. Returning zero-value pricing response.",
-                    request.getOperationType(),
-                    payerIdentifier.getAccountId(),
-                    payeeIdentifier.getAccountId()
+                    serviceCode,
+                    payerAccountId,
+                    payeeAccountId
             );
             return emptyResponse;
         }
@@ -774,11 +790,11 @@ public class PricingService {
                 .distinct()
                 .toList();
 
-        if (tagKeys.isEmpty()) {
-            return List.of("ALLTAGS");
+        List<String> resolvedTagKeys = new ArrayList<>(tagKeys);
+        if (!resolvedTagKeys.contains("ALLTAGS")) {
+            resolvedTagKeys.add("ALLTAGS");
         }
-
-        return tagKeys;
+        return resolvedTagKeys;
     }
 
     private List<PricingRule> getApplicableRules(

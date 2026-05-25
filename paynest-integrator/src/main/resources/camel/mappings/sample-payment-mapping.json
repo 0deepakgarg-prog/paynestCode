@@ -1,0 +1,10 @@
+{
+  "source": "partner-payment-v1",
+  "target": "paynest-payment-v1",
+  "fields": {
+    "amount": "$.transaction.amount",
+    "currency": "$.transaction.currency",
+    "payer": "$.sender.accountId",
+    "payee": "$.receiver.accountId"
+  }
+}

@@ -1,6 +1,7 @@
 package com.paynest.payments.service;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.config.tenant.TenantTime;
 import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
@@ -17,9 +18,13 @@ import com.paynest.exception.PaymentErrorCode;
 import com.paynest.payments.dto.Authentication;
 import com.paynest.payments.dto.BillPayPaymentRequest;
 import com.paynest.payments.dto.BillPayPaymentResponse;
+import com.paynest.payments.dto.GenericIntegratorPayload;
+import com.paynest.payments.dto.GenericServiceFinancialInfo;
+import com.paynest.payments.dto.GenericServiceParty;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.enums.BillPaymentStatus;
+import com.paynest.payments.repository.ServiceCatalogRepository;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
 import com.paynest.pricing.dto.response.PricingComputationResponse;
 import com.paynest.pricing.service.PricingService;
@@ -33,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.Locale;
@@ -58,6 +65,9 @@ public class BillPayPaymentService {
     private final AuthService authService;
     private final BillPaymentStatusService billPaymentStatusService;
     private final PricingService pricingService;
+    private final ServiceCatalogRepository serviceCatalogRepository;
+    private final BillPayIntegratorSettlementService billPayIntegratorSettlementService;
+    private final ObjectMapper objectMapper;
 
     public BillPayPaymentService(
             BasePaymentRequestValidator basePaymentRequestValidator,
@@ -69,7 +79,10 @@ public class BillPayPaymentService {
             BalanceService balanceService,
             AuthService authService,
             BillPaymentStatusService billPaymentStatusService,
-            PricingService pricingService
+            PricingService pricingService,
+            ServiceCatalogRepository serviceCatalogRepository,
+            BillPayIntegratorSettlementService billPayIntegratorSettlementService,
+            ObjectMapper objectMapper
     ) {
         this.basePaymentRequestValidator = basePaymentRequestValidator;
         this.accountIdentifierRepository = accountIdentifierRepository;
@@ -81,6 +94,9 @@ public class BillPayPaymentService {
         this.authService = authService;
         this.billPaymentStatusService = billPaymentStatusService;
         this.pricingService = pricingService;
+        this.serviceCatalogRepository = serviceCatalogRepository;
+        this.billPayIntegratorSettlementService = billPayIntegratorSettlementService;
+        this.objectMapper = objectMapper;
     }
 
     public BillPayPaymentResponse processPayment(BillPayPaymentRequest request, boolean validateJWT) {
@@ -176,6 +192,16 @@ public class BillPayPaymentService {
                         transactionId
                 );
             }
+
+            sendToIntegratorIfConfigured(
+                    request,
+                    transactionId,
+                    debitorAccount,
+                    creditorAccount,
+                    debitorWallet,
+                    creditorWallet,
+                    pricingComputation
+            );
         } catch (ApplicationException ex) {
             throw ex.withTransactionId(transactionId);
         }
@@ -223,6 +249,93 @@ public class BillPayPaymentService {
                 .currency(request.getTransaction().getCurrency())
                 .billStatus(BillPaymentStatus.PENDING)
                 .build();
+    }
+
+    private void sendToIntegratorIfConfigured(
+            BillPayPaymentRequest request,
+            String transactionId,
+            Account debitorAccount,
+            Account creditorAccount,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            PricingComputationResponse pricingComputation
+    ) {
+        serviceCatalogRepository.findFirstByServiceCodeIgnoreCaseAndIsActiveTrue(OPERATION_NAME)
+                .filter(serviceCatalog -> Boolean.TRUE.equals(serviceCatalog.getSendToIntegrator()))
+                .ifPresent(serviceCatalog -> {
+                    GenericIntegratorPayload payload = GenericIntegratorPayload.builder()
+                                .serviceCode(serviceCatalog.getServiceCode())
+                                .serviceName(serviceCatalog.getServiceName())
+                                .serviceCategory(serviceCatalog.getServiceCategory())
+                                .transactionType(serviceCatalog.getTransactionType())
+                                .serviceType("FINANCIAL")
+                                .referenceId(request.getPaymentReference())
+                                .transactionId(transactionId)
+                                .debitor(toGenericParty(debitorAccount, debitorWallet, request.getDebitor()))
+                                .creditor(toGenericParty(creditorAccount, creditorWallet, request.getCreditor()))
+                                .partnerData(objectMapper.valueToTree(request.getPartnerData()))
+                                .financialInfo(toGenericFinancialInfo(request))
+                                .pricingInfo(pricingComputation)
+                                .metadata(objectMapper.valueToTree(request.getMetadata()))
+                                .build();
+                    boolean confirmationRequired = Boolean.TRUE.equals(serviceCatalog.getRequiresConfirmation());
+                    registerAfterCommitIntegratorCall(
+                            payload,
+                            confirmationRequired,
+                            serviceCatalog.getIntegratorCallMode()
+                    );
+                });
+    }
+
+    private void registerAfterCommitIntegratorCall(
+            GenericIntegratorPayload payload,
+            boolean confirmationRequired,
+            String integratorCallMode
+    ) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            callIntegrator(payload, confirmationRequired, integratorCallMode);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                callIntegrator(payload, confirmationRequired, integratorCallMode);
+            }
+        });
+    }
+
+    private void callIntegrator(
+            GenericIntegratorPayload payload,
+            boolean confirmationRequired,
+            String integratorCallMode
+    ) {
+        billPayIntegratorSettlementService.callIntegratorAndSettle(
+                payload,
+                confirmationRequired,
+                integratorCallMode
+        );
+    }
+
+    private GenericServiceParty toGenericParty(Account account, Wallet wallet, Party requestParty) {
+        GenericServiceParty party = new GenericServiceParty();
+        party.setAccountId(account.getAccountId());
+        party.setAccountCode(account.getAccountCode());
+        party.setAccountType(account.getAccountType());
+        if (requestParty != null && requestParty.getWalletType() != null) {
+            party.setWalletType(requestParty.getWalletType().name());
+        }
+        if (wallet != null) {
+            party.setCurrency(wallet.getCurrency());
+        }
+        return party;
+    }
+
+    private GenericServiceFinancialInfo toGenericFinancialInfo(BillPayPaymentRequest request) {
+        GenericServiceFinancialInfo financialInfo = new GenericServiceFinancialInfo();
+        financialInfo.setAmount(request.getTransaction().getAmount());
+        financialInfo.setCurrency(request.getTransaction().getCurrency());
+        return financialInfo;
     }
 
     private void validateParty(Party party, InitiatedBy role, AccountType expectedType) {

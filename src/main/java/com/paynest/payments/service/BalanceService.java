@@ -73,6 +73,7 @@ public class BalanceService {
     private final WalletCacheService walletCacheService;
     private final WalletRestrictionValidator walletRestrictionValidator;
     private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+    private final SuccessfulPaymentEventPublisher successfulPaymentEventPublisher;
 
     public BalanceService(WalletRepository walletRepository,
                           WalletBalanceRepository balanceRepository,
@@ -86,7 +87,8 @@ public class BalanceService {
                           TransactionsService transactionsService,
                           WalletCacheService walletCacheService,
                           WalletRestrictionValidator walletRestrictionValidator,
-                          TransactionNotificationEventPublisher transactionNotificationEventPublisher) {
+                          TransactionNotificationEventPublisher transactionNotificationEventPublisher,
+                          SuccessfulPaymentEventPublisher successfulPaymentEventPublisher) {
         this.walletRepository = walletRepository;
         this.balanceRepository = balanceRepository;
         this.accountRepo = accountRepo;
@@ -100,6 +102,7 @@ public class BalanceService {
         this.walletCacheService = walletCacheService;
         this.walletRestrictionValidator = walletRestrictionValidator;
         this.transactionNotificationEventPublisher = transactionNotificationEventPublisher;
+        this.successfulPaymentEventPublisher = successfulPaymentEventPublisher;
     }
 
     public BalanceResponse getBalance(Long walletId) {
@@ -263,7 +266,7 @@ public class BalanceService {
                 transaction.setPreviousStatus(transaction.getTransferStatus());
                 transaction.setTransferStatus(Constants.TRANSACTION_SUCCESS);
                 transactionsRepository.save(transaction);
-                transactionNotificationEventPublisher.publish(transaction);
+                publishSuccessfulTransaction(transaction);
             }
 
             updateTransactionDetails(
@@ -397,7 +400,7 @@ public class BalanceService {
                 transaction.setPreviousStatus(transaction.getTransferStatus());
                 transaction.setTransferStatus(Constants.TRANSACTION_SUCCESS);
                 transactionsRepository.save(transaction);
-                transactionNotificationEventPublisher.publish(transaction);
+                publishSuccessfulTransaction(transaction);
             }
 
             updateTransactionDetails(
@@ -578,7 +581,7 @@ public class BalanceService {
                 transaction.setPreviousStatus(transaction.getTransferStatus());
                 transaction.setTransferStatus(Constants.TRANSACTION_SUCCESS);
                 transactionsRepository.save(transaction);
-                transactionNotificationEventPublisher.publish(transaction);
+                publishSuccessfulTransaction(transaction);
             }
 
             updateCurrencyExchangeTransactionDetails(
@@ -839,6 +842,7 @@ public class BalanceService {
                         pricingComputation
                 ));
                 transactionsRepository.save(transaction);
+                publishSuccessfulTransaction(transaction);
             }
 
             updateTransactionDetails(
@@ -857,6 +861,35 @@ public class BalanceService {
                     receiverFrozenAfter,
                     receiverFicBefore,
                     receiverFicAfter
+            );
+            saveServiceChargeTransactionDetails(
+                    txnId,
+                    now,
+                    Constants.TRANSACTION_SUCCESS,
+                    serviceCode,
+                    serviceChargeWallet,
+                    systemWallet,
+                    dbServiceChargeAmount,
+                    serviceChargePayerBalBefore,
+                    serviceChargePayerBalAfter,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFrozenBefore
+                            : receiverFrozenBefore,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFrozenAfter
+                            : receiverFrozenAfter,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFicBefore
+                            : receiverFicBefore,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFicAfter
+                            : receiverFicAfter,
+                    systemBalBefore,
+                    systemBalAfter,
+                    systemFrozenBefore,
+                    systemFrozenAfter,
+                    systemFicBefore,
+                    systemFicAfter
             );
             updatePrimaryTransactionDetailAmounts(
                     txnId,
@@ -907,7 +940,8 @@ public class BalanceService {
         String serviceChargePayer = pricingComputation.getServiceChargeAffectedParty();
 
         try {
-            if (isWalletServiceCharge(serviceChargeAmount, serviceChargePayer)) {
+            boolean walletServiceCharge = isWalletServiceCharge(serviceChargeAmount, serviceChargePayer);
+            if (walletServiceCharge) {
                 transferWalletAmountWithServiceCharge(
                         debitorWallet,
                         creditorWallet,
@@ -923,7 +957,7 @@ public class BalanceService {
                 transferWalletAmount(debitorWallet, creditorWallet, netAmount, serviceCode, initiatedBy, txnId);
             }
 
-            Long nextSequenceNumber = 3L;
+            Long nextSequenceNumber = walletServiceCharge ? 5L : 3L;
             PricingAdjustmentApplication commissionApplication = applyCommissionIfRequired(
                     debitorWallet,
                     creditorWallet,
@@ -1145,7 +1179,8 @@ public class BalanceService {
         String serviceChargePayer = pricingComputation.getServiceChargeAffectedParty();
 
         try {
-            if (isWalletServiceCharge(serviceChargeAmount, serviceChargePayer)) {
+            boolean walletServiceCharge = isWalletServiceCharge(serviceChargeAmount, serviceChargePayer);
+            if (walletServiceCharge) {
                 parkWalletAmountInFicWithServiceCharge(
                         debitorWallet,
                         creditorWallet,
@@ -1161,7 +1196,7 @@ public class BalanceService {
                 parkWalletAmountInFic(debitorWallet, creditorWallet, netAmount, serviceCode, initiatedBy, txnId);
             }
 
-            Long nextSequenceNumber = 3L;
+            Long nextSequenceNumber = walletServiceCharge ? 5L : 3L;
             PricingAdjustmentApplication commissionApplication = applyCommissionIfRequired(
                     debitorWallet,
                     creditorWallet,
@@ -1460,6 +1495,35 @@ public class BalanceService {
                     receiverFicBefore,
                     receiverFicAfter
             );
+            saveServiceChargeTransactionDetails(
+                    txnId,
+                    now,
+                    Constants.TRANSACTION_AMBIGUOUS,
+                    serviceCode,
+                    serviceChargeWallet,
+                    systemWallet,
+                    dbServiceChargeAmount,
+                    serviceChargePayerBalBefore,
+                    serviceChargePayerBalAfter,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFrozenBefore
+                            : receiverFrozenBefore,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFrozenAfter
+                            : receiverFrozenAfter,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFicBefore
+                            : receiverFicBefore,
+                    SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
+                            ? senderFicAfter
+                            : receiverFicAfter,
+                    systemBalBefore,
+                    systemBalAfter,
+                    systemFrozenBefore,
+                    systemFrozenAfter,
+                    systemFicBefore,
+                    systemFicAfter
+            );
             updatePrimaryTransactionDetailAmounts(
                     txnId,
                     dbAmount,
@@ -1521,6 +1585,11 @@ public class BalanceService {
         ledger.setTxnType(serviceCode);
         ledger.setReferenceId(TraceContext.getTraceId());
         ledgerRepo.save(ledger);
+    }
+
+    private void publishSuccessfulTransaction(Transactions transaction) {
+        transactionNotificationEventPublisher.publish(transaction);
+        successfulPaymentEventPublisher.publish(transaction);
     }
 
     private void saveServiceChargeLedgerEntries(
@@ -2249,7 +2318,7 @@ public class BalanceService {
 
     private void setPricingDetailAttributes(TransactionDetails detail, String adjustmentType, BigDecimal amount) {
         detail.setAttr6Name(resolvePricingDetailName(adjustmentType));
-        detail.setAttr6Value(amount == null ? null : amount.toPlainString());
+        detail.setAttr6Value(formatPricingDetailAmount(amount));
     }
 
     private String resolvePricingDetailName(String adjustmentType) {
@@ -2374,8 +2443,15 @@ public class BalanceService {
     ) {
         if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
             names.add(name);
-            amounts.add(amount.toPlainString());
+            amounts.add(formatPricingDetailAmount(amount));
         }
+    }
+
+    private String formatPricingDetailAmount(BigDecimal amount) {
+        if (amount == null) {
+            return null;
+        }
+        return amount.setScale(0, RoundingMode.HALF_UP).toPlainString();
     }
 
     private void updateTransactionDetails(
@@ -2604,7 +2680,7 @@ public class BalanceService {
                 .formatted(serviceChargePayer));
         serviceCharge.put("serviceCode", serviceCode);
         serviceCharge.put("ledgerTxnType", serviceCode);
-        serviceCharge.put("detailTableEntry", false);
+        serviceCharge.put("detailTableEntry", true);
         serviceCharge.put("amount", dbServiceChargeAmount);
         serviceCharge.put("requestAmount", serviceChargeAmount);
         serviceCharge.put("transactionAmount", dbAmount);
@@ -2676,7 +2752,7 @@ public class BalanceService {
                     .formatted(normalizedPayer));
             serviceCharge.put("serviceCode", serviceCode);
             serviceCharge.put("ledgerTxnType", serviceCode);
-            serviceCharge.put("detailTableEntry", false);
+            serviceCharge.put("detailTableEntry", true);
             serviceCharge.put("amount", dbServiceChargeAmount);
             serviceCharge.put("requestAmount", requestServiceChargeAmount);
             serviceCharge.put("transactionAmount", dbNetAmount);

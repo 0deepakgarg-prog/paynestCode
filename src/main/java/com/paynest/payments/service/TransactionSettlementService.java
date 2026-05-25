@@ -22,7 +22,6 @@ import com.paynest.payments.repository.WalletLedgerRepository;
 import com.paynest.users.repository.WalletRepository;
 import com.paynest.users.service.WalletCacheService;
 import com.paynest.config.security.JWTUtils;
-import com.paynest.payments.service.TransactionsService;
 import com.paynest.config.tenant.TraceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +46,7 @@ public class TransactionSettlementService {
     private final BillPaymentStatusService billPaymentStatusService;
     private final WalletCacheService walletCacheService;
     private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+    private final SuccessfulPaymentEventPublisher successfulPaymentEventPublisher;
 
     public TransactionSettlementService(
             TransactionsRepository transactionsRepository,
@@ -57,7 +57,8 @@ public class TransactionSettlementService {
             TransactionsService transactionsService,
             BillPaymentStatusService billPaymentStatusService,
             WalletCacheService walletCacheService,
-            TransactionNotificationEventPublisher transactionNotificationEventPublisher
+            TransactionNotificationEventPublisher transactionNotificationEventPublisher,
+            SuccessfulPaymentEventPublisher successfulPaymentEventPublisher
     ) {
         this.transactionsRepository = transactionsRepository;
         this.transactionDetailsRepository = transactionDetailsRepository;
@@ -68,6 +69,7 @@ public class TransactionSettlementService {
         this.billPaymentStatusService = billPaymentStatusService;
         this.walletCacheService = walletCacheService;
         this.transactionNotificationEventPublisher = transactionNotificationEventPublisher;
+        this.successfulPaymentEventPublisher = successfulPaymentEventPublisher;
     }
 
     public SettleTransactionResponse settleTransaction(SettleTransactionRequest request) {
@@ -116,10 +118,14 @@ public class TransactionSettlementService {
     }
 
     private BillPaymentStatusRecord getPendingBillPaymentStatusIfRequired(Transactions transaction) {
-        if (!"BILLPAY".equalsIgnoreCase(transaction.getServiceCode())) {
+        if (!isBillPaySpecificSettlementRequired(transaction)) {
             return null;
         }
         return billPaymentStatusService.getPendingRecord(transaction.getTransactionId());
+    }
+
+    private boolean isBillPaySpecificSettlementRequired(Transactions transaction) {
+        return "BILLPAY".equalsIgnoreCase(transaction.getServiceCode());
     }
 
     private void markBillPaymentSuccessIfRequired(
@@ -237,6 +243,7 @@ public class TransactionSettlementService {
         transaction.setModifiedBy(modifiedBy);
         transactionsRepository.save(transaction);
         transactionNotificationEventPublisher.publish(transaction);
+        successfulPaymentEventPublisher.publish(transaction);
 
         for (TransactionDetails detail : transactionDetails) {
             detail.setTransferStatus(Constants.TRANSACTION_SUCCESS);

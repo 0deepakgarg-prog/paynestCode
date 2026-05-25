@@ -6,6 +6,7 @@ public final class ErrorCodes {
     }
 
     public static final String ACCOUNT_AUTH_NOT_FOUND = "ACCOUNT_AUTH_NOT_FOUND";
+    public static final String ACCOUNT_CODE_EXISTS = "ACCOUNT_CODE_EXISTS";
     public static final String ACCOUNT_IDENTIFIER_NOT_FOUND = "ACCOUNT_IDENTIFIER_NOT_FOUND";
     public static final String ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE";
     public static final String ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
@@ -14,6 +15,10 @@ public final class ErrorCodes {
     public static final String CURRENCY_MISSING = "CURRENCY_MISSING";
     public static final String DEBITOR_MISSING = "DEBITOR_MISSING";
     public static final String DELETE_THRESHOLD_EXCEEDED = "DELETE_THRESHOLD_EXCEEDED";
+    public static final String DOCUMENT_NOT_FOUND = "DOCUMENT_NOT_FOUND";
+    public static final String DOCUMENT_STORAGE_ERROR = "DOCUMENT_STORAGE_ERROR";
+    public static final String DOCUMENT_TYPE_NOT_ALLOWED = "DOCUMENT_TYPE_NOT_ALLOWED";
+    public static final String DOCUMENT_TYPE_NOT_FOUND = "DOCUMENT_TYPE_NOT_FOUND";
     public static final String FORCE_AUTH_CHANGE = "FORCE_AUTH_CHANGE";
     public static final String IDENTIFIER_NOT_FOUND = "IDENTIFIER_NOT_FOUND";
     public static final String INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE";

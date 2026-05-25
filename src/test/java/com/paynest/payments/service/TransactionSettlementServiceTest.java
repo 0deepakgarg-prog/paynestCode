@@ -22,10 +22,8 @@ import com.paynest.users.service.WalletCacheService;
 import com.paynest.config.security.JWTUtils;
 import com.paynest.payments.service.TransactionsService;
 import com.paynest.config.tenant.TraceContext;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,8 +34,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -72,6 +70,9 @@ class TransactionSettlementServiceTest {
 
     @Mock
     private TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+
+    @Mock
+    private SuccessfulPaymentEventPublisher successfulPaymentEventPublisher;
 
     @Test
     void settleTransaction_shouldClearFicAndMarkTransactionSuccessful() {
@@ -110,16 +111,19 @@ class TransactionSettlementServiceTest {
 
             verify(walletBalanceRepository).save(creditorBalance);
             verify(walletCacheService).refreshAccountWallets("biller-1");
-            verify(transactionsService).updateComments("txn-1", "settled");
+            verify(transactionsService).updateOptionalTransactionFields(
+                    eq("txn-1"),
+                    eq(null),
+                    eq(java.util.Map.of("providerRef", "ABC-1")),
+                    eq(null),
+                    eq("settled")
+            );
             verify(billPaymentStatusService).markSuccess(
                     billPaymentStatusRecord,
                     "ops-1",
                     "settled",
                     java.util.Map.of("providerRef", "ABC-1")
             );
-            ArgumentCaptor<JSONObject> additionalInfoCaptor = ArgumentCaptor.forClass(JSONObject.class);
-            verify(transactionsService).updateAdditionalInfo(any(), additionalInfoCaptor.capture());
-            assertTrue(additionalInfoCaptor.getValue().toString().contains("\"providerRef\":\"ABC-1\""));
         } finally {
             TraceContext.clear();
         }
@@ -235,7 +239,8 @@ class TransactionSettlementServiceTest {
                 transactionsService,
                 billPaymentStatusService,
                 walletCacheService,
-                transactionNotificationEventPublisher
+                transactionNotificationEventPublisher,
+                successfulPaymentEventPublisher
         );
     }
 

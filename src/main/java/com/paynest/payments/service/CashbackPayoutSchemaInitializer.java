@@ -44,7 +44,18 @@ public class CashbackPayoutSchemaInitializer {
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute(buildCreateTableSql(normalizedSchemaName));
-            statement.execute(buildIndexSql(normalizedSchemaName));
+            try {
+                statement.execute(buildIndexSql(normalizedSchemaName));
+            } catch (SQLException ex) {
+                if (isInsufficientPrivilege(ex)) {
+                    log.warn(
+                            "Skipping cashback_payout index creation for schema {} because the current database user does not own the existing table",
+                            normalizedSchemaName
+                    );
+                } else {
+                    throw ex;
+                }
+            }
         } catch (SQLException ex) {
             throw new IllegalStateException(
                     "Failed to initialize cashback_payout table for schema " + normalizedSchemaName,
@@ -53,6 +64,10 @@ public class CashbackPayoutSchemaInitializer {
         }
 
         log.info("Ensured cashback_payout table exists in schema {}", normalizedSchemaName);
+    }
+
+    private boolean isInsufficientPrivilege(SQLException ex) {
+        return "42501".equals(ex.getSQLState());
     }
 
     private String normalizeSchemaName(String schemaName) {

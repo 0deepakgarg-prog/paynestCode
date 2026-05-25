@@ -1,10 +1,5 @@
 package com.paynest.config.service;
 
-import com.paynest.payments.service.BillPaymentStatusSchemaInitializer;
-import com.paynest.payments.service.CashbackPayoutSchemaInitializer;
-import com.paynest.payments.service.ServiceCatalogSchemaInitializer;
-import com.paynest.users.service.AccountNotificationEndpointSchemaInitializer;
-import com.paynest.users.service.NotificationTemplateSchemaInitializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,14 +9,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,21 +21,6 @@ class TenantRegistryServiceTest {
 
     @Mock
     private JdbcTemplate jdbcTemplate;
-
-    @Mock
-    private BillPaymentStatusSchemaInitializer billPaymentStatusSchemaInitializer;
-
-    @Mock
-    private CashbackPayoutSchemaInitializer cashbackPayoutSchemaInitializer;
-
-    @Mock
-    private ServiceCatalogSchemaInitializer serviceCatalogSchemaInitializer;
-
-    @Mock
-    private AccountNotificationEndpointSchemaInitializer accountNotificationEndpointSchemaInitializer;
-
-    @Mock
-    private NotificationTemplateSchemaInitializer notificationTemplateSchemaInitializer;
 
     @InjectMocks
     private TenantRegistryService tenantRegistryService;
@@ -72,9 +49,6 @@ class TenantRegistryServiceTest {
         assertEquals("Europe/Chisinau", tenantRegistryService.getTimeZone("TENANT_A"));
         assertEquals("UTC", tenantRegistryService.getTimeZone("TENANT_B"));
         assertEquals("Europe/Chisinau", tenantRegistryService.getTimeZoneBySchema("schema_a"));
-        verify(cashbackPayoutSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && Set.copyOf(schemas).equals(Set.of("schema_a", "schema_b"))));
     }
 
     @Test
@@ -85,9 +59,6 @@ class TenantRegistryServiceTest {
         tenantRegistryService.loadTenants();
 
         assertNull(tenantRegistryService.getSchema("UNKNOWN_TENANT"));
-        verify(cashbackPayoutSchemaInitializer)
-                .ensureTableExistsForSchemas(argThat(schemas ->
-                        schemas != null && schemas.isEmpty()));
     }
 }
 

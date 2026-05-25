@@ -25,6 +25,9 @@ public class Enumeration {
     @Column(name = "enum_value", length = 100, nullable = false)
     private String enumValue;
 
+    @Column(name = "parent_enum_id")
+    private Long parentEnumId;
+
     @Column(name = "description", length = 255)
     private String description;
 
@@ -42,6 +45,21 @@ public class Enumeration {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "field1", length = 250)
+    private String field1;
+
+    @Column(name = "field2", length = 250)
+    private String field2;
+
+    @Column(name = "field3", length = 250)
+    private String field3;
+
+    @Column(name = "field4", length = 250)
+    private String field4;
+
+    @Column(name = "field5", length = 250)
+    private String field5;
 
     @PrePersist
     protected void onCreate() {

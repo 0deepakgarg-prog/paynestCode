@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: paynest-integrator
+  config:
+    import: optional:file:./config/application.yml,optional:file:./config/integrator.properties
+
+server:
+  port: ${INTEGRATOR_SERVER_PORT:7788}
+
+camel:
+  springboot:
+    name: paynest-integrator
+    main-run-controller: true
+  main:
+    run-controller: true
+    routes-include-pattern: ${PAYNEST_CAMEL_ROUTES:classpath:camel/routes/*.yaml,classpath:camel/routes/*.xml,classpath:camel/templates/*.yaml,classpath:camel/templates/*.xml}
+    file-configurations: ${PAYNEST_CAMEL_CONFIG_FILES:file:./config/*.properties}

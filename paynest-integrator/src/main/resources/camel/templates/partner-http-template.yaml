@@ -1,0 +1,51 @@
+- route:
+    id: bill-enquiry-flow1-http-route
+    from:
+      uri: "direct:bill-enquiry-flow1"
+      steps:
+        - setHeader:
+            name: Content-Type
+            constant: application/json
+        - setHeader:
+            name: CamelHttpMethod
+            constant: POST
+        - toD:
+            uri: "https://107396ea-22fc-45fe-820c-e683a6bd7105.mock.pstmn.io/billEnquiryTest?throwExceptionOnFailure=false"
+        - unmarshal:
+            json: {}
+        - choice:
+            when:
+              - simple: "${jsonpath('$.billInquiryResponse.status')} == 'SUCCESS'"
+                steps:
+                  - setHeader:
+                      name: Content-Type
+                      constant: application/json
+                  - setBody:
+                      jq: |
+                        {
+                          status: "SUCCESS",
+                          billerCode: .billInquiryResponse.billerCode,
+                          billReference: .billInquiryResponse.billReference,
+                          customerName: .billInquiryResponse.customerName,
+                          amount: .billInquiryResponse.amount,
+                          dueDate: .billInquiryResponse.dueDate,
+                          usageBreakdown: [
+                            .billInquiryResponse.usageSummary.usageBreakdown[]
+                            | {
+                                tier: .tier,
+                                charge: .charge
+                              }
+                          ]
+                        }
+            otherwise:
+              steps:
+                - setHeader:
+                    name: Content-Type
+                    constant: application/json
+                - setBody:
+                    jq: |
+                      {
+                        status: "FAILED",
+                        code: (.billInquiryResponse.code // "BILL_ENQUIRY_FAILED"),
+                        message: (.billInquiryResponse.message // "Bill enquiry failed")
+                      }

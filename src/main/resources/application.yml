@@ -38,6 +38,8 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       timeout: 2000ms
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://paynest_app:payNest%40123@localhost:27017/paynest_docs}
 
 logging:
   level:
@@ -48,6 +50,10 @@ logging:
     org.springframework.security.mvc.method.annotation.RequestMappingHandlerMapping: DEBUG
 
 app:
+  integrator:
+    base-url: ${PAYNEST_INTEGRATOR_BASE_URL:http://localhost:7788}
+    generic-services-path: ${PAYNEST_INTEGRATOR_GENERIC_SERVICES_SYNC_PATH:/services/execute}
+    generic-services-async-path: ${PAYNEST_INTEGRATOR_GENERIC_SERVICES_ASYNC_PATH:/services/execute/async}
   logging:
     path: ./logs
   kafka:

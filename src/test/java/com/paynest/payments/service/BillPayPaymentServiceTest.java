@@ -1,5 +1,6 @@
 package com.paynest.payments.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
 import com.paynest.config.security.JWTUtils;
@@ -14,9 +15,11 @@ import com.paynest.payments.dto.BillPayPaymentResponse;
 import com.paynest.payments.dto.Identifier;
 import com.paynest.payments.dto.Party;
 import com.paynest.payments.dto.TransactionInfo;
+import com.paynest.payments.entity.ServiceCatalog;
 import com.paynest.payments.enums.BillPaymentStatus;
 import com.paynest.payments.enums.InitiatedBy;
 import com.paynest.payments.enums.TransactionStatus;
+import com.paynest.payments.repository.ServiceCatalogRepository;
 import com.paynest.payments.validation.BasePaymentRequestValidator;
 import com.paynest.pricing.dto.response.PricingComputationResponse;
 import com.paynest.pricing.service.PricingService;
@@ -85,6 +88,14 @@ class BillPayPaymentServiceTest {
     @Mock
     private PricingService pricingService;
 
+    @Mock
+    private ServiceCatalogRepository serviceCatalogRepository;
+
+    @Mock
+    private BillPayIntegratorSettlementService billPayIntegratorSettlementService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Test
     void processPayment_shouldParkFundsInBillerFicCreatePendingBillStatusAndReturnSuccess() {
         BillPayPaymentService billPayPaymentService = billPayPaymentService();
@@ -110,6 +121,8 @@ class BillPayPaymentServiceTest {
         when(walletRepository.findByAccountIdAndCurrencyAndWalletType("biller-1", "USD", "MAIN"))
                 .thenReturn(Optional.of(creditorWallet));
         when(propertyReader.getPropertyValue("server.instance")).thenReturn("A");
+        when(serviceCatalogRepository.findFirstByServiceCodeIgnoreCaseAndIsActiveTrue("BILLPAY"))
+                .thenReturn(Optional.empty());
 
         TraceContext.setTraceId("trace-1");
         try (MockedStatic<JWTUtils> jwtUtils = org.mockito.Mockito.mockStatic(JWTUtils.class)) {
@@ -146,7 +159,7 @@ class BillPayPaymentServiceTest {
                     eq(creditorWallet),
                     eq(InitiatedBy.DEBITOR),
                     eq(null),
-                    eq(request.getAdditionalInfo()),
+                    eq(request.getPartnerData()),
                     eq("pay-ref-1"),
                     eq("April electricity bill")
             );
@@ -198,6 +211,16 @@ class BillPayPaymentServiceTest {
                 .thenReturn(Optional.of(creditorWallet));
         when(pricingService.calculatePricingAmounts(request)).thenReturn(pricingComputation);
         when(propertyReader.getPropertyValue("server.instance")).thenReturn("A");
+        ServiceCatalog serviceCatalog = new ServiceCatalog();
+        serviceCatalog.setServiceCode("BILLPAY");
+        serviceCatalog.setServiceName("Bill Payment");
+        serviceCatalog.setServiceCategory("BILLER");
+        serviceCatalog.setTransactionType("PAYMENT");
+        serviceCatalog.setSendToIntegrator(true);
+        serviceCatalog.setRequiresConfirmation(true);
+        serviceCatalog.setIntegratorCallMode("BILL_PAY");
+        when(serviceCatalogRepository.findFirstByServiceCodeIgnoreCaseAndIsActiveTrue("BILLPAY"))
+                .thenReturn(Optional.of(serviceCatalog));
 
         TraceContext.setTraceId("trace-1");
         try (MockedStatic<JWTUtils> jwtUtils = org.mockito.Mockito.mockStatic(JWTUtils.class)) {
@@ -216,6 +239,7 @@ class BillPayPaymentServiceTest {
                     response.getTransactionId(),
                     pricingComputation
             );
+            verify(billPayIntegratorSettlementService).callIntegratorAndSettle(any(), eq(true), eq("BILL_PAY"));
             verify(balanceService, never()).parkWalletAmountInFic(any(), any(), any(), any(), any(), any());
         } finally {
             TraceContext.clear();
@@ -250,7 +274,10 @@ class BillPayPaymentServiceTest {
                 balanceService,
                 authService,
                 billPaymentStatusService,
-                pricingService
+                pricingService,
+                serviceCatalogRepository,
+                billPayIntegratorSettlementService,
+                objectMapper
         );
     }
 
@@ -269,7 +296,7 @@ class BillPayPaymentServiceTest {
         additionalInfo.put("note", "subscriber initiated");
         additionalInfo.put("meterNumber", "MTR-001");
         additionalInfo.put("region", "NORTH");
-        request.setAdditionalInfo(additionalInfo);
+        request.setPartnerData(additionalInfo);
 
         TransactionInfo transactionInfo = new TransactionInfo();
         transactionInfo.setAmount(new BigDecimal("10.50"));

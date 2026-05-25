@@ -387,6 +387,7 @@ class MultiTenantIsolationE2ETest {
                   "user": {
                     "mobileNumber": "%s",
                     "accountType": "ADMIN",
+                    "accountCode": "%s",
                     "firstName": "Network",
                     "lastName": "Admin",
                     "email": "networkadmin.%s@example.com",
@@ -401,7 +402,7 @@ class MultiTenantIsolationE2ETest {
                     "role": "NETWORKADMIN"
                   }
                 }
-                """.formatted(scenarioPrefix, mobile, loginId, uniqueSuffix.substring(Math.max(0, uniqueSuffix.length() - 4)), loginId);
+                """.formatted(scenarioPrefix, mobile, loginId, loginId, uniqueSuffix.substring(Math.max(0, uniqueSuffix.length() - 4)), loginId);
 
         String accountId = postJson(tenant, "create network admin", "/api/v1/account/registerUser", superAdminToken, registerRequest)
                 .then()
@@ -498,12 +499,15 @@ class MultiTenantIsolationE2ETest {
         String loginId = loginPrefix + uniqueSuffix;
         String mobile = mobileNumber("810", uniqueSuffix);
         String password = BUSINESS_USER_UPDATED_PASSWORD + accountType.charAt(0);
+        String accountCode = loginPrefix + uniqueSuffix;
+        String profileSection = businessProfileSection(accountType, uniqueSuffix);
         String registerRequest = """
                 {
                   "requestId": "req-%s-%s-register",
                   "user": {
                     "mobileNumber": "%s",
                     "accountType": "%s",
+                    "accountCode": "%s",
                     "firstName": "%s",
                     "lastName": "User",
                     "email": "%s@example.com",
@@ -516,9 +520,9 @@ class MultiTenantIsolationE2ETest {
                     "remarks": "E2E %s user",
                     "loginId": "%s",
                     "role": "%s"
-                  }
+                  }%s
                 }
-                """.formatted(tenant.tenantId(), loginPrefix, mobile, accountType, roleCode, loginId, uniqueSuffix.substring(Math.max(0, uniqueSuffix.length() - 4)), accountType, loginId, roleCode);
+                """.formatted(tenant.tenantId(), loginPrefix, mobile, accountType, accountCode, roleCode, loginId, uniqueSuffix.substring(Math.max(0, uniqueSuffix.length() - 4)), accountType, loginId, roleCode, profileSection);
         String accountId = postJson(tenant, "create " + accountType, "/api/v1/account/registerUser", creatorToken, registerRequest)
                 .then()
                 .statusCode(200)
@@ -544,7 +548,67 @@ class MultiTenantIsolationE2ETest {
         String accessToken = loginWithPassword(tenant, accountType + " login after change", loginId, password, accountId);
         assertJwt(accessToken, accountId, "PASSWORD", accountType);
         assertAccountMobile(tenant, accountId, accountType, mobile);
+        assertBusinessProfile(tenant, accountId, accountType, uniqueSuffix);
         return new BusinessUser(accountId, accountType, mobile, accessToken, password);
+    }
+
+    private String businessProfileSection(String accountType, String uniqueSuffix) {
+        if ("MERCHANT".equalsIgnoreCase(accountType)) {
+            return """
+                    ,
+                                      "merchantInfo": {
+                                        "merchantCode": "MER%s",
+                                        "mccCodes": ["5411", "5812"],
+                                        "merchantConfig": {
+                                          "source": "e2e"
+                                        }
+                                      }
+                    """.formatted(uniqueSuffix);
+        }
+        if ("BILLER".equalsIgnoreCase(accountType)) {
+            return """
+                    ,
+                                      "billerInfo": {
+                                        "billerCategory": "UTILITIES",
+                                        "billerCode": "BIL%s",
+                                        "billerSubCategory": "ELEC",
+                                        "billerConfig": {
+                                          "source": "e2e"
+                                        },
+                                        "billerSettings": {
+                                          "enabled": true
+                                        }
+                                      }
+                    """.formatted(uniqueSuffix);
+        }
+        return "";
+    }
+
+    private void assertBusinessProfile(TenantSpec tenant, String accountId, String accountType, String uniqueSuffix) {
+        if ("MERCHANT".equalsIgnoreCase(accountType)) {
+            Integer merchantCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM " + tenant.schema() + ".account_merchant_info WHERE account_id = ? AND merchant_code = ?",
+                    Integer.class,
+                    accountId,
+                    "MER" + uniqueSuffix
+            );
+            assertEquals(1, merchantCount);
+            Integer mccCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM " + tenant.schema() + ".account_merchant_mcc mcc JOIN " + tenant.schema() + ".account_merchant_info mi ON mi.merchant_info_id = mcc.merchant_info_id WHERE mi.account_id = ? AND mcc.mcc_code IN ('5411', '5812')",
+                    Integer.class,
+                    accountId
+            );
+            assertEquals(2, mccCount);
+        }
+        if ("BILLER".equalsIgnoreCase(accountType)) {
+            Integer billerCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM " + tenant.schema() + ".account_biller_info WHERE account_id = ? AND biller_code = ?",
+                    Integer.class,
+                    accountId,
+                    "BIL" + uniqueSuffix
+            );
+            assertEquals(1, billerCount);
+        }
     }
 
     private Long createTag(TenantSpec tenant, String accessToken, String tagCode, String category, String tagType) {

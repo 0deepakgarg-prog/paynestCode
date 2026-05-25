@@ -1,0 +1,23 @@
+[Unit]
+Description=PayNest Apache Camel Integrator
+After=network-online.target paynest-wallet.service
+Wants=network-online.target
+Requires=paynest-wallet.service
+
+[Service]
+Type=simple
+User=paynest
+Group=paynest
+WorkingDirectory=/opt/paynest/integrator
+Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=JAVA_OPTS=-Xms256m -Xmx768m
+Environment=INTEGRATOR_HOME=/opt/paynest/integrator
+ExecStart=/bin/sh -c 'exec /usr/bin/java $JAVA_OPTS -Dloader.main=com.paynest.integrator.PayNestIntegratorApplication -jar ${INTEGRATOR_HOME}/paynest-integrator-1.0.0.jar'
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

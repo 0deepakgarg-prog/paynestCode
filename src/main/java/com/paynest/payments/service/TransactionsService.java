@@ -788,7 +788,6 @@ public class TransactionsService {
             Map<String, Object> additionalInfo,
             String paymentReference,
             String comments) {
-/*
         try {
             Transactions txn = transactionsRepository.findFirstByTransactionId(transactionId).orElse(null);
             if (txn == null) {
@@ -859,8 +858,6 @@ public class TransactionsService {
                     ex
             );
         }
-
- */
     }
 
     private JSONObject mergeJson(String existingValue, JSONObject newValue, String fieldName, String transactionId) {

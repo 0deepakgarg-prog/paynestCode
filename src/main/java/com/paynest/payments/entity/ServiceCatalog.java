@@ -36,6 +36,15 @@ public class ServiceCatalog {
     @Column(name = "is_financial", nullable = false)
     private Boolean isFinancial = true;
 
+    @Column(name = "send_to_integrator", nullable = false)
+    private Boolean sendToIntegrator = false;
+
+    @Column(name = "requires_confirmation", nullable = false)
+    private Boolean requiresConfirmation = false;
+
+    @Column(name = "integrator_call_mode", nullable = false, length = 20)
+    private String integratorCallMode = "SYNC";
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
@@ -53,6 +62,15 @@ public class ServiceCatalog {
         createdAt = TenantTime.now();
         if (isFinancial == null) {
             isFinancial = true;
+        }
+        if (sendToIntegrator == null) {
+            sendToIntegrator = false;
+        }
+        if (requiresConfirmation == null) {
+            requiresConfirmation = false;
+        }
+        if (integratorCallMode == null || integratorCallMode.isBlank()) {
+            integratorCallMode = "SYNC";
         }
         if (isActive == null) {
             isActive = true;
