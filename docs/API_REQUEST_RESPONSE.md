@@ -651,6 +651,43 @@ Request:
 
 Response fields: `responseStatus`, `operationType`, `code`, `message`, `timestamp`, `traceId`, `transactionId`, `transactionTraceId`, `serviceCode`, `transferStatus`.
 
+## Card Pre-Auth Hold APIs
+
+These internal APIs are intended for CMS-driven card pre-auth hold updates. Each operation writes `card_pre_auth_hold` and updates the related wallet `frozenBalance`.
+
+### `POST /api/v1/internal/card/preauth/holds`
+
+Creates a new pre-auth hold and increases `wallet_balance.frozen_balance` by `amount`.
+
+Request fields: `cmsTransactionId`, `debitor`, `transaction`, `cmsReference`, `merchantId`, `comments`, `additionalInfo`.
+
+`debitor.identifier.type` must be `MSISDN`; the service resolves the active account using the MSISDN, then resolves the wallet using `transaction.currency` and `debitor.walletType`. There is no creditor/receiver on hold creation.
+
+### `POST /api/v1/internal/card/preauth/holds/{holdId}/increment`
+
+Increments an active hold and increases `wallet_balance.frozen_balance` by `amount`.
+
+Request fields: `amount`, `comments`, `additionalInfo`.
+
+### `POST /api/v1/internal/card/preauth/holds/{holdId}/decrement`
+
+Decrements an active hold and decreases `wallet_balance.frozen_balance` by `amount`. If the hold reaches zero, status becomes `RELEASED`.
+
+Request fields: `amount`, `comments`, `additionalInfo`.
+
+### `POST /api/v1/internal/card/preauth/holds/{holdId}/debit`
+
+Debits an active pre-auth hold without PIN/auth validation. The API resolves both `debitor` and `creditor` from the database, validates the resolved debitor wallet against the hold, validates the debit against `wallet_balance.frozen_balance`, reduces `frozen_balance`, reduces `available_balance`, writes transaction header/detail/ledger records, and refreshes the wallet balance cache.
+
+The debitor is resolved from `debitor.identifier`, `transaction.currency`, and `debitor.walletType`; it must match the wallet linked to the pre-auth hold. The creditor is resolved from `creditor.identifier`, `transaction.currency`, and `creditor.walletType`.
+
+Request fields: `debitor`, `creditor`, `transaction`, `paymentReference`, `comments`, `additionalInfo`.
+
+`debitor.identifier.type` must be `MSISDN`.
+`creditor.identifier.type` may be `MSISDN` or `LOGINID`; `MSISDN` resolves through the stored mobile identifier. `transaction.currency` must match the hold/debitor wallet currency and the resolved creditor wallet currency.
+
+Response fields: `responseStatus`, `code`, `message`, `timestamp`, `transactionId`, `holdId`, `cmsTransactionId`, `walletId`, `accountId`, `currency`, `walletType`, `originalAmount`, `holdAmount`, `frozenBalance`, `status`.
+
 ## Transaction Query APIs
 
 ### `GET /api/v1/transaction/{accountId}/{transactionId}`

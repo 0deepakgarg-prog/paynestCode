@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/account/*/status-history").hasRole("ADMIN")
                         .requestMatchers("/api/v1/documents/**", "/api/v1/document-categories/**", "/api/v1/document-types/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/accounts/*/documents").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/internal/card/preauth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/internal/settletxn").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",

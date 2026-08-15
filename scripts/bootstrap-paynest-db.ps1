@@ -1308,6 +1308,108 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.qr_payment_intent (
 CREATE INDEX IF NOT EXISTS idx_qr_payment_intent_status_expiry
     ON $TenantSchema.qr_payment_intent(status, expires_at);
 
+CREATE TABLE IF NOT EXISTS $TenantSchema.batches (
+    batch_id VARCHAR(30) PRIMARY KEY,
+    batch_reference VARCHAR(100),
+    batch_type VARCHAR(30) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    transaction_id VARCHAR(30),
+    total_records INTEGER NOT NULL DEFAULT 0,
+    valid_records INTEGER NOT NULL DEFAULT 0,
+    failed_records INTEGER NOT NULL DEFAULT 0,
+    total_amount NUMERIC(19, 0) NOT NULL DEFAULT 0,
+    currency VARCHAR(10) NOT NULL,
+    debitor_account_id VARCHAR(30),
+    debitor_wallet_type VARCHAR(50),
+    debitor_currency VARCHAR(10),
+    created_by VARCHAR(30),
+    approved_by VARCHAR(30),
+    rejected_by VARCHAR(30),
+    validation_started_on TIMESTAMP,
+    validation_completed_on TIMESTAMP,
+    approved_on TIMESTAMP,
+    rejected_on TIMESTAMP,
+    processing_started_on TIMESTAMP,
+    processing_completed_on TIMESTAMP,
+    failure_reason VARCHAR(500),
+    remarks VARCHAR(500),
+    additional_info JSONB,
+    created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified_by VARCHAR(30) NOT NULL,
+    modified_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_batches_status CHECK (
+        status IN (
+            'VALIDATION_INITIATED',
+            'VALIDATION_IN_PROGRESS',
+            'PENDING_APPROVAL',
+            'APPROVED',
+            'REJECTED',
+            'PROCESSING',
+            'SUCCESS',
+            'PARTIAL_SUCCESS',
+            'FAILED',
+            'REFUNDED'
+        )
+    )
+);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.batch_details (
+    batch_detail_id BIGSERIAL PRIMARY KEY,
+    batch_id VARCHAR(30) NOT NULL,
+    item_reference VARCHAR(100),
+    status VARCHAR(30) NOT NULL,
+    transaction_id VARCHAR(30),
+    amount NUMERIC(19, 0) NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    creditor_wallet_type VARCHAR(50),
+    creditor_currency VARCHAR(10),
+    creditor_identifier_type VARCHAR(30),
+    creditor_identifier_value VARCHAR(50),
+    payment_reference VARCHAR(100),
+    comments VARCHAR(300),
+    validation_error_code VARCHAR(100),
+    validation_error_message VARCHAR(500),
+    processing_error_code VARCHAR(100),
+    processing_error_message VARCHAR(500),
+    additional_info JSONB,
+    CONSTRAINT fk_batch_details_batch
+        FOREIGN KEY (batch_id)
+        REFERENCES $TenantSchema.batches (batch_id),
+    CONSTRAINT chk_batch_details_status CHECK (
+        status IN (
+            'PENDING',
+            'VALIDATION_IN_PROGRESS',
+            'VALIDATED',
+            'VALIDATION_FAILED',
+            'PROCESSING',
+            'SUCCESS',
+            'FAILED',
+            'SKIPPED'
+        )
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_batches_status
+    ON $TenantSchema.batches (status);
+
+CREATE INDEX IF NOT EXISTS idx_batches_reference
+    ON $TenantSchema.batches (batch_reference);
+
+CREATE INDEX IF NOT EXISTS idx_batches_created_on
+    ON $TenantSchema.batches (created_on);
+
+CREATE INDEX IF NOT EXISTS idx_batch_details_batch_id
+    ON $TenantSchema.batch_details (batch_id);
+
+CREATE INDEX IF NOT EXISTS idx_batch_details_status
+    ON $TenantSchema.batch_details (status);
+
+CREATE INDEX IF NOT EXISTS idx_batch_details_transaction_id
+    ON $TenantSchema.batch_details (transaction_id);
+
+CREATE INDEX IF NOT EXISTS idx_batch_details_item_reference
+    ON $TenantSchema.batch_details (item_reference);
+
 CREATE TABLE IF NOT EXISTS $TenantSchema.audit_api_log (
     id BIGSERIAL PRIMARY KEY,
     request_id VARCHAR(255),
@@ -1336,6 +1438,12 @@ INSERT INTO $TenantSchema.enumerations (enum_type, enum_code, enum_value, descri
 VALUES
     ('SYSTEM_CONFIG', 'TESTING_MODE', 'true', 'Set to true to use fixed OTP, PIN, and password values for testing', 0, TRUE, TRUE),
     ('SYSTEM_CONFIG', 'INTRAWALLET_BONUS_TO_MAIN_PERCENTAGE', '25', 'Percentage of bonus wallet value credited to main wallet during intra-wallet transfers', 1, TRUE, TRUE),
+    ('SYSTEM_CONFIG', 'BULK_PAYMENT_VALIDATION_EXECUTOR_COUNT', '3', 'Number of workers used for bulk payment validation', 2, TRUE, TRUE),
+    ('SYSTEM_CONFIG', 'BULK_PAYMENT_PROCESSING_EXECUTOR_COUNT', '3', 'Number of workers used for bulk payment execution', 3, TRUE, TRUE),
+    ('SYSTEM_CONFIG', 'BULK_PAYMENT_EXECUTOR_DELAY_MS', '1000', 'Delay between bulk payment executor runs in milliseconds', 4, TRUE, TRUE),
+    ('SYSTEM_CONFIG', 'BULK_PAYMENT_EXECUTION_WINDOW_ENABLED', 'true', 'Enable off-business-hour execution window for bulk salary payments', 5, TRUE, TRUE),
+    ('SYSTEM_CONFIG', 'BULK_PAYMENT_EXECUTION_WINDOW_START', '20:00', 'Bulk salary execution window start time in tenant timezone', 6, TRUE, TRUE),
+    ('SYSTEM_CONFIG', 'BULK_PAYMENT_EXECUTION_WINDOW_END', '06:00', 'Bulk salary execution window end time in tenant timezone', 7, TRUE, TRUE),
 ('SERVICE_CATEGORY', 'BILLER', 'Biller', 'Biller and bill payment services', 1, TRUE, TRUE),
 ('SERVICE_CATEGORY', 'WALLET', 'Wallet', 'Wallet balance and wallet movement services', 2, TRUE, TRUE),
 ('SERVICE_CATEGORY', 'MERCHANT', 'Merchant', 'Merchant payment and merchant collection services', 3, TRUE, TRUE),
@@ -8601,7 +8709,10 @@ VALUES
     (90000000042, 'SYS0001', 'EUR', 'TAX', 'ACTIVE', TRUE, FALSE, CURRENT_TIMESTAMP, NULL, 'TAX account for EUR Wallets'),
     (90000000050, 'SYS0001', 'USD', 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'HOLDING account for USD Wallets'),
     (90000000051, 'SYS0001', 'INR', 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'HOLDING account for INR Wallets'),
-    (90000000052, 'SYS0001', 'EUR', 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'HOLDING account for EUR Wallets')
+    (90000000052, 'SYS0001', 'EUR', 'HOLDING', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'HOLDING account for EUR Wallets'),
+    (90000000060, 'SYS0001', 'USD', 'SALARY', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'Salary transient account for USD Wallets'),
+    (90000000061, 'SYS0001', 'INR', 'SALARY', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'Salary transient account for INR Wallets'),
+    (90000000062, 'SYS0001', 'EUR', 'SALARY', 'ACTIVE', FALSE, FALSE, CURRENT_TIMESTAMP, NULL, 'Salary transient account for EUR Wallets')
 ON CONFLICT (wallet_id) DO UPDATE
 SET account_id = EXCLUDED.account_id,
     currency = EXCLUDED.currency,
@@ -8647,7 +8758,10 @@ VALUES
     (90000000042, 0, 0, 0, 0, CURRENT_TIMESTAMP),
     (90000000050, 0, 0, 0, 0, CURRENT_TIMESTAMP),
     (90000000051, 0, 0, 0, 0, CURRENT_TIMESTAMP),
-    (90000000052, 0, 0, 0, 0, CURRENT_TIMESTAMP)
+    (90000000052, 0, 0, 0, 0, CURRENT_TIMESTAMP),
+    (90000000060, 0, 0, 0, 0, CURRENT_TIMESTAMP),
+    (90000000061, 0, 0, 0, 0, CURRENT_TIMESTAMP),
+    (90000000062, 0, 0, 0, 0, CURRENT_TIMESTAMP)
 ON CONFLICT (wallet_id) DO UPDATE
 SET updated_at = CURRENT_TIMESTAMP;
 
@@ -8740,7 +8854,10 @@ VALUES
     ('IPSMP', 'Internal Subscriber Merchant Payment', 'Internal transfer from subscriber to merchant', 'PAYMENT', 'PAYMENT', TRUE, FALSE, FALSE, 'SYNC', TRUE, 12),
     ('IPSCIN', 'Internal Agent Cash In', 'Internal transfer from agent to subscriber', 'PAYMENT', 'CREDIT', TRUE, FALSE, FALSE, 'SYNC', TRUE, 13),
     ('IPSBP', 'Third Party Bill Payment', 'Bill payment for third party requiring integrator confirmation', 'PAYMENT', 'PAYMENT', TRUE, TRUE, TRUE, 'ASYNC', TRUE, 14),
-    ('IPSBPSC', 'Third Party Bill Payment Sync', 'Synchronous third party bill payment', 'PAYMENT', 'PAYMENT', TRUE, TRUE, FALSE, 'SYNC', TRUE, 15)
+    ('IPSBPSC', 'Third Party Bill Payment Sync', 'Synchronous third party bill payment', 'PAYMENT', 'PAYMENT', TRUE, TRUE, FALSE, 'SYNC', TRUE, 15),
+    ('BULKP', 'Bulk Salary Prefund', 'Enterprise prefund to salary transient wallet', 'PAYMENT', 'TRANSFER', TRUE, FALSE, FALSE, 'SYNC', TRUE, 16),
+    ('SALPAY', 'Salary Payment', 'Salary payment from transient wallet to recipient', 'PAYMENT', 'TRANSFER', TRUE, FALSE, FALSE, 'SYNC', TRUE, 17),
+    ('BULKR', 'Bulk Salary Refund', 'Refund failed salary payment funds from transient wallet to enterprise', 'PAYMENT', 'TRANSFER', TRUE, FALSE, FALSE, 'SYNC', TRUE, 18)
 ON CONFLICT (service_code) DO UPDATE
 SET service_name = EXCLUDED.service_name,
     description = EXCLUDED.description,
@@ -8933,6 +9050,3 @@ FROM $TenantSchema.service_catalog;
     Remove-Item Env:\PGPASSWORD -ErrorAction SilentlyContinue
     Write-DbBootstrapLog "Bootstrap cleanup completed for tenant '$TenantId'."
 }
-
-
-
