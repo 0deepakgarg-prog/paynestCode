@@ -6,6 +6,7 @@ import com.paynest.users.dto.response.AccountWalletBalancesResponse;
 import com.paynest.users.dto.response.BalanceResponse;
 import com.paynest.users.entity.Wallet;
 import com.paynest.users.entity.WalletBalance;
+import com.paynest.limits.service.TransactionLimitValidator;
 import com.paynest.payments.entity.WalletLedger;
 import com.paynest.exception.ApplicationException;
 import com.paynest.users.repository.AccountRepository;
@@ -31,11 +32,20 @@ public class WalletService {
     private final WalletLedgerRepository ledgerRepo;
     private final WalletRepository walletRepository;
     private final WalletCacheService walletCacheService;
+    private final TransactionLimitValidator transactionLimitValidator;
 
     @Transactional
     public void debitWallet(Wallet wallet,
                             BigDecimal amount,
                             String txnId) throws ApplicationException {
+        debitWallet(wallet, amount, txnId, null);
+    }
+
+    @Transactional
+    public void debitWallet(Wallet wallet,
+                            BigDecimal amount,
+                            String txnId,
+                            String serviceCode) throws ApplicationException {
 
         WalletBalance balance =
                 balanceRepo.lockBalance(wallet.getWalletId());
@@ -54,6 +64,17 @@ public class WalletService {
 
         BigDecimal after =
                 before.subtract(amount);
+
+        transactionLimitValidator.validateAndReserve(
+                wallet,
+                null,
+                amount,
+                BigDecimal.ZERO,
+                after,
+                null,
+                serviceCode,
+                txnId
+        );
 
         WalletLedger ledger = new WalletLedger();
         ledger.setTxnId(txnId);
@@ -75,6 +96,14 @@ public class WalletService {
     public void creditWallet(Wallet wallet,
                              BigDecimal amount,
                              String txnId) {
+        creditWallet(wallet, amount, txnId, null);
+    }
+
+    @Transactional
+    public void creditWallet(Wallet wallet,
+                             BigDecimal amount,
+                             String txnId,
+                             String serviceCode) {
 
         WalletBalance balance =
                 balanceRepo.lockBalance(wallet.getWalletId());
@@ -84,6 +113,17 @@ public class WalletService {
 
         BigDecimal after =
                 before.add(amount);
+
+        transactionLimitValidator.validateAndReserve(
+                null,
+                wallet,
+                BigDecimal.ZERO,
+                amount,
+                null,
+                after,
+                serviceCode,
+                txnId
+        );
 
         // 3. Insert ledger entry
         WalletLedger ledger = new WalletLedger();

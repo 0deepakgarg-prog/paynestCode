@@ -2,11 +2,13 @@ package com.paynest.notifications.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.paynest.common.Constants;
 import com.paynest.config.AsyncEventConfig;
 import com.paynest.config.PropertyReader;
 import com.paynest.config.tenant.TenantContext;
 import com.paynest.config.tenant.TraceContext;
+import com.paynest.notifications.dto.NotificationOutboxRequest;
 import com.paynest.notifications.event.TransactionNotificationEvent;
 import com.paynest.users.entity.AccountNotificationEndpoint;
 import com.paynest.users.entity.NotificationTemplate;
@@ -21,6 +23,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,6 +36,7 @@ public class AsyncTransactionNotificationProcessor {
     private final AccountNotificationEndpointRepository accountNotificationEndpointRepository;
     private final ObjectMapper objectMapper;
     private final PropertyReader propertyReader;
+    private final NotificationOutboxService notificationOutboxService;
     private static final List<String> TEXT_FIELD_NAMES = List.of(
             "notificationText",
             "message",
@@ -228,15 +232,39 @@ public class AsyncTransactionNotificationProcessor {
         for (AccountNotificationEndpoint endpoint : endpoints) {
             Map<String, Object> replacementValues = buildEndpointReplacementValues(context, accountId, partyRole, endpoint);
             JsonNode renderedTemplate = renderTemplate(template.get().getTemplateDefinition(), replacementValues);
+            String channel = resolveChannel(endpoint);
+            JsonNode deliveryPayload = selectDeliveryPayload(renderedTemplate, channel);
             Map<String, Object> finalNotification = buildFinalNotification(
                     endpoint,
                     template.get(),
-                    renderedTemplate
+                    channel,
+                    deliveryPayload
             );
+            var queuedNotification = notificationOutboxService.enqueue(NotificationOutboxRequest.builder()
+                    .transactionId(event.getTransactionId())
+                    .accountId(accountId)
+                    .partyRole(partyRole)
+                    .channel(channel)
+                    .recipient(endpoint.getEndpointValue())
+                    .recipientMasked(maskEndpoint(endpoint))
+                    .templateCode(template.get().getTemplateCode())
+                    .subject((String) finalNotification.get("subject"))
+                    .title((String) finalNotification.get("title"))
+                    .notificationText((String) finalNotification.get("text"))
+                    .payload(deliveryPayload)
+                    .serviceCode(event.getServiceCode())
+                    .transferStatus(event.getTransferStatus())
+                    .traceId(event.getTraceId())
+                    .build());
 
             log.info(
-                    "Generated notification. finalNotification={}",
-                    finalNotification
+                    "Queued notification. notificationId={}, transactionId={}, accountId={}, channel={}, recipient={}, templateCode={}",
+                    queuedNotification.getNotificationId(),
+                    event.getTransactionId(),
+                    accountId,
+                    channel,
+                    maskEndpoint(endpoint),
+                    template.get().getTemplateCode()
             );
         }
     }
@@ -258,16 +286,120 @@ public class AsyncTransactionNotificationProcessor {
     private Map<String, Object> buildFinalNotification(
             AccountNotificationEndpoint endpoint,
             NotificationTemplate template,
-            JsonNode renderedTemplate
+            String channel,
+            JsonNode deliveryPayload
     ) {
         Map<String, Object> finalNotification = new LinkedHashMap<>();
-        finalNotification.put("channel", endpoint.getEndpointType());
+        finalNotification.put("channel", channel);
         finalNotification.put("recipient", maskEndpoint(endpoint));
         finalNotification.put("templateCode", template.getTemplateCode());
-        addIfPresent(finalNotification, "subject", extractTextField(renderedTemplate, "subject"));
-        addIfPresent(finalNotification, "title", extractTextField(renderedTemplate, "title"));
-        finalNotification.put("text", extractNotificationText(renderedTemplate));
+        addIfPresent(finalNotification, "subject", extractTextField(deliveryPayload, "subject"));
+        addIfPresent(finalNotification, "title", extractTextField(deliveryPayload, "title"));
+        finalNotification.put("text", extractNotificationText(deliveryPayload));
         return finalNotification;
+    }
+
+    private String resolveChannel(AccountNotificationEndpoint endpoint) {
+        String endpointType = endpoint.getEndpointType();
+        if (endpointType == null || endpointType.isBlank()) {
+            return "UNKNOWN";
+        }
+
+        String normalizedEndpointType = endpointType.trim().toUpperCase(Locale.ROOT);
+        return switch (normalizedEndpointType) {
+            case "MOBILE", "MSISDN", "PHONE", "PHONE_NUMBER" -> "SMS";
+            case "FCM", "APNS", "DEVICE", "DEVICE_TOKEN", "PUSH_TOKEN" -> "PUSH";
+            default -> normalizedEndpointType;
+        };
+    }
+
+    private JsonNode selectDeliveryPayload(JsonNode renderedTemplate, String channel) {
+        if (renderedTemplate == null || !renderedTemplate.isObject()) {
+            return renderedTemplate;
+        }
+
+        JsonNode channelsNode = findField(renderedTemplate, "channels");
+        if (channelsNode == null || !channelsNode.isObject()) {
+            return renderedTemplate;
+        }
+
+        JsonNode channelNode = findField(channelsNode, channel);
+        if (channelNode == null) {
+            String defaultChannel = extractDirectTextField(renderedTemplate, "defaultChannel");
+            channelNode = findField(channelsNode, defaultChannel);
+        }
+        if (channelNode == null) {
+            return renderedTemplate;
+        }
+
+        return selectLanguagePayload(renderedTemplate, channelNode);
+    }
+
+    private JsonNode selectLanguagePayload(JsonNode rootTemplate, JsonNode channelNode) {
+        if (channelNode == null || !channelNode.isObject()) {
+            return channelNode;
+        }
+
+        JsonNode languagesNode = findField(channelNode, "languages");
+        if (languagesNode == null || !languagesNode.isObject()) {
+            return channelNode;
+        }
+
+        String defaultLanguage = extractDirectTextField(rootTemplate, "defaultLanguage");
+        JsonNode languageNode = findField(languagesNode, defaultLanguage);
+        if (languageNode == null) {
+            languageNode = findField(languagesNode, "en");
+        }
+        if (languageNode == null) {
+            languageNode = firstFieldValue(languagesNode);
+        }
+        if (languageNode == null) {
+            return channelNode;
+        }
+
+        ObjectNode payload = objectMapper.createObjectNode();
+        channelNode.fields().forEachRemaining(field -> {
+            if (!field.getKey().equalsIgnoreCase("languages")) {
+                payload.set(field.getKey(), field.getValue());
+            }
+        });
+        if (languageNode.isObject()) {
+            languageNode.fields().forEachRemaining(field -> payload.set(field.getKey(), field.getValue()));
+        } else {
+            payload.set("body", languageNode);
+        }
+        return payload;
+    }
+
+    private JsonNode findField(JsonNode node, String fieldName) {
+        if (node == null || !node.isObject() || fieldName == null || fieldName.isBlank()) {
+            return null;
+        }
+
+        var fields = node.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            if (field.getKey().equalsIgnoreCase(fieldName)) {
+                return field.getValue();
+            }
+        }
+        return null;
+    }
+
+    private JsonNode firstFieldValue(JsonNode node) {
+        if (node == null || !node.isObject()) {
+            return null;
+        }
+        var fields = node.fields();
+        return fields.hasNext() ? fields.next().getValue() : null;
+    }
+
+    private String extractDirectTextField(JsonNode node, String fieldName) {
+        JsonNode value = findField(node, fieldName);
+        if (value == null || value.isNull()) {
+            return null;
+        }
+        return value.isTextual() ? value.asText() : value.toString();
     }
 
     private String extractNotificationText(JsonNode renderedTemplate) {

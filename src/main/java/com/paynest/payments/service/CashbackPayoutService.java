@@ -3,6 +3,7 @@ package com.paynest.payments.service;
 import com.paynest.common.Constants;
 import com.paynest.config.PropertyReader;
 import com.paynest.config.tenant.TenantTime;
+import com.paynest.limits.service.TransactionLimitValidator;
 import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.payments.entity.CashbackPayout;
 import com.paynest.payments.entity.TransactionDetails;
@@ -56,6 +57,7 @@ public class CashbackPayoutService {
     private final PropertyReader propertyReader;
     private final WalletCacheService walletCacheService;
     private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+    private final TransactionLimitValidator transactionLimitValidator;
 
     public void payoutDueCashback(LocalDateTime dueAt) {
         LocalDateTime effectiveDueAt = dueAt == null ? TenantTime.now() : dueAt;
@@ -94,6 +96,18 @@ public class CashbackPayoutService {
             BigDecimal sourceBalAfter = sourceBalBefore.subtract(dbAmount);
             BigDecimal beneficiaryBalBefore = beneficiaryBalance.getAvailableBalance();
             BigDecimal beneficiaryBalAfter = beneficiaryBalBefore.add(dbAmount);
+
+            transactionLimitValidator.validateAndReserve(
+                    sourceWallet,
+                    beneficiaryWallet,
+                    dbAmount,
+                    dbAmount,
+                    sourceBalAfter,
+                    beneficiaryBalAfter,
+                    CASHBACK_SERVICE_CODE,
+                    "SYSTEM",
+                    payoutTxnId
+            );
 
             sourceBalance.setAvailableBalance(sourceBalAfter);
             beneficiaryBalance.setAvailableBalance(beneficiaryBalAfter);

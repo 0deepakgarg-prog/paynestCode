@@ -2,6 +2,7 @@ package com.paynest.users.e2e;
 
 import com.paynest.config.security.JwtService;
 import com.paynest.config.service.TenantRegistryService;
+import com.paynest.common.Constants;
 import com.paynest.payments.dto.U2UPaymentResponse;
 import com.paynest.payments.dto.U2UPaymentRequest;
 import com.paynest.payments.enums.TransactionStatus;
@@ -13,6 +14,7 @@ import com.paynest.users.dto.request.RegistrationRequest;
 import com.paynest.users.dto.request.RegistrationRequestWithOtp;
 import com.paynest.users.dto.response.AuthLoginResponse;
 import com.paynest.users.entity.Account;
+import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.service.AccountService;
 import com.paynest.users.service.AuthService;
 import com.paynest.users.service.PinService;
@@ -33,6 +35,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -79,12 +82,16 @@ class SubscriberLifecycleJourneyE2ETest {
     @MockBean
     private UserDetailsService userDetailsService;
 
+    @MockBean
+    private AccountRepository accountRepository;
+
     @BeforeEach
     void setUp() {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
 
         when(tenantRegistryService.getSchema(TENANT_ID)).thenReturn(TENANT_SCHEMA);
+        when(tenantRegistryService.getTimeZone(TENANT_ID)).thenReturn("UTC");
 
         when(jwtService.isTokenValid(SUBSCRIBER_TOKEN)).thenReturn(true);
         when(jwtService.extractAccountId(SUBSCRIBER_TOKEN)).thenReturn(SUBSCRIBER_ACCOUNT_ID);
@@ -102,6 +109,10 @@ class SubscriberLifecycleJourneyE2ETest {
         when(userDetailsService.loadUserByUsername("ADMIN0001")).thenReturn(
                 new User("ADMIN0001", "N/A", AuthorityUtils.NO_AUTHORITIES)
         );
+        when(accountRepository.findById(SUBSCRIBER_ACCOUNT_ID))
+                .thenReturn(Optional.of(activeAccount(SUBSCRIBER_ACCOUNT_ID, "SUBSCRIBER")));
+        when(accountRepository.findById("ADMIN0001"))
+                .thenReturn(Optional.of(activeAccount("ADMIN0001", "ADMIN")));
     }
 
     @Test
@@ -332,5 +343,13 @@ class SubscriberLifecycleJourneyE2ETest {
 
     private Claims claims(String scope) {
         return new DefaultClaims(Map.of("scope", scope, "tenant", TENANT_ID));
+    }
+
+    private Account activeAccount(String accountId, String accountType) {
+        Account account = new Account();
+        account.setAccountId(accountId);
+        account.setAccountType(accountType);
+        account.setStatus(Constants.ACCOUNT_STATUS_ACTIVE);
+        return account;
     }
 }

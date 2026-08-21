@@ -10,6 +10,7 @@ import com.paynest.payments.repository.TransactionsRepository;
 import com.paynest.config.tenant.TraceContext;
 import com.paynest.users.entity.AccountIdentifier;
 import com.paynest.users.entity.Wallet;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
@@ -147,6 +149,62 @@ class TransactionsServiceTest {
         ArgumentCaptor<Transactions> transactionCaptor = ArgumentCaptor.forClass(Transactions.class);
         verify(transactionsRepository).save(transactionCaptor.capture());
         assertEquals(true, transactionCaptor.getValue().getPaymentViaQr());
+    }
+
+    @Test
+    void generateTransactionRecord_shouldPersistOptionalJsonFieldsOnInitialSave() throws Exception {
+        TransactionsService transactionsService = new TransactionsService(
+                propertyReader,
+                transactionsRepository,
+                transactionDetailsRepository,
+                transactionNotificationEventPublisher
+        );
+
+        AccountIdentifier debitorIdentifier = identifier("sub-1", "MOBILE", "7777777777");
+        AccountIdentifier creditorIdentifier = identifier("sub-2", "MOBILE", "8888888888");
+        Wallet debitorWallet = wallet(101L, "sub-1");
+        Wallet creditorWallet = wallet(202L, "sub-2");
+        Map<String, Object> metadata = Map.of(
+                "channel", "MOBILE_APP",
+                "deviceId", "ANDROID-SAMSUNG-S25"
+        );
+        Map<String, Object> additionalInfo = Map.of(
+                "clientId", "123445",
+                "clientName", "Jio"
+        );
+
+        when(propertyReader.getPropertyValue("currency.factor")).thenReturn("100");
+
+        transactionsService.generateTransactionRecord(
+                "txn-json-1",
+                new BigDecimal("10.50"),
+                "MOBILE",
+                "U2U",
+                "en",
+                debitorIdentifier,
+                creditorIdentifier,
+                "SUBSCRIBER",
+                "SUBSCRIBER",
+                debitorWallet,
+                creditorWallet,
+                InitiatedBy.DEBITOR,
+                "TXN-REF-1",
+                "Dinner payment",
+                false,
+                metadata,
+                additionalInfo
+        );
+
+        ArgumentCaptor<Transactions> transactionCaptor = ArgumentCaptor.forClass(Transactions.class);
+        verify(transactionsRepository).save(transactionCaptor.capture());
+
+        Transactions transaction = transactionCaptor.getValue();
+        JSONObject persistedMetadata = new JSONObject(transaction.getMetadata());
+        JSONObject persistedAdditionalInfo = new JSONObject(transaction.getAdditionalInfo());
+        assertEquals("MOBILE_APP", persistedMetadata.getString("channel"));
+        assertEquals("ANDROID-SAMSUNG-S25", persistedMetadata.getString("deviceId"));
+        assertEquals("123445", persistedAdditionalInfo.getString("clientId"));
+        assertEquals("Jio", persistedAdditionalInfo.getString("clientName"));
     }
 
     private AccountIdentifier identifier(String accountId, String identifierType, String identifierValue) {

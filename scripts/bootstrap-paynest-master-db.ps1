@@ -19,6 +19,35 @@ function Write-MasterDbBootstrapLog {
     Write-Host "[$timestamp] [master-db-bootstrap] $Message"
 }
 
+function Resolve-PsqlCommand {
+    $command = Get-Command psql -ErrorAction SilentlyContinue
+    if ($command) {
+        return $command.Source
+    }
+
+    $candidateRoots = @(
+        $env:ProgramFiles,
+        [Environment]::GetEnvironmentVariable("ProgramFiles(x86)")
+    ) | Where-Object { $_ -and (Test-Path $_) }
+
+    foreach ($root in $candidateRoots) {
+        $postgresRoot = Join-Path $root "PostgreSQL"
+        if (-not (Test-Path $postgresRoot)) {
+            continue
+        }
+
+        $psqlCandidates = Get-ChildItem -Path $postgresRoot -Filter psql.exe -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '\\bin\\psql\.exe$' } |
+            Sort-Object FullName -Descending
+
+        if ($psqlCandidates) {
+            return $psqlCandidates[0].FullName
+        }
+    }
+
+    throw "psql was not found on PATH or under Program Files\\PostgreSQL. Install PostgreSQL client tools or add psql.exe to PATH."
+}
+
 function Invoke-PsqlCommand {
     param(
         [string[]]$Arguments,
@@ -27,7 +56,7 @@ function Invoke-PsqlCommand {
 
     Write-MasterDbBootstrapLog "Starting psql step '$StepName'. arguments=$($Arguments -join ' ')"
     $startedAt = Get-Date
-    & psql @Arguments
+    & $script:PsqlCommand @Arguments
     $exitCode = $LASTEXITCODE
     $durationMs = [int]((Get-Date) - $startedAt).TotalMilliseconds
     Write-MasterDbBootstrapLog "Finished psql step '$StepName'. exitCode=$exitCode durationMs=$durationMs"
@@ -39,12 +68,8 @@ function Invoke-PsqlCommand {
 
 Write-MasterDbBootstrapLog "Bootstrap parameters: dbHost=$DbHost dbPort=$DbPort database=$Database dbLoginUser=$DbLoginUser dbUser=$DbUser"
 
-if (-not (Get-Command psql -ErrorAction SilentlyContinue)) {
-    throw "psql was not found on PATH. Install PostgreSQL client tools or add psql.exe to PATH."
-}
-
-$psqlCommand = Get-Command psql
-Write-MasterDbBootstrapLog "Found psql. path=$($psqlCommand.Source)"
+$script:PsqlCommand = Resolve-PsqlCommand
+Write-MasterDbBootstrapLog "Found psql. path=$script:PsqlCommand"
 
 $env:PGPASSWORD = $DatabasePwd
 $sqlFile = Join-Path ([System.IO.Path]::GetTempPath()) ("paynest-master-bootstrap-{0}.sql" -f ([guid]::NewGuid()))

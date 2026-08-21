@@ -24,6 +24,7 @@ import com.paynest.users.repository.WalletBalanceRepository;
 import com.paynest.users.repository.WalletRepository;
 import com.paynest.users.service.WalletCacheService;
 import com.paynest.exception.ApplicationException;
+import com.paynest.limits.service.TransactionLimitValidator;
 import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,6 +78,9 @@ class BalanceServiceTest {
     private WalletRestrictionValidator walletRestrictionValidator;
 
     @Mock
+    private TransactionLimitValidator transactionLimitValidator;
+
+    @Mock
     private TransactionNotificationEventPublisher transactionNotificationEventPublisher;
 
     @Mock
@@ -99,6 +103,7 @@ class BalanceServiceTest {
                 transactionsService,
                 walletCacheService,
                 walletRestrictionValidator,
+                transactionLimitValidator,
                 transactionNotificationEventPublisher,
                 successfulPaymentEventPublisher
         );

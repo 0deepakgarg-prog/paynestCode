@@ -29,6 +29,35 @@ function Write-DbBootstrapLog {
     Write-Host "[$timestamp] [db-bootstrap] $Message"
 }
 
+function Resolve-PsqlCommand {
+    $command = Get-Command psql -ErrorAction SilentlyContinue
+    if ($command) {
+        return $command.Source
+    }
+
+    $candidateRoots = @(
+        $env:ProgramFiles,
+        [Environment]::GetEnvironmentVariable("ProgramFiles(x86)")
+    ) | Where-Object { $_ -and (Test-Path $_) }
+
+    foreach ($root in $candidateRoots) {
+        $postgresRoot = Join-Path $root "PostgreSQL"
+        if (-not (Test-Path $postgresRoot)) {
+            continue
+        }
+
+        $psqlCandidates = Get-ChildItem -Path $postgresRoot -Filter psql.exe -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '\\bin\\psql\.exe$' } |
+            Sort-Object FullName -Descending
+
+        if ($psqlCandidates) {
+            return $psqlCandidates[0].FullName
+        }
+    }
+
+    throw "psql was not found on PATH or under Program Files\\PostgreSQL. Install PostgreSQL client tools or add psql.exe to PATH."
+}
+
 function Invoke-PsqlCommand {
     param(
         [string[]]$Arguments,
@@ -37,7 +66,7 @@ function Invoke-PsqlCommand {
 
     Write-DbBootstrapLog "Starting psql step '$StepName'. arguments=$($Arguments -join ' ')"
     $startedAt = Get-Date
-    & psql @Arguments
+    & $script:PsqlCommand @Arguments
     $exitCode = $LASTEXITCODE
     $durationMs = [int]((Get-Date) - $startedAt).TotalMilliseconds
     Write-DbBootstrapLog "Finished psql step '$StepName'. exitCode=$exitCode durationMs=$durationMs"
@@ -49,12 +78,8 @@ function Invoke-PsqlCommand {
 
 Write-DbBootstrapLog "Bootstrap parameters: dbHost=$DbHost dbPort=$DbPort database=$Database dbLoginUser=$DbLoginUser dbUser=$DbUser tenantId=$TenantId tenantSchema=$TenantSchema tenantName='$TenantName' tenantTimeZone=$TenantTimeZone"
 
-if (-not (Get-Command psql -ErrorAction SilentlyContinue)) {
-    throw "psql was not found on PATH. Install PostgreSQL client tools or add psql.exe to PATH."
-}
-
-$psqlCommand = Get-Command psql
-Write-DbBootstrapLog "Found psql. path=$($psqlCommand.Source)"
+$script:PsqlCommand = Resolve-PsqlCommand
+Write-DbBootstrapLog "Found psql. path=$script:PsqlCommand"
 
 $env:PGPASSWORD = $DatabasePwd
 $sqlFile = Join-Path ([System.IO.Path]::GetTempPath()) ("paynest-bootstrap-{0}.sql" -f ([guid]::NewGuid()))
@@ -509,6 +534,41 @@ CREATE TABLE IF NOT EXISTS $TenantSchema.notification_template (
 
 CREATE INDEX IF NOT EXISTS idx_notification_template_code_status
     ON $TenantSchema.notification_template (template_code, status);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.notification_outbox (
+    notification_id BIGSERIAL PRIMARY KEY,
+    transaction_id VARCHAR(30),
+    account_id VARCHAR(100),
+    party_role VARCHAR(20),
+    channel VARCHAR(50) NOT NULL,
+    recipient VARCHAR(2000) NOT NULL,
+    recipient_masked VARCHAR(200),
+    template_code VARCHAR(200),
+    subject VARCHAR(500),
+    title VARCHAR(500),
+    notification_text TEXT NOT NULL,
+    payload JSONB,
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    attempt_count INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at TIMESTAMP,
+    last_error VARCHAR(1000),
+    service_code VARCHAR(15),
+    transfer_status VARCHAR(10),
+    trace_id VARCHAR(100),
+    created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    modified_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    sent_on TIMESTAMP,
+    version BIGINT
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_outbox_pending
+    ON $TenantSchema.notification_outbox(status, next_attempt_at, created_on);
+
+CREATE INDEX IF NOT EXISTS idx_notification_outbox_transaction
+    ON $TenantSchema.notification_outbox(transaction_id);
+
+CREATE INDEX IF NOT EXISTS idx_notification_outbox_channel_status
+    ON $TenantSchema.notification_outbox(channel, status, created_on);
 
  INSERT INTO $TenantSchema.notification_template (template_code, template_definition, status, description, created_by) VALUES
 ('U2U.TRANSFER_SUCCESS.SENDER', '{"defaultLanguage":"en","defaultChannel":"SMS","channels":{"EMAIL":{"fromAddress":"noreply@bank.com","replyTo":"support@bank.com","priority":"HIGH","languages":{"en":{"subject":"Transfer Successful","body":"<html><body>Hello {{subscriberName}}, your transfer of {{amount}} {{currency}} was successful.</body></html>"}}},"SMS":{"senderId":"PAYBANK","languages":{"en":{"body":"Your transfer of {{amount}} {{currency}} was successful."}}},"PUSH":{"ttlSeconds":3600,"sound":"default","languages":{"en":{"title":"Transfer Successful","body":"{{amount}} {{currency}} transferred successfully."}}}}}'::jsonb, 'ACTIVE', 'P2P transfer success notification for sender', 'SYSTEM'),
@@ -1169,6 +1229,164 @@ CREATE INDEX IF NOT EXISTS idx_recent_recipients_account_last_paid
 
 CREATE INDEX IF NOT EXISTS idx_recent_recipients_account_service_last_paid
     ON $TenantSchema.recent_recipients (account_id, service_code, last_paid_at DESC);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.transaction_limit_profile (
+    limit_id BIGSERIAL PRIMARY KEY,
+    limit_name VARCHAR(150) NOT NULL,
+    tag_id BIGINT NOT NULL,
+    limit_type VARCHAR(20) NOT NULL,
+    subject_key VARCHAR(50) NOT NULL,
+    details JSONB,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    wallet_type VARCHAR(50) NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    min_residual_balance NUMERIC(19, 0),
+    max_balance NUMERIC(19, 0),
+    created_by VARCHAR(100),
+    created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    modified_by VARCHAR(100),
+    modified_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    version BIGINT,
+    CONSTRAINT fk_transaction_limit_profile_tag
+        FOREIGN KEY (tag_id) REFERENCES $TenantSchema.tags(tag_id)
+);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.transaction_limit_profile_details (
+    limit_details_id BIGSERIAL PRIMARY KEY,
+    limit_id BIGINT NOT NULL,
+    party_type VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    operation_type VARCHAR(50) NOT NULL DEFAULT 'ALL',
+    request_gateway VARCHAR(50) NOT NULL DEFAULT 'ALL',
+    min_txn_amount NUMERIC(19, 0),
+    max_txn_amount NUMERIC(19, 0),
+    created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    modified_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    version BIGINT,
+    CONSTRAINT fk_transaction_limit_details_profile
+        FOREIGN KEY (limit_id) REFERENCES $TenantSchema.transaction_limit_profile(limit_id)
+);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.transaction_limit_profile_period (
+    limit_period_id BIGSERIAL PRIMARY KEY,
+    limit_details_id BIGINT NOT NULL,
+    period_type VARCHAR(20) NOT NULL,
+    max_count INTEGER,
+    max_amount NUMERIC(19, 0),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    modified_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    version BIGINT,
+    CONSTRAINT fk_transaction_limit_period_details
+        FOREIGN KEY (limit_details_id)
+        REFERENCES $TenantSchema.transaction_limit_profile_details(limit_details_id)
+);
+
+CREATE TABLE IF NOT EXISTS $TenantSchema.transaction_limit_usage (
+    usage_id BIGSERIAL PRIMARY KEY,
+    subject_key VARCHAR(50) NOT NULL,
+    subject_value VARCHAR(200) NOT NULL,
+    account_id VARCHAR(100),
+    limit_id BIGINT NOT NULL,
+    limit_details_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    period_type VARCHAR(20) NOT NULL,
+    operation_type VARCHAR(50) NOT NULL,
+    request_gateway VARCHAR(50) NOT NULL,
+    payer_count INTEGER NOT NULL DEFAULT 0,
+    payer_amount NUMERIC(19, 0) NOT NULL DEFAULT 0,
+    payee_count INTEGER NOT NULL DEFAULT 0,
+    payee_amount NUMERIC(19, 0) NOT NULL DEFAULT 0,
+    last_transaction_id VARCHAR(30),
+    last_transaction_date TIMESTAMP,
+    CONSTRAINT fk_transaction_limit_usage_profile
+        FOREIGN KEY (limit_id) REFERENCES $TenantSchema.transaction_limit_profile(limit_id),
+    CONSTRAINT fk_transaction_limit_usage_details
+        FOREIGN KEY (limit_details_id)
+        REFERENCES $TenantSchema.transaction_limit_profile_details(limit_details_id),
+    CONSTRAINT fk_transaction_limit_usage_tag
+        FOREIGN KEY (tag_id) REFERENCES $TenantSchema.tags(tag_id)
+);
+
+ALTER TABLE $TenantSchema.transaction_limit_profile
+    DROP COLUMN IF EXISTS priority;
+
+ALTER TABLE $TenantSchema.transaction_limit_usage
+    ADD COLUMN IF NOT EXISTS subject_value VARCHAR(200),
+    ALTER COLUMN account_id DROP NOT NULL,
+    DROP COLUMN IF EXISTS subject_value_hash,
+    DROP COLUMN IF EXISTS subject_value_masked,
+    DROP COLUMN IF EXISTS limit_period_id,
+    DROP COLUMN IF EXISTS wallet_type,
+    DROP COLUMN IF EXISTS currency,
+    DROP COLUMN IF EXISTS period_start,
+    DROP COLUMN IF EXISTS period_end,
+    DROP COLUMN IF EXISTS status,
+    DROP COLUMN IF EXISTS created_on,
+    DROP COLUMN IF EXISTS modified_on,
+    DROP COLUMN IF EXISTS version;
+
+ALTER TABLE $TenantSchema.transaction_limit_profile
+    ALTER COLUMN min_residual_balance TYPE NUMERIC(19, 0) USING min_residual_balance::NUMERIC(19, 0),
+    ALTER COLUMN max_balance TYPE NUMERIC(19, 0) USING max_balance::NUMERIC(19, 0);
+
+ALTER TABLE $TenantSchema.transaction_limit_profile_details
+    ALTER COLUMN min_txn_amount TYPE NUMERIC(19, 0) USING min_txn_amount::NUMERIC(19, 0),
+    ALTER COLUMN max_txn_amount TYPE NUMERIC(19, 0) USING max_txn_amount::NUMERIC(19, 0);
+
+ALTER TABLE $TenantSchema.transaction_limit_profile_period
+    ALTER COLUMN max_amount TYPE NUMERIC(19, 0) USING max_amount::NUMERIC(19, 0);
+
+ALTER TABLE $TenantSchema.transaction_limit_usage
+    ALTER COLUMN payer_amount TYPE NUMERIC(19, 0) USING payer_amount::NUMERIC(19, 0),
+    ALTER COLUMN payee_amount TYPE NUMERIC(19, 0) USING payee_amount::NUMERIC(19, 0);
+
+CREATE INDEX IF NOT EXISTS idx_transaction_limit_profile_type
+    ON $TenantSchema.transaction_limit_profile(limit_type, status, wallet_type, currency);
+
+CREATE INDEX IF NOT EXISTS idx_transaction_limit_profile_tag
+    ON $TenantSchema.transaction_limit_profile(tag_id, status, created_on DESC);
+
+CREATE INDEX IF NOT EXISTS idx_transaction_limit_details_profile
+    ON $TenantSchema.transaction_limit_profile_details(limit_id, party_type, operation_type, request_gateway, status);
+
+CREATE INDEX IF NOT EXISTS idx_transaction_limit_period_details
+    ON $TenantSchema.transaction_limit_profile_period(limit_details_id, period_type, status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_transaction_limit_usage_bucket
+    ON $TenantSchema.transaction_limit_usage(
+        subject_key,
+        subject_value,
+        limit_id,
+        limit_details_id,
+        period_type,
+        operation_type,
+        request_gateway
+    );
+
+CREATE INDEX IF NOT EXISTS idx_transaction_limit_usage_account_period
+    ON $TenantSchema.transaction_limit_usage(account_id, period_type, last_transaction_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_transaction_limit_usage_subject
+    ON $TenantSchema.transaction_limit_usage(subject_key, subject_value, last_transaction_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_tlp_tag_id
+    ON $TenantSchema.transaction_limit_profile(tag_id);
+
+CREATE INDEX IF NOT EXISTS idx_tlpd_limit_id
+    ON $TenantSchema.transaction_limit_profile_details(limit_id);
+
+CREATE INDEX IF NOT EXISTS idx_tlpp_limit_details_id
+    ON $TenantSchema.transaction_limit_profile_period(limit_details_id);
+
+CREATE INDEX IF NOT EXISTS idx_tlu_limit_id
+    ON $TenantSchema.transaction_limit_usage(limit_id);
+
+CREATE INDEX IF NOT EXISTS idx_tlu_limit_details_id
+    ON $TenantSchema.transaction_limit_usage(limit_details_id);
+
+CREATE INDEX IF NOT EXISTS idx_tlu_tag_id
+    ON $TenantSchema.transaction_limit_usage(tag_id);
 
 CREATE TABLE IF NOT EXISTS $TenantSchema.wallet_ledger (
     ledger_id BIGSERIAL PRIMARY KEY,
@@ -8352,6 +8570,20 @@ VALUES
     ('INVALID_CURRENCY', 'en', 'Currency {currency} is not supported', 400, 'VALIDATION', 'PAYMENT', TRUE),
     ('AMOUNT_LIMIT_EXCEEDED', 'en', 'Transaction amount exceeds allowed limit', 400, 'VALIDATION', 'PAYMENT', TRUE),
     ('MIN_AMOUNT_NOT_MET', 'en', 'Minimum transaction amount not met', 400, 'VALIDATION', 'PAYMENT', TRUE),
+    ('LIMIT_TAG_NOT_FOUND', 'en', 'No active limit tag found for {partyType} account', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_SUBJECT_KEY_MISSING', 'en', 'Limit subject key is not configured for limit profile {limitId}', 400, 'CONFIGURATION', 'LIMIT', TRUE),
+    ('LIMIT_SUBJECT_VALUE_NOT_FOUND', 'en', 'Required limit subject value {subjectKey} was not found for {partyType} account', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_PROFILE_NOT_FOUND', 'en', 'No active transaction limit profile found for {partyType} account', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_PROFILE_DETAILS_NOT_FOUND', 'en', 'No active transaction limit details found for {partyType} account', 400, 'CONFIGURATION', 'LIMIT', TRUE),
+    ('LIMIT_PERIOD_NOT_CONFIGURED', 'en', 'No active {periodType} limit period configured for limit details {limitDetailsId}', 400, 'CONFIGURATION', 'LIMIT', TRUE),
+    ('LIMIT_MIN_TRANSACTION_AMOUNT_NOT_MET', 'en', 'Transaction amount is below the minimum allowed amount', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_MAX_TRANSACTION_AMOUNT_EXCEEDED', 'en', 'Transaction amount exceeds the maximum allowed amount', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_DAILY_COUNT_EXCEEDED', 'en', 'Daily transaction count limit exceeded', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_DAILY_AMOUNT_EXCEEDED', 'en', 'Daily transaction amount limit exceeded', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_MONTHLY_COUNT_EXCEEDED', 'en', 'Monthly transaction count limit exceeded', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_MONTHLY_AMOUNT_EXCEEDED', 'en', 'Monthly transaction amount limit exceeded', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_MIN_RESIDUAL_BALANCE_NOT_MET', 'en', 'Wallet balance after transaction would be below minimum residual balance', 400, 'BUSINESS', 'LIMIT', TRUE),
+    ('LIMIT_MAX_BALANCE_EXCEEDED', 'en', 'Wallet balance after transaction would exceed maximum allowed balance', 400, 'BUSINESS', 'LIMIT', TRUE),
     ('SELF_TRANSFER_NOT_ALLOWED', 'en', 'Debitor and creditor cannot be the same account', 400, 'BUSINESS', 'PAYMENT', TRUE),
     ('INVALID_DEBITOR_USER_TYPE', 'en', 'DEBITOR user type {accountType} not allowed for {operationType}', 400, 'BUSINESS', 'PAYMENT', TRUE),
     ('INVALID_CREDITOR_USER_TYPE', 'en', 'CREDITOR user type {accountType} not allowed for {operationType}', 400, 'BUSINESS', 'PAYMENT', TRUE),
@@ -8703,6 +8935,7 @@ VALUES
     ('SUBSCRIBER_BASE', 'Subscriber Base', 'SUBSCRIBER', TRUE, 'BASE', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('MERCHANT_BASE', 'Merchant Base', 'MERCHANT', TRUE, 'BASE', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('AGENT_BASE', 'Agent Base', 'AGENT', TRUE, 'BASE', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('BILLER_BASE', 'Biller Base', 'BILLER', TRUE, 'BASE', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('PARTNER_BASE', 'Partner Base', 'PARTNER', TRUE, 'BASE', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (tag_code) DO UPDATE
 SET tag_name = EXCLUDED.tag_name,
@@ -8711,6 +8944,150 @@ SET tag_name = EXCLUDED.tag_name,
     tag_type = EXCLUDED.tag_type,
     status = EXCLUDED.status,
     updated_at = CURRENT_TIMESTAMP;
+
+WITH seed_tags AS (
+    SELECT tag_id, tag_code
+    FROM $TenantSchema.tags
+    WHERE tag_code IN ('SUBSCRIBER_BASE', 'MERCHANT_BASE', 'AGENT_BASE', 'BILLER_BASE', 'PARTNER_BASE')
+),
+seed_wallets(wallet_type) AS (
+    VALUES ('MAIN'), ('BONUS')
+),
+seed_currencies(currency) AS (
+    VALUES ('USD'), ('EUR'), ('INR')
+),
+desired_profiles AS (
+    SELECT
+        seed_tags.tag_id,
+        seed_tags.tag_code,
+        seed_wallets.wallet_type,
+        seed_currencies.currency,
+        seed_tags.tag_code || ' GLOBAL ' || seed_wallets.wallet_type || ' ' || seed_currencies.currency AS limit_name
+    FROM seed_tags
+    CROSS JOIN seed_wallets
+    CROSS JOIN seed_currencies
+)
+INSERT INTO $TenantSchema.transaction_limit_profile (
+    limit_name,
+    tag_id,
+    limit_type,
+    subject_key,
+    details,
+    status,
+    wallet_type,
+    currency,
+    min_residual_balance,
+    max_balance,
+    created_by,
+    modified_by
+)
+SELECT
+    desired_profiles.limit_name,
+    desired_profiles.tag_id,
+    'GLOBAL',
+    'ACCOUNT_ID',
+    '{"seededDefault":true,"description":"Bootstrap default global limit. Configure stricter limits through admin APIs."}'::jsonb,
+    'ACTIVE',
+    desired_profiles.wallet_type,
+    desired_profiles.currency,
+    0,
+    99999999999999999,
+    'SYSTEM',
+    'SYSTEM'
+FROM desired_profiles
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM $TenantSchema.transaction_limit_profile existing_profile
+    WHERE existing_profile.limit_name = desired_profiles.limit_name
+      AND existing_profile.tag_id = desired_profiles.tag_id
+      AND existing_profile.limit_type = 'GLOBAL'
+      AND existing_profile.wallet_type = desired_profiles.wallet_type
+      AND existing_profile.currency = desired_profiles.currency
+);
+
+WITH seed_profiles AS (
+    SELECT profile.limit_id
+    FROM $TenantSchema.transaction_limit_profile profile
+    INNER JOIN $TenantSchema.tags tag ON tag.tag_id = profile.tag_id
+    WHERE tag.tag_code IN ('SUBSCRIBER_BASE', 'MERCHANT_BASE', 'AGENT_BASE', 'BILLER_BASE', 'PARTNER_BASE')
+      AND profile.limit_type = 'GLOBAL'
+      AND profile.subject_key = 'ACCOUNT_ID'
+      AND profile.wallet_type IN ('MAIN', 'BONUS')
+      AND profile.currency IN ('USD', 'EUR', 'INR')
+      AND profile.details ->> 'seededDefault' = 'true'
+),
+seed_parties(party_type) AS (
+    VALUES ('DEBITOR'), ('CREDITOR')
+)
+INSERT INTO $TenantSchema.transaction_limit_profile_details (
+    limit_id,
+    party_type,
+    status,
+    operation_type,
+    request_gateway,
+    min_txn_amount,
+    max_txn_amount
+)
+SELECT
+    seed_profiles.limit_id,
+    seed_parties.party_type,
+    'ACTIVE',
+    'ALL',
+    'ALL',
+    0,
+    99999999999999999
+FROM seed_profiles
+CROSS JOIN seed_parties
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM $TenantSchema.transaction_limit_profile_details existing_detail
+    WHERE existing_detail.limit_id = seed_profiles.limit_id
+      AND existing_detail.party_type = seed_parties.party_type
+      AND existing_detail.operation_type = 'ALL'
+      AND existing_detail.request_gateway = 'ALL'
+);
+
+WITH seed_details AS (
+    SELECT detail.limit_details_id
+    FROM $TenantSchema.transaction_limit_profile_details detail
+    INNER JOIN $TenantSchema.transaction_limit_profile profile ON profile.limit_id = detail.limit_id
+    INNER JOIN $TenantSchema.tags tag ON tag.tag_id = profile.tag_id
+    WHERE tag.tag_code IN ('SUBSCRIBER_BASE', 'MERCHANT_BASE', 'AGENT_BASE', 'BILLER_BASE', 'PARTNER_BASE')
+      AND profile.limit_type = 'GLOBAL'
+      AND profile.subject_key = 'ACCOUNT_ID'
+      AND profile.wallet_type IN ('MAIN', 'BONUS')
+      AND profile.currency IN ('USD', 'EUR', 'INR')
+      AND profile.details ->> 'seededDefault' = 'true'
+      AND detail.party_type IN ('DEBITOR', 'CREDITOR')
+      AND detail.operation_type = 'ALL'
+      AND detail.request_gateway = 'ALL'
+),
+seed_periods(period_type, max_count, max_amount) AS (
+    VALUES
+        ('DAILY', 2147483647, 99999999999999999),
+        ('MONTHLY', 2147483647, 99999999999999999)
+)
+INSERT INTO $TenantSchema.transaction_limit_profile_period (
+    limit_details_id,
+    period_type,
+    max_count,
+    max_amount,
+    status
+)
+SELECT
+    seed_details.limit_details_id,
+    seed_periods.period_type,
+    seed_periods.max_count,
+    seed_periods.max_amount,
+    'ACTIVE'
+FROM seed_details
+CROSS JOIN seed_periods
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM $TenantSchema.transaction_limit_profile_period existing_period
+    WHERE existing_period.limit_details_id = seed_details.limit_details_id
+      AND existing_period.period_type = seed_periods.period_type
+);
 
 INSERT INTO $TenantSchema.service_catalog (
     service_code,
@@ -8843,6 +9220,12 @@ GRANT USAGE, CREATE ON SCHEMA $TenantSchema TO $DbUser;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA $TenantSchema TO $DbUser;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA $TenantSchema TO $DbUser;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.tenant_registry TO $DbUser;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA $TenantSchema
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO $DbUser;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA $TenantSchema
+    GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO $DbUser;
 
 COMMIT;
 "@

@@ -89,6 +89,7 @@ class U2UPaymentServiceTest {
     void processPayment_shouldUseWalletMatchingCurrencyAndWalletType() {
         U2UPaymentRequest request = validRequest();
         request.setMetadata(Map.of("paymentViaQr", true));
+        request.setAdditionalInfo(Map.of("clientId", "123445", "clientName", "Jio"));
         AccountIdentifier debitorIdentifier = identifier("acc-1", "9999999999", "MOBILE", 10L);
         AccountIdentifier creditorIdentifier = identifier("acc-2", "8888888888", "MOBILE", 20L);
         Account debitorAccount = account("acc-1", "SUBSCRIBER");
@@ -141,7 +142,9 @@ class U2UPaymentServiceTest {
                     eq(InitiatedBy.DEBITOR),
                     eq(request.getPaymentReference()),
                     eq(request.getComments()),
-                    eq(true)
+                    eq(true),
+                    eq(request.getMetadata()),
+                    eq(request.getAdditionalInfo())
             );
             verify(balanceService).transferWalletAmount(
                     debitorWallet,

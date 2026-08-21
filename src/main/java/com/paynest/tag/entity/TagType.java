@@ -14,7 +14,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tag_types", schema = "tenant_movii")
+@Table(name = "tag_types")
 @Data
 public class TagType {
 

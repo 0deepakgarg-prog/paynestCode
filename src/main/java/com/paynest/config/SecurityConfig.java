@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/wallet/restrictions").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/wallet/restrictions/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/transaction-limits/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/account/*/suspend").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/account/*/resume").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/account/*/status-history").hasRole("ADMIN")

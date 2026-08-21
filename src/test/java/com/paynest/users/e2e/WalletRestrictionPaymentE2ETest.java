@@ -9,6 +9,7 @@ import com.paynest.config.repository.EnumerationRepository;
 import com.paynest.config.repository.SupportedLanguageRepository;
 import com.paynest.config.security.JwtService;
 import com.paynest.config.service.TenantRegistryService;
+import com.paynest.limits.service.TransactionLimitValidator;
 import com.paynest.notifications.service.TransactionNotificationEventPublisher;
 import com.paynest.payments.entity.Transactions;
 import com.paynest.payments.repository.TransactionDetailsRepository;
@@ -159,6 +160,9 @@ class WalletRestrictionPaymentE2ETest {
 
     @MockBean
     private IntraWalletTransferService intraWalletTransferService;
+
+    @MockBean
+    private TransactionLimitValidator transactionLimitValidator;
 
     @BeforeEach
     void setUp() {

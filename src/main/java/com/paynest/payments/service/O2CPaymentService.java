@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -809,7 +810,9 @@ public class O2CPaymentService {
             }
         }
 
-        for (String key : newValue.keySet()) {
+        Iterator<String> keys = newValue.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
             mergedValue.put(key, newValue.get(key));
         }
         return mergedValue;

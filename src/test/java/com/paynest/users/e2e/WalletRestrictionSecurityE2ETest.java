@@ -2,10 +2,13 @@ package com.paynest.users.e2e;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paynest.common.Constants;
 import com.paynest.config.security.JwtService;
 import com.paynest.config.service.TenantRegistryService;
 import com.paynest.users.dto.request.WalletRestrictionRequest;
 import com.paynest.users.dto.response.WalletRestrictionResponse;
+import com.paynest.users.entity.Account;
+import com.paynest.users.repository.AccountRepository;
 import com.paynest.users.service.WalletRestrictionService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.impl.DefaultClaims;
@@ -22,6 +25,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -53,6 +57,9 @@ class WalletRestrictionSecurityE2ETest {
     @MockBean
     private WalletRestrictionService walletRestrictionService;
 
+    @MockBean
+    private AccountRepository accountRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -79,6 +86,8 @@ class WalletRestrictionSecurityE2ETest {
         when(userDetailsService.loadUserByUsername("CUST0001")).thenReturn(
                 new User("CUST0001", "N/A", AuthorityUtils.createAuthorityList("ROLE_SUBSCRIBER"))
         );
+        when(accountRepository.findById("ADMIN0001")).thenReturn(Optional.of(activeAccount("ADMIN0001", "ADMIN")));
+        when(accountRepository.findById("CUST0001")).thenReturn(Optional.of(activeAccount("CUST0001", "SUBSCRIBER")));
 
         JsonNode selectedServicesRestrictions = selectedServicesRestrictions();
         when(walletRestrictionService.addWalletRestriction(any(WalletRestrictionRequest.class)))
@@ -202,6 +211,14 @@ class WalletRestrictionSecurityE2ETest {
         claims.put("scope", scope);
         claims.put("authType", "PIN");
         return claims;
+    }
+
+    private Account activeAccount(String accountId, String accountType) {
+        Account account = new Account();
+        account.setAccountId(accountId);
+        account.setAccountType(accountType);
+        account.setStatus(Constants.ACCOUNT_STATUS_ACTIVE);
+        return account;
     }
 
     private JsonNode selectedServicesRestrictions() throws Exception {

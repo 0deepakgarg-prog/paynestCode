@@ -1242,8 +1242,8 @@ public class AccountService {
                     systemWallet,
                     InitiatedBy.DEBITOR
             );
-            walletService.debitWallet(subscriberWallet, transferableAmount, txnId);
-            walletService.creditWallet(systemWallet, transferableAmount, txnId);
+            walletService.debitWallet(subscriberWallet, transferableAmount, txnId, ACCOUNT_DELETE_SERVICE_CODE);
+            walletService.creditWallet(systemWallet, transferableAmount, txnId, ACCOUNT_DELETE_SERVICE_CODE);
         }
     }
 

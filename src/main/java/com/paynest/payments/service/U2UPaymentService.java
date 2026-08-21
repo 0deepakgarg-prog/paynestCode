@@ -561,7 +561,9 @@ public class U2UPaymentService {
                 request.getInitiatedBy(),
                 request.getPaymentReference(),
                 request.getComments(),
-                isPaymentViaQr(request.getMetadata())
+                isPaymentViaQr(request.getMetadata()),
+                request.getMetadata(),
+                request.getAdditionalInfo()
         );
 
         transactionsService.updateOptionalTransactionFields(

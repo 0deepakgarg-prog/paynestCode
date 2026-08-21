@@ -6,6 +6,7 @@ import com.paynest.Utilities.IdGenerator;
 import com.paynest.common.Constants;
 import com.paynest.common.ErrorCodes;
 import com.paynest.config.PropertyReader;
+import com.paynest.limits.service.TransactionLimitValidator;
 import com.paynest.users.entity.Account;
 import com.paynest.users.entity.AccountIdentifier;
 import com.paynest.payments.entity.TransactionDetails;
@@ -76,6 +77,7 @@ public class StockService {
     private final WalletCacheService walletCacheService;
     private final PropertyReader propertyReader;
     private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
+    private final TransactionLimitValidator transactionLimitValidator;
 
     public BasePaymentResponse initiateStock(StockInitiateRequest request) {
 
@@ -669,6 +671,28 @@ public class StockService {
         BigDecimal creditorAvailableBefore = creditorBalance.getAvailableBalance();
         BigDecimal creditorFicBefore = creditorBalance.getFicBalance();
         BigDecimal creditorFrozenBefore = creditorBalance.getFrozenBalance();
+        BigDecimal debtorProjectedAvailableAfter = debtorAvailableBefore.subtract(storedAmount);
+        BigDecimal creditorProjectedAvailableAfter = creditorAvailableBefore.add(storedAmount);
+
+        try {
+            transactionLimitValidator.validateAndReserve(
+                    debtorWallet,
+                    creditorWallet,
+                    storedAmount,
+                    storedAmount,
+                    debtorProjectedAvailableAfter,
+                    creditorProjectedAvailableAfter,
+                    STOCK_REIMBURSEMENT_OPERATION,
+                    transactionId
+            );
+        } catch (ApplicationException ex) {
+            transactionsService.updateFailedTransactionRecord(
+                    transactionId,
+                    ex.getErrorCode(),
+                    debtorWallet.getAccountId()
+            );
+            throw ex;
+        }
 
         debtorBalance.setFrozenBalance(debtorFrozenBefore.add(storedAmount));
         saveWalletLedger(

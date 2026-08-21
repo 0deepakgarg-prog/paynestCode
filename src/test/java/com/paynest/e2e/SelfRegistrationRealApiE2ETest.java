@@ -34,7 +34,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,7 +120,7 @@ class SelfRegistrationRealApiE2ETest {
     private static volatile String lastGenericIntegratorRequestBody;
 
     static {
-        //runDatabaseBootstrap();
+        runDatabaseBootstrap();
     }
 
     @DynamicPropertySource
@@ -170,10 +172,16 @@ class SelfRegistrationRealApiE2ETest {
         try {
             Path projectRoot = Path.of(System.getProperty("user.dir"));
             Path scriptPath = projectRoot.resolve("scripts").resolve("paynest-db.ps1");
-            log.info("E2E bootstrap starting: script={} tenantId={} tenantSchema={}",
+            Path outputDir = projectRoot.resolve("target").resolve("e2e-bootstrap-logs");
+            Files.createDirectories(outputDir);
+            Path outputPath = outputDir.resolve(TENANT_ID + "-bootstrap.log");
+            Files.deleteIfExists(outputPath);
+
+            log.info("E2E bootstrap starting: script={} tenantId={} tenantSchema={} outputFile={}",
                     scriptPath,
                     TENANT_ID,
-                    TENANT_SCHEMA
+                    TENANT_SCHEMA,
+                    outputPath
             );
             Process process = new ProcessBuilder(
                     "powershell.exe",
@@ -190,11 +198,12 @@ class SelfRegistrationRealApiE2ETest {
                     TENANT_SCHEMA
             )
                     .directory(projectRoot.toFile())
+                    .redirectOutput(outputPath.toFile())
                     .redirectErrorStream(true)
                     .start();
 
-            boolean completed = process.waitFor(180, TimeUnit.SECONDS);
-            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            boolean completed = process.waitFor(300, TimeUnit.SECONDS);
+            String output = readBootstrapOutput(outputPath);
             log.info("E2E bootstrap completed={} exitCode={} output={}",
                     completed,
                     completed ? process.exitValue() : "not-available",
@@ -210,6 +219,17 @@ class SelfRegistrationRealApiE2ETest {
             }
         } catch (Exception ex) {
             throw new ExceptionInInitializerError(ex);
+        }
+    }
+
+    private static String readBootstrapOutput(Path outputPath) {
+        try {
+            if (!Files.exists(outputPath)) {
+                return "";
+            }
+            return Files.readString(outputPath, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            return "<unable to read bootstrap output: " + ex.getMessage() + ">";
         }
     }
 
@@ -243,6 +263,8 @@ class SelfRegistrationRealApiE2ETest {
         ensureHoldingWallets();
        // ensureQrPaymentSchema();
         ensureE2EServiceCatalog();
+        deactivateActivePricingRulesForE2E();
+        seededAvailableBalanceOffset = currentAvailableWalletBalanceSum();
         //  cleanupMobileNumber(mobileNumber);
         log.info("E2E setup completed for mobileNumber={}", mobileNumber);
     }
@@ -912,7 +934,7 @@ class SelfRegistrationRealApiE2ETest {
         assertDefaultBaseTag(receiverSubscriber.accountId(), "SUBSCRIBER_BASE", "SUBSCRIBER");
         assertDefaultBaseTag(agent.accountId(), "AGENT_BASE", "AGENT");
         assertDefaultBaseTag(merchant.accountId(), "MERCHANT_BASE", "MERCHANT");
-        assertNoDefaultBaseTag(biller.accountId(), "BILLER");
+        assertDefaultBaseTag(biller.accountId(), "BILLER_BASE", "BILLER");
         assertNoDefaultBaseTag(networkAdminAccountId, "ADMIN");
         assertSeededDefaultBaseTag("PARTNER_BASE", "PARTNER");
 
@@ -995,7 +1017,7 @@ class SelfRegistrationRealApiE2ETest {
                 merchant.mobile(),
                 "SUB_BEHAVIOR_" + suffix,
                 "MERCHANT_RISK_" + suffix,
-                new BigDecimal("2.50"),
+                new BigDecimal("18.50"),
                 new BigDecimal("3.25")
         );
 
@@ -1082,7 +1104,7 @@ class SelfRegistrationRealApiE2ETest {
                 receiverSubscriber.mobile(),
                 "SUB_BEHAVIOR_" + suffix,
                 "SUB_RISK_" + suffix,
-                new BigDecimal("1.75"),
+                new BigDecimal("17.75"),
                 BigDecimal.ZERO
         );
         updatePricingRuleStatus(networkAdminAccessToken, p2pLowestRuleId, "INACTIVE");
@@ -1097,7 +1119,7 @@ class SelfRegistrationRealApiE2ETest {
                 receiverSubscriber.mobile(),
                 "SUB_BEHAVIOR_" + suffix,
                 "SUB_RISK_" + suffix,
-                new BigDecimal("4.00"),
+                new BigDecimal("16.00"),
                 BigDecimal.ZERO
         );
 
@@ -1118,7 +1140,7 @@ class SelfRegistrationRealApiE2ETest {
                 subscriber.mobile(),
                 "AGENT_UPGRADE_" + suffix,
                 "SUB_BEHAVIOR_" + suffix,
-                new BigDecimal("2.50"),
+                new BigDecimal("18.50"),
                 BigDecimal.ZERO
         );
 
@@ -1139,7 +1161,7 @@ class SelfRegistrationRealApiE2ETest {
                 agent.mobile(),
                 "SUB_BEHAVIOR_" + suffix,
                 "AGENT_UPGRADE_" + suffix,
-                new BigDecimal("2.50"),
+                new BigDecimal("18.50"),
                 BigDecimal.ZERO
         );
 
@@ -1250,7 +1272,7 @@ class SelfRegistrationRealApiE2ETest {
         ).then()
                 .statusCode(200)
                 .body("status", equalTo("SUCCESS"))
-                .body("walletRestriction.walletId", equalTo(senderWalletId.intValue()))
+                .body("walletRestriction.walletId", equalTo(senderWalletId.longValue()))
                 .body("walletRestriction.version", equalTo(0))
                 .body("walletRestriction.restrictions.sendBlock.blocked", equalTo(true))
                 .body("walletRestriction.restrictions.sendBlock.mode", equalTo("ALL_SERVICES"));
@@ -1266,7 +1288,7 @@ class SelfRegistrationRealApiE2ETest {
         ).then()
                 .statusCode(200)
                 .body("status", equalTo("SUCCESS"))
-                .body("walletRestriction.walletId", equalTo(senderWalletId.intValue()))
+                .body("walletRestriction.walletId", equalTo(senderWalletId.longValue()))
                 .body("walletRestriction.version", equalTo(1))
                 .body("walletRestriction.restrictions.sendBlock.blocked", equalTo(false));
 
@@ -1278,7 +1300,7 @@ class SelfRegistrationRealApiE2ETest {
         ).then()
                 .statusCode(200)
                 .body("status", equalTo("SUCCESS"))
-                .body("walletRestriction.walletId", equalTo(receiverWalletId.intValue()))
+                .body("walletRestriction.walletId", equalTo(receiverWalletId.longValue()))
                 .body("walletRestriction.version", equalTo(0))
                 .body("walletRestriction.restrictions.receiveBlock.blocked", equalTo(true));
 
@@ -1370,7 +1392,7 @@ class SelfRegistrationRealApiE2ETest {
         ).then()
                 .statusCode(200)
                 .body("status", equalTo("SUCCESS"))
-                .body("walletRestriction.walletId", equalTo(agentWalletId.intValue()))
+                .body("walletRestriction.walletId", equalTo(agentWalletId.longValue()))
                 .body("walletRestriction.version", equalTo(0))
                 .body("walletRestriction.restrictions.sendBlock.mode", equalTo("SELECTED_SERVICES"))
                 .body("walletRestriction.restrictions.sendBlock.services[0]", equalTo("U2U"));
@@ -2856,7 +2878,7 @@ class SelfRegistrationRealApiE2ETest {
                 .statusCode(200)
                 .body("status", equalTo("SUCCESS"))
                 .body("walletRestrictionHistory.size()", equalTo(expectedHistoryCount))
-                .body("walletRestrictionHistory[0].walletId", equalTo(walletId.intValue()))
+                .body("walletRestrictionHistory[0].walletId", equalTo(walletId.longValue()))
                 .body("walletRestrictionHistory[0].version", equalTo(expectedLatestVersion))
                 .body("walletRestrictionHistory[0].actionType", equalTo(expectedLatestActionType))
                 .body("walletRestrictionHistory[0].restrictions", notNullValue());
@@ -3044,9 +3066,15 @@ class SelfRegistrationRealApiE2ETest {
                 WHERE transaction_id = ?
                 ORDER BY txn_sequence_number
                 """.formatted(tenantTable("transaction_details")), transactionId);
-        assertEquals(4, details.size(), adjustmentType + " transaction should have transfer and adjustment details: " + transactionId);
+        assertTrue(details.size() >= 4, adjustmentType + " transaction should have transfer and adjustment details: " + transactionId);
 
-        Map<String, Object> systemDebit = details.get(2);
+        String adjustmentAttrName = adjustmentType.toUpperCase(Locale.ROOT);
+        Map<String, Object> systemDebit = details.stream()
+                .filter(detail -> "SYS0001".equals(String.valueOf(detail.get("account_id")).toUpperCase(Locale.ROOT)))
+                .filter(detail -> "DR".equals(detail.get("entry_type")))
+                .filter(detail -> adjustmentAttrName.equals(detail.get("attr_6_name")))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing " + adjustmentType + " system debit detail: " + transactionId));
         assertEquals("SYS0001", String.valueOf(systemDebit.get("account_id")).toUpperCase(Locale.ROOT));
         assertEquals("DR", systemDebit.get("entry_type"));
         assertEquals("COMMDIS", systemDebit.get("wallet_type"));
@@ -3055,7 +3083,12 @@ class SelfRegistrationRealApiE2ETest {
         assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(systemDebit.get("approved_value")), adjustmentType + " debit approved amount");
         assertPricingAttr6(systemDebit, adjustmentType, expectedStoredAmount);
 
-        Map<String, Object> beneficiaryCredit = details.get(3);
+        Map<String, Object> beneficiaryCredit = details.stream()
+                .filter(detail -> expectedBeneficiaryAccountId.equals(detail.get("account_id")))
+                .filter(detail -> "CR".equals(detail.get("entry_type")))
+                .filter(detail -> adjustmentAttrName.equals(detail.get("attr_6_name")))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing " + adjustmentType + " beneficiary credit detail: " + transactionId));
         assertEquals(expectedBeneficiaryAccountId, beneficiaryCredit.get("account_id"));
         assertEquals("CR", beneficiaryCredit.get("entry_type"));
         assertEquals(currency, beneficiaryCredit.get("currency"));
@@ -6288,6 +6321,22 @@ class SelfRegistrationRealApiE2ETest {
                 """.formatted(tenantTable("pricing_rules")));
     }
 
+    private void deactivateActivePricingRulesForE2E() {
+        if (!tableExists(TENANT_SCHEMA, "pricing_rules")) {
+            return;
+        }
+
+        int updatedRows = jdbcTemplate.update("""
+                UPDATE %s
+                SET status = 'INACTIVE',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE status = 'ACTIVE'
+                """.formatted(tenantTable("pricing_rules")));
+        if (updatedRows > 0) {
+            log.info("Deactivated {} active pricing rules before self-registration E2E test", updatedRows);
+        }
+    }
+
     private void assertApprovedBalanceMovementDetail(
             Map<String, Object> detail,
             String operationType,
@@ -6922,16 +6971,19 @@ class SelfRegistrationRealApiE2ETest {
     }
 
     private void assertAvailableWalletBalanceSumIsZero(String assertionContext) {
+        assertBigDecimalEquals(
+                seededAvailableBalanceOffset,
+                currentAvailableWalletBalanceSum(),
+                assertionContext + " available wallet balance sum"
+        );
+    }
+
+    private BigDecimal currentAvailableWalletBalanceSum() {
         Map<String, Object> balanceSums = jdbcTemplate.queryForMap("""
                 SELECT COALESCE(SUM(available_balance), 0) AS available_balance_sum
                 FROM %s
                 """.formatted(tenantTable("wallet_balance")));
-
-        assertBigDecimalEquals(
-                seededAvailableBalanceOffset,
-                toBigDecimal(balanceSums.get("available_balance_sum")),
-                assertionContext + " available wallet balance sum"
-        );
+        return toBigDecimal(balanceSums.get("available_balance_sum"));
     }
 
     private Response putJson(String stepName, String path, String bearerToken, String requestBody) {
@@ -7580,6 +7632,8 @@ class SelfRegistrationRealApiE2ETest {
                 .then()
                 .statusCode(401);
 
+        assumeTrue(isMongoAvailable(), "MongoDB/GridFS is required for document upload/download E2E");
+
         byte[] originalSelfie = createSelfiePng();
         Response uploadResponse = given()
                 .header("X-Tenant-Id", TENANT_ID)
@@ -7763,6 +7817,16 @@ class SelfRegistrationRealApiE2ETest {
                 .extract()
                 .path("document.documentId");
         return new RetainedDocument(documentId, expectedCategory, documentTypeCode, expectedThumbnail);
+    }
+
+    private boolean isMongoAvailable() {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress("localhost", 27017), 500);
+            return true;
+        } catch (IOException ex) {
+            log.warn("MongoDB/GridFS is not available on localhost:27017. Skipping document upload/download E2E.", ex);
+            return false;
+        }
     }
 
     private byte[] createSelfiePng() {

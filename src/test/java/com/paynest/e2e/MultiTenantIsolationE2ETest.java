@@ -287,6 +287,7 @@ class MultiTenantIsolationE2ETest {
         assertDefaultBaseTag(tenant, receiverSubscriber.accountId(), "SUBSCRIBER_BASE", "SUBSCRIBER");
         assertDefaultBaseTag(tenant, agent.accountId(), "AGENT_BASE", "AGENT");
         assertDefaultBaseTag(tenant, merchant.accountId(), "MERCHANT_BASE", "MERCHANT");
+        assertDefaultBaseTag(tenant, biller.accountId(), "BILLER_BASE", "BILLER");
 
         Long subscriberBehaviorTagId = createTag(tenant, initiatingAdminToken, "MT_SUB_BEHAVIOR_" + runSuffix, "SUBSCRIBER", "BEHAVIOR");
         Long agentUpgradeTagId = createTag(tenant, initiatingAdminToken, "MT_AGENT_UPGRADE_" + runSuffix, "AGENT", "UPGRADE");
@@ -338,7 +339,7 @@ class MultiTenantIsolationE2ETest {
         String secondCashInId = performCashIn(tenant, agent, receiverSubscriber, new BigDecimal("100.00"));
         transactionIds.add(firstCashInId);
         transactionIds.add(secondCashInId);
-        assertFinancialTransferTransaction(tenant, firstCashInId, "CASHIN", agent.accountId(), subscriber.accountId(), new BigDecimal("150.00"));
+        assertFinancialTransferTransaction(tenant, firstCashInId, "CASHIN", agent.accountId(), subscriber.accountId(), new BigDecimal("150.00"), new BigDecimal("152.50"));
         assertFinancialTransferTransaction(tenant, secondCashInId, "CASHIN", agent.accountId(), receiverSubscriber.accountId(), new BigDecimal("100.00"));
 
         String u2uId = performU2U(tenant, subscriberParticipant(subscriber), subscriberParticipant(receiverSubscriber), new BigDecimal("40.00"));
@@ -361,7 +362,7 @@ class MultiTenantIsolationE2ETest {
         transactionIds.add(cashOutId);
         assertFinancialTransferTransaction(tenant, cashOutId, "CASHOUT", receiverSubscriber.accountId(), agent.accountId(), new BigDecimal("10.00"));
 
-        assertMainUsdBalance(tenant, agent.accountId(), new BigDecimal("260.00"));
+        assertMainUsdBalance(tenant, agent.accountId(), new BigDecimal("257.50"));
         assertMainUsdBalance(tenant, subscriber.accountId(), new BigDecimal("95.00"));
         assertMainUsdBalance(tenant, receiverSubscriber.accountId(), new BigDecimal("110.00"));
         assertMainUsdBalance(tenant, merchant.accountId(), new BigDecimal("45.00"));
@@ -1502,6 +1503,26 @@ class MultiTenantIsolationE2ETest {
             String creditorAccountId,
             BigDecimal displayAmount
     ) {
+        assertFinancialTransferTransaction(
+                tenant,
+                transactionId,
+                serviceCode,
+                debitorAccountId,
+                creditorAccountId,
+                displayAmount,
+                displayAmount
+        );
+    }
+
+    private void assertFinancialTransferTransaction(
+            TenantSpec tenant,
+            String transactionId,
+            String serviceCode,
+            String debitorAccountId,
+            String creditorAccountId,
+            BigDecimal displayAmount,
+            BigDecimal transactionDisplayAmount
+    ) {
         Map<String, Object> transaction = jdbcTemplate.queryForMap("""
                 SELECT transaction_id,
                        service_code,
@@ -1511,10 +1532,11 @@ class MultiTenantIsolationE2ETest {
                 WHERE transaction_id = ?
                 """.formatted(tenantTable(tenant, "transactions")), transactionId);
         BigDecimal expectedStoredAmount = displayAmount.multiply(new BigDecimal("100.00"));
+        BigDecimal expectedStoredTransactionAmount = transactionDisplayAmount.multiply(new BigDecimal("100.00"));
         assertEquals(transactionId, transaction.get("transaction_id"));
         assertEquals(serviceCode, transaction.get("service_code"));
         assertEquals("TS", transaction.get("transfer_status"));
-        assertBigDecimalEquals(expectedStoredAmount, toBigDecimal(transaction.get("transaction_value")), tenant.tenantId() + " transaction value");
+        assertBigDecimalEquals(expectedStoredTransactionAmount, toBigDecimal(transaction.get("transaction_value")), tenant.tenantId() + " transaction value");
 
         List<Map<String, Object>> details = jdbcTemplate.queryForList("""
                 SELECT account_id,
@@ -1525,7 +1547,8 @@ class MultiTenantIsolationE2ETest {
                 WHERE transaction_id = ?
                 ORDER BY txn_sequence_number
                 """.formatted(tenantTable(tenant, "transaction_details")), transactionId);
-        assertEquals(2, details.size());
+        int expectedDetailRowCount = transactionDisplayAmount.compareTo(displayAmount) == 0 ? 2 : 4;
+        assertEquals(expectedDetailRowCount, details.size());
         assertEquals(debitorAccountId, details.get(0).get("account_id"));
         assertEquals("DR", details.get(0).get("entry_type"));
         assertEquals(creditorAccountId, details.get(1).get("account_id"));
@@ -1642,10 +1665,10 @@ class MultiTenantIsolationE2ETest {
 
     private String mobileNumber(String prefix, String uniqueSuffix) {
         String digits = uniqueSuffix.replaceAll("\\D", "");
-        if (digits.length() < 7) {
-            digits = String.format("%7s", digits).replace(' ', '0');
+        if (digits.length() < 15) {
+            digits = String.format("%15s", digits).replace(' ', '0');
         }
-        return prefix + digits.substring(digits.length() - 7);
+        return prefix + digits.substring(digits.length() - 15);
     }
 
     private BigDecimal toBigDecimal(Object value) {

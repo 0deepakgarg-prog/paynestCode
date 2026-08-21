@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Propagation;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -222,7 +223,48 @@ public class TransactionsService {
             String paymentReference,
             String comments,
             boolean paymentViaQr
-    ){
+    ) {
+        generateTransactionRecord(
+                transactionId,
+                transactionValue,
+                requestGateway,
+                serviceCode,
+                language,
+                debitorAccountIdentifier,
+                creditorAccountIdentifier,
+                debitorAccountType,
+                creditorAccountType,
+                debitorWallet,
+                creditorWallet,
+                initiatedBy,
+                paymentReference,
+                comments,
+                paymentViaQr,
+                null,
+                null
+        );
+    }
+
+    @Transactional
+    public void generateTransactionRecord(
+            String transactionId,
+            BigDecimal transactionValue,
+            String requestGateway,
+            String serviceCode,
+            String language,
+            AccountIdentifier debitorAccountIdentifier,
+            AccountIdentifier creditorAccountIdentifier,
+            String debitorAccountType,
+            String creditorAccountType,
+            Wallet debitorWallet,
+            Wallet creditorWallet,
+            InitiatedBy initiatedBy,
+            String paymentReference,
+            String comments,
+            boolean paymentViaQr,
+            Map<String, Object> metadata,
+            Map<String, Object> additionalInfo
+    ) {
         LocalDateTime currentDateTime = TenantTime.now();
         Transactions transaction = new Transactions();
         String currencyFactor = propertyReader.getPropertyValue("currency.factor");
@@ -259,6 +301,7 @@ public class TransactionsService {
         transaction.setPaymentReference(normalizeOptionalText(paymentReference));
         transaction.setComments(normalizeOptionalText(comments));
         transaction.setPaymentViaQr(paymentViaQr);
+        setOptionalJsonFields(transaction, metadata, additionalInfo, transactionId);
         transactionsRepository.save(transaction);
 
         TransactionDetails debitDetail = new TransactionDetails();
@@ -729,9 +772,7 @@ public class TransactionsService {
             existingJson = new JSONObject(txn.getMetadata());
         }
 
-        for (String key : newMetadata.keySet()) {
-            existingJson.put(key, newMetadata.get(key));
-        }
+        copyJsonFields(newMetadata, existingJson);
 
         txn.setMetadata(existingJson.toString());
         transactionsRepository.save(txn);
@@ -739,7 +780,7 @@ public class TransactionsService {
 
     public void updateAdditionalInfo(String transactionId, JSONObject additionalInfo) {
 
-        if (additionalInfo == null || additionalInfo.isEmpty()) {
+        if (additionalInfo == null || additionalInfo.length() == 0) {
             return;
         }
 
@@ -753,9 +794,7 @@ public class TransactionsService {
                 ? new JSONObject()
                 : new JSONObject(txn.getAdditionalInfo());
 
-        for (String key : additionalInfo.keySet()) {
-            existingAdditional.put(key, additionalInfo.get(key));
-        }
+        copyJsonFields(additionalInfo, existingAdditional);
 
         txn.setAdditionalInfo(existingAdditional.toString());
 
@@ -871,10 +910,16 @@ public class TransactionsService {
             }
         }
 
-        for (String key : newValue.keySet()) {
-            mergedValue.put(key, newValue.get(key));
-        }
+        copyJsonFields(newValue, mergedValue);
         return mergedValue;
+    }
+
+    private void copyJsonFields(JSONObject source, JSONObject target) {
+        Iterator<String> keys = source.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            target.put(key, source.get(key));
+        }
     }
 
     private JSONObject toJsonObject(Map<String, Object> value, String fieldName, String transactionId) {
@@ -893,6 +938,32 @@ public class TransactionsService {
             );
             return null;
         }
+    }
+
+    private void setOptionalJsonFields(
+            Transactions transaction,
+            Map<String, Object> metadata,
+            Map<String, Object> additionalInfo,
+            String transactionId) {
+        String metadataValue = toOptionalJsonString(metadata, "metadata", transactionId);
+        if (metadataValue != null) {
+            transaction.setMetadata(metadataValue);
+        }
+
+        String additionalInfoValue = toOptionalJsonString(additionalInfo, "additionalInfo", transactionId);
+        if (additionalInfoValue != null) {
+            transaction.setAdditionalInfo(additionalInfoValue);
+        }
+    }
+
+    private String toOptionalJsonString(Map<String, Object> value, String fieldName, String transactionId) {
+        JSONObject jsonObject = toJsonObject(value, fieldName, transactionId);
+        if (jsonObject == null) {
+            return null;
+        }
+
+        String json = jsonObject.toString();
+        return isWithinMaxLength(json, OPTIONAL_JSON_MAX_LENGTH, fieldName, transactionId) ? json : null;
     }
 
     private boolean isWithinMaxLength(String value, int maxLength, String fieldName, String transactionId) {

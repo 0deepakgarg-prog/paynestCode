@@ -8,6 +8,7 @@ import com.paynest.config.PropertyReader;
 import com.paynest.config.tenant.TraceContext;
 import com.paynest.exception.ApplicationException;
 import com.paynest.exception.PaymentErrorCode;
+import com.paynest.limits.service.TransactionLimitValidator;
 import com.paynest.payments.entity.TransactionDetails;
 import com.paynest.payments.entity.TransactionDetailsId;
 import com.paynest.payments.entity.Transactions;
@@ -72,6 +73,7 @@ public class BalanceService {
     private final TransactionsService transactionsService;
     private final WalletCacheService walletCacheService;
     private final WalletRestrictionValidator walletRestrictionValidator;
+    private final TransactionLimitValidator transactionLimitValidator;
     private final TransactionNotificationEventPublisher transactionNotificationEventPublisher;
     private final SuccessfulPaymentEventPublisher successfulPaymentEventPublisher;
 
@@ -87,6 +89,7 @@ public class BalanceService {
                           TransactionsService transactionsService,
                           WalletCacheService walletCacheService,
                           WalletRestrictionValidator walletRestrictionValidator,
+                          TransactionLimitValidator transactionLimitValidator,
                           TransactionNotificationEventPublisher transactionNotificationEventPublisher,
                           SuccessfulPaymentEventPublisher successfulPaymentEventPublisher) {
         this.walletRepository = walletRepository;
@@ -101,6 +104,7 @@ public class BalanceService {
         this.transactionsService = transactionsService;
         this.walletCacheService = walletCacheService;
         this.walletRestrictionValidator = walletRestrictionValidator;
+        this.transactionLimitValidator = transactionLimitValidator;
         this.transactionNotificationEventPublisher = transactionNotificationEventPublisher;
         this.successfulPaymentEventPublisher = successfulPaymentEventPublisher;
     }
@@ -232,6 +236,17 @@ public class BalanceService {
 
             BigDecimal receiverFicAfter = receiverFicBefore;
             BigDecimal receiverFrozenAfter = receiverFrozenBefore;
+
+            transactionLimitValidator.validateAndReserve(
+                    debitorWallet,
+                    creditorWallet,
+                    dbAmount,
+                    dbAmount,
+                    senderBalAfter,
+                    receiverBalAfter,
+                    serviceCode,
+                    txnId
+            );
 
             saveLedgerEntry(
                     txnId,
@@ -366,6 +381,17 @@ public class BalanceService {
 
             BigDecimal senderBalAfter = senderBalBefore.subtract(debitDbAmount);
             BigDecimal receiverBalAfter = receiverBalBefore.add(creditDbAmount);
+
+            transactionLimitValidator.validateAndReserve(
+                    debitorWallet,
+                    creditorWallet,
+                    debitDbAmount,
+                    creditDbAmount,
+                    senderBalAfter,
+                    receiverBalAfter,
+                    serviceCode,
+                    txnId
+            );
 
             saveLedgerEntry(
                     txnId,
@@ -525,6 +551,17 @@ public class BalanceService {
             BigDecimal systemSourceBalAfter = systemSourceBalBefore.add(debitDbAmount);
             BigDecimal systemTargetBalAfter = systemTargetBalBefore.subtract(creditDbAmount);
             BigDecimal creditorBalAfter = creditorBalBefore.add(creditDbAmount);
+
+            transactionLimitValidator.validateAndReserve(
+                    debitorWallet,
+                    creditorWallet,
+                    debitDbAmount,
+                    creditDbAmount,
+                    debitorBalAfter,
+                    creditorBalAfter,
+                    serviceCode,
+                    txnId
+            );
 
             saveLedgerEntry(
                     txnId,
@@ -774,6 +811,17 @@ public class BalanceService {
             BigDecimal serviceChargePayerBalAfter = SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
                     ? senderBalAfter
                     : receiverBalAfter;
+
+            transactionLimitValidator.validateAndReserve(
+                    debitorWallet,
+                    creditorWallet,
+                    senderRequiredAmount,
+                    dbAmount,
+                    senderBalAfter,
+                    receiverBalAfter,
+                    serviceCode,
+                    txnId
+            );
 
             BigDecimal senderFicAfter = senderFicBefore;
             BigDecimal senderFrozenAfter = senderFrozenBefore;
@@ -1082,6 +1130,17 @@ public class BalanceService {
             BigDecimal receiverBalAfter = receiverBalBefore.add(dbAmount);
             BigDecimal senderFicAfter = senderFicBefore;
             BigDecimal receiverFicAfter = receiverFicBefore.add(dbAmount);
+
+            transactionLimitValidator.validateAndReserve(
+                    debitorWallet,
+                    creditorWallet,
+                    dbAmount,
+                    dbAmount,
+                    senderBalAfter,
+                    receiverBalAfter,
+                    serviceCode,
+                    txnId
+            );
 
             saveLedgerEntry(
                     txnId,
@@ -1408,6 +1467,17 @@ public class BalanceService {
             BigDecimal serviceChargePayerBalAfter = SERVICE_CHARGE_PAYER_SENDER.equals(normalizedServiceChargePayer)
                     ? senderBalAfter
                     : receiverBalAfter;
+
+            transactionLimitValidator.validateAndReserve(
+                    debitorWallet,
+                    creditorWallet,
+                    senderRequiredAmount,
+                    dbAmount,
+                    senderBalAfter,
+                    receiverBalAfter,
+                    serviceCode,
+                    txnId
+            );
 
             BigDecimal senderFicAfter = senderFicBefore;
             BigDecimal senderFrozenAfter = senderFrozenBefore;
@@ -1981,6 +2051,17 @@ public class BalanceService {
 
         BigDecimal sourceBalAfter = sourceBalBefore.subtract(dbAdjustmentAmount);
         BigDecimal beneficiaryBalAfter = beneficiaryBalBefore.add(dbAdjustmentAmount);
+
+        transactionLimitValidator.validateAndReserve(
+                sourceWallet,
+                beneficiaryWallet,
+                dbAdjustmentAmount,
+                dbAdjustmentAmount,
+                sourceBalAfter,
+                beneficiaryBalAfter,
+                serviceCode,
+                txnId
+        );
 
         savePricingAdjustmentLedgerEntries(
                 adjustmentType,

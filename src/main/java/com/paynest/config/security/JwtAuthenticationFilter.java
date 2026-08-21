@@ -63,6 +63,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("tenant is :" + tenantId);
 
         String tenantClaim = jwtService.extractTenant(token);
+        String requestTenantId = request.getHeader("X-Tenant-Id");
+
+        if (requestTenantId != null
+                && !requestTenantId.isBlank()
+                && (tenantClaim == null
+                || tenantClaim.isBlank()
+                || !requestTenantId.trim().equalsIgnoreCase(tenantClaim.trim()))) {
+            apiErrorResponseWriter.write(request, response, CommonErrorCode.INVALID_TOKEN);
+            return;
+        }
 
         String requestTenantSchema = TenantContext.getTenant();
         String resolvedTokenTenantSchema = resolveTokenTenantSchema(tenantClaim, requestTenantSchema);
